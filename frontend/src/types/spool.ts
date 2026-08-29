@@ -1,0 +1,75 @@
+export type SpoolStatus =
+  | 'SEALED'
+  | 'OPEN'
+  | 'IN_USE'
+  | 'LOW'
+  | 'EMPTY'
+  | 'NEEDS_DRYING'
+  | 'ARCHIVED'
+
+export type ApiDecimal = number | string
+
+export interface Manufacturer {
+  id: number
+  name: string
+  website: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Material {
+  id: number
+  name: string
+  category: string
+  default_nozzle_temp_min: number | null
+  default_nozzle_temp_max: number | null
+  default_bed_temp_min: number | null
+  default_bed_temp_max: number | null
+  density_g_cm3: ApiDecimal | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Location {
+  id: number
+  name: string
+  description: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Spool {
+  id: number
+  code: string
+  manufacturer_id: number
+  material_id: number
+  location_id: number | null
+  manufacturer: Manufacturer
+  material: Material
+  location: Location | null
+  product_name: string | null
+  color_name: string
+  color_hex: string | null
+  diameter_mm: ApiDecimal
+  initial_filament_weight_g: ApiDecimal
+  current_filament_weight_g: ApiDecimal
+  empty_spool_weight_g: ApiDecimal | null
+  purchase_price: ApiDecimal | null
+  currency: string
+  purchase_date: string | null
+  opened_at: string | null
+  last_used_at: string | null
+  nozzle_temp_min: number | null
+  nozzle_temp_max: number | null
+  bed_temp_min: number | null
+  bed_temp_max: number | null
+  status: SpoolStatus
+  needs_drying: boolean
+  last_dried_at: string | null
+  notes: string | null
+  created_at: string
+  updated_at: string
+  archived_at: string | null
+  remaining_percent: number
+}

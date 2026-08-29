@@ -1,0 +1,74 @@
+# ==========================================
+# Python
+# ==========================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environment
+/bin/
+/lib/
+/lib64/
+/include/
+/pyvenv.cfg
+/lib64
+
+.venv/
+venv/
+env/
+
+# ==========================================
+# Environment / secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+
+# ==========================================
+# Local databases
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==========================================
+# Frontend / Node
+# ==========================================
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+node_modules/
+
+# ==========================================
+# IDE / OS
+# ==========================================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Codex / agentes locais
+# ==========================================
+.codex/
+.agents/
+**/.codex/
+**/.agents/
+
+# Contexto local
+SESSION_CONTEXT.txt
+**/SESSION_CONTEXT.txt
+
+# ==========================================
+# Logs / temporários
+# ==========================================
+*.log
+*.tmp
+*.swp
+*.bak

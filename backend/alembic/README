@@ -1,0 +1,4 @@
+Single-database migration environment for Filament Command Center.
+
+The database URL is resolved by app.db.config.get_database_url, and
+autogeneration reads metadata from app.db.base.Base.
