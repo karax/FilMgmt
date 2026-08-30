@@ -30,6 +30,8 @@ export const navigationItems: readonly NavigationItem[] = [
 ]
 
 export function getPageTitle(pathname: string): string {
+  if (pathname === '/inventory/new') return 'New Spool'
+
   return (
     navigationItems.find((item) => item.path === pathname)?.title ??
     'Filament Command Center'

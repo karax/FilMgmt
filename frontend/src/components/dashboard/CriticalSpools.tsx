@@ -1,16 +1,13 @@
 import { AlertTriangle, ArrowRight, Droplets } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
+import { SpoolColorIndicator } from '../spool/SpoolColorIndicator'
+import { SpoolStatusBadge } from '../spool/SpoolStatusBadge'
 import { formatPercent, formatWeight } from '../../lib/inventory'
-import type { Spool, SpoolStatus } from '../../types/spool'
+import type { Spool } from '../../types/spool'
 
 interface CriticalSpoolsProps {
   spools: readonly Spool[]
-}
-
-const statusClasses: Partial<Record<SpoolStatus, string>> = {
-  EMPTY: 'border-red-500/35 bg-red-500/10 text-red-700 dark:text-red-300',
-  LOW: 'border-amber-500/35 bg-amber-500/10 text-amber-700 dark:text-amber-300',
 }
 
 export function CriticalSpools({ spools }: CriticalSpoolsProps) {
@@ -61,10 +58,10 @@ export function CriticalSpools({ spools }: CriticalSpoolsProps) {
             <li className="px-5 py-4 sm:px-6" key={spool.id}>
               <article className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                 <div className="flex min-w-0 items-start gap-3">
-                  <span
-                    aria-label={`Color: ${spool.color_name}`}
-                    className="mt-1 size-3.5 shrink-0 rounded-full border border-black/15 shadow-sm dark:border-white/20"
-                    style={{ backgroundColor: spool.color_hex ?? 'transparent' }}
+                  <SpoolColorIndicator
+                    className="mt-1"
+                    colorHex={spool.color_hex}
+                    colorName={spool.color_name}
                   />
                   <div className="min-w-0">
                     <h3 className="font-mono text-sm font-bold tracking-wide text-ink">
@@ -85,11 +82,7 @@ export function CriticalSpools({ spools }: CriticalSpoolsProps) {
                     {formatPercent(spool.remaining_percent)}
                   </span>
                   {(spool.status === 'EMPTY' || spool.status === 'LOW') && (
-                    <span
-                      className={`rounded border px-2 py-1 font-mono text-[0.62rem] font-bold tracking-[0.1em] ${statusClasses[spool.status]}`}
-                    >
-                      {spool.status}
-                    </span>
+                    <SpoolStatusBadge status={spool.status} />
                   )}
                   {spool.needs_drying && (
                     <span className="inline-flex items-center gap-1 rounded border border-sky-500/35 bg-sky-500/10 px-2 py-1 font-mono text-[0.62rem] font-bold tracking-[0.08em] text-sky-700 dark:text-sky-300">

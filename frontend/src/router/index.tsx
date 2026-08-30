@@ -5,8 +5,10 @@ import { AdvisorPage } from '../pages/AdvisorPage'
 import { AnalyticsPage } from '../pages/AnalyticsPage'
 import { DashboardPage } from '../pages/DashboardPage'
 import { InventoryPage } from '../pages/InventoryPage'
+import { NewSpoolPage } from '../pages/NewSpoolPage'
 import { PrintsPage } from '../pages/PrintsPage'
 import { SettingsPage } from '../pages/SettingsPage'
+import { SpoolDetailsPage } from '../pages/SpoolDetailsPage'
 
 export const routes: RouteObject[] = [
   {
@@ -15,6 +17,8 @@ export const routes: RouteObject[] = [
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'inventory', element: <InventoryPage /> },
+      { path: 'inventory/new', element: <NewSpoolPage /> },
+      { path: 'spools/:code', element: <SpoolDetailsPage /> },
       { path: 'prints', element: <PrintsPage /> },
       { path: 'advisor', element: <AdvisorPage /> },
       { path: 'analytics', element: <AnalyticsPage /> },

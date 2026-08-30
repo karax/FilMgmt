@@ -9,6 +9,20 @@ export type SpoolStatus =
 
 export type ApiDecimal = number | string
 
+export interface SpoolFilters {
+  search?: string
+  manufacturerId?: number
+  materialId?: number
+  locationId?: number
+  status?: SpoolStatus
+  needsDrying?: boolean
+  minWeightG?: number
+  maxWeightG?: number
+  minRemainingPercent?: number
+  maxRemainingPercent?: number
+  includeArchived?: boolean
+}
+
 export interface Manufacturer {
   id: number
   name: string
@@ -72,4 +86,28 @@ export interface Spool {
   updated_at: string
   archived_at: string | null
   remaining_percent: number
+}
+
+/** Editable fields accepted by POST /api/spools. */
+export interface CreateSpoolPayload {
+  manufacturer_id: number
+  material_id: number
+  location_id: number | null
+  product_name: string | null
+  color_name: string
+  color_hex: string | null
+  diameter_mm: number
+  initial_filament_weight_g: number
+  current_filament_weight_g: number | null
+  empty_spool_weight_g: number | null
+  purchase_price: number | null
+  currency: string
+  purchase_date: string | null
+  nozzle_temp_min: number | null
+  nozzle_temp_max: number | null
+  bed_temp_min: number | null
+  bed_temp_max: number | null
+  status: Extract<SpoolStatus, 'SEALED' | 'OPEN'>
+  needs_drying: boolean
+  notes: string | null
 }

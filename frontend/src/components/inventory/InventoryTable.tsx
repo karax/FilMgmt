@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react'
 
+import { SpoolColorIndicator } from '../spool/SpoolColorIndicator'
+import { SpoolStatusBadge } from '../spool/SpoolStatusBadge'
 import { formatPercent, formatWeight } from '../../lib/inventory'
 import type { Spool } from '../../types/spool'
-import { StatusBadge } from './StatusBadge'
 
 interface InventoryTableProps {
   spools: readonly Spool[]
@@ -31,13 +32,21 @@ export function InventoryTable({ spools }: InventoryTableProps) {
                 className="whitespace-nowrap px-3 py-4 font-mono text-xs font-bold tracking-wide text-ink sm:px-4"
                 scope="row"
               >
-                {spool.code}
+                <a
+                  className="rounded text-accent underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  href={`/spools/${encodeURIComponent(spool.code)}`}
+                >
+                  {spool.code}
+                </a>
               </th>
               <Cell className="hidden lg:table-cell">{spool.manufacturer.name}</Cell>
               <Cell className="font-semibold text-ink">{spool.material.name}</Cell>
               <Cell className="hidden md:table-cell">
                 <span className="inline-flex items-center gap-2">
-                  <ColorIndicator colorHex={spool.color_hex} colorName={spool.color_name} />
+                  <SpoolColorIndicator
+                    colorHex={spool.color_hex}
+                    colorName={spool.color_name}
+                  />
                   {spool.color_name}
                 </span>
               </Cell>
@@ -48,7 +57,7 @@ export function InventoryTable({ spools }: InventoryTableProps) {
                 {formatWeight(Number(spool.current_filament_weight_g))}
               </Cell>
               <Cell>
-                <StatusBadge status={spool.status} />
+                <SpoolStatusBadge status={spool.status} />
               </Cell>
               <Cell className="hidden xl:table-cell">
                 {spool.location?.name ?? '—'}
@@ -87,22 +96,5 @@ function Cell({ children, className = '' }: CellProps) {
     <td className={`px-3 py-4 text-sm text-ink-muted sm:px-4 ${className}`}>
       {children}
     </td>
-  )
-}
-
-interface ColorIndicatorProps {
-  colorHex: string | null
-  colorName: string
-}
-
-function ColorIndicator({ colorHex, colorName }: ColorIndicatorProps) {
-  return (
-    <span
-      aria-label={`Color: ${colorName}`}
-      className={`size-3 shrink-0 rounded-full border border-black/15 shadow-sm dark:border-white/20 ${
-        colorHex ? '' : 'bg-line'
-      }`}
-      style={colorHex ? { backgroundColor: colorHex } : undefined}
-    />
   )
 }

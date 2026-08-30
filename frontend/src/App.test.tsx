@@ -66,6 +66,17 @@ describe('application layout', () => {
     ).toBeVisible()
     expect(screen.getByText('Manage and track your filament spools.')).toBeVisible()
     expect(screen.getByText('Your filament inventory is empty.')).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Add Spool' })).toHaveAttribute(
+      'href',
+      '/inventory/new',
+    )
+  })
+
+  it('renders the new spool route inside the main layout', () => {
+    renderRoute('/inventory/new')
+
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('New Spool')
+    expect(screen.getByRole('heading', { level: 2, name: 'New Spool' })).toBeVisible()
   })
 
   it.each([

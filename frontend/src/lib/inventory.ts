@@ -106,3 +106,18 @@ export function formatPercent(percent: number): string {
     maximumFractionDigits: 1,
   }).format(percent)}%`
 }
+
+export function formatCurrency(value: number | string, currency: string): string {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency,
+  }).format(Number(value))
+}
+
+export function formatDate(value: string): string {
+  return new Intl.DateTimeFormat('en-GB', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(value))
+}

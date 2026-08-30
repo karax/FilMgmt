@@ -9,8 +9,10 @@ const dashboardSpools = [
     code: 'FIL-0001',
     manufacturer: { id: 1, name: 'eSUN' },
     material: { id: 1, name: 'PLA+', category: 'PLA' },
+    product_name: 'PLA+ HS',
     color_name: 'Black',
     color_hex: '#111111',
+    initial_filament_weight_g: '1000.000',
     current_filament_weight_g: '800.000',
     remaining_percent: 80,
     status: 'OPEN',
@@ -21,8 +23,10 @@ const dashboardSpools = [
     code: 'FIL-0002',
     manufacturer: { id: 1, name: 'eSUN' },
     material: { id: 1, name: 'PLA+', category: 'PLA' },
+    product_name: null,
     color_name: 'Orange',
     color_hex: '#F97316',
+    initial_filament_weight_g: '1000.000',
     current_filament_weight_g: '150.000',
     remaining_percent: 15,
     status: 'LOW',
@@ -33,8 +37,10 @@ const dashboardSpools = [
     code: 'FIL-0003',
     manufacturer: { id: 1, name: 'eSUN' },
     material: { id: 2, name: 'PETG', category: 'PETG' },
+    product_name: null,
     color_name: 'Signal Blue',
     color_hex: '#2563EB',
+    initial_filament_weight_g: '1000.000',
     current_filament_weight_g: '0.000',
     remaining_percent: 0,
     status: 'EMPTY',
@@ -55,6 +61,18 @@ async function mockDashboardSpools(page: Page) {
   await page.route('**/api/spools', async (route) => {
     await route.fulfill({ json: dashboardSpools })
   })
+}
+
+async function mockSpoolCatalogs(page: Page) {
+  await page.route('**/api/manufacturers', (route) =>
+    route.fulfill({ json: [{ id: 1, name: 'eSUN' }] }),
+  )
+  await page.route('**/api/materials', (route) =>
+    route.fulfill({ json: [{ id: 2, name: 'PLA+', category: 'PLA' }] }),
+  )
+  await page.route('**/api/locations', (route) =>
+    route.fulfill({ json: [{ id: 3, name: 'Rack A / Slot 3' }] }),
+  )
 }
 
 async function useInventoryView(page: Page, view: 'grid' | 'table') {
@@ -114,7 +132,7 @@ test('desktop inventory in dark mode with active navigation', async ({ page }) =
   await expect(
     page.getByRole('link', { name: 'Inventory' }),
   ).toHaveAttribute('aria-current', 'page')
-  await expect(page).toHaveScreenshot('inventory-desktop-dark.png', {
+  await expect(page).toHaveScreenshot('inventory-table-desktop-dark.png', {
     fullPage: true,
   })
 })
@@ -141,6 +159,40 @@ test('mobile inventory and open navigation drawer', async ({ page }) => {
     drawer.getByRole('link', { name: 'Inventory' }),
   ).toHaveAttribute('aria-current', 'page')
   await expect(page).toHaveScreenshot('inventory-mobile-drawer.png', {
+    fullPage: true,
+  })
+})
+
+test('inventory preserves the selected view after refresh', async ({ page }) => {
+  await mockDashboardSpools(page)
+  await page.goto('/inventory')
+
+  await page.getByRole('button', { name: 'Table view' }).click()
+  await expect(page.getByRole('table', { name: 'Spool inventory' })).toBeVisible()
+  await page.reload()
+
+  await expect(page.getByRole('button', { name: 'Table view' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  )
+  await expect(page.getByRole('table', { name: 'Spool inventory' })).toBeVisible()
+})
+
+test('mobile new spool form in dark mode has no horizontal overflow', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 })
+  await useTheme(page, 'dark')
+  await mockSpoolCatalogs(page)
+  await page.goto('/inventory/new')
+
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('New Spool')
+  await expect(page.getByRole('combobox', { name: 'Manufacturer' })).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Material' })).toBeVisible()
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+  ).toBe(true)
+  await expect(page).toHaveScreenshot('new-spool-mobile-dark.png', {
     fullPage: true,
   })
 })

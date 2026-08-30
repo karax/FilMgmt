@@ -1,8 +1,12 @@
 import { AlertCircle } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 
+import { ActiveFilters } from '../components/inventory/ActiveFilters'
 import { InventoryEmptyState } from '../components/inventory/InventoryEmptyState'
 import { InventoryGrid } from '../components/inventory/InventoryGrid'
+import { InventoryFilters } from '../components/inventory/InventoryFilters'
+import { InventorySearch } from '../components/inventory/InventorySearch'
 import { InventorySkeleton } from '../components/inventory/InventorySkeleton'
 import { InventoryTable } from '../components/inventory/InventoryTable'
 import {
@@ -10,6 +14,12 @@ import {
   type InventoryView,
 } from '../components/inventory/InventoryToolbar'
 import { useSpools } from '../hooks/useSpools'
+import { useLocations } from '../hooks/useLocations'
+import { useManufacturers } from '../hooks/useManufacturers'
+import { useMaterials } from '../hooks/useMaterials'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
+import { activeFilterCount, filtersFromSearchParams, filtersToSearchParams } from '../lib/spoolFilters'
+import type { SpoolFilters } from '../types/spool'
 
 export const INVENTORY_VIEW_STORAGE_KEY = 'fcc-inventory-view'
 
@@ -25,7 +35,38 @@ function getInitialView(): InventoryView {
 
 export function InventoryPage() {
   const [view, setView] = useState<InventoryView>(getInitialView)
-  const { data: spools, error, isFetching, isPending, refetch } = useSpools()
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
+  const filters = filtersFromSearchParams(searchParams)
+  const [searchInput, setSearchInput] = useState(filters.search ?? '')
+  const debouncedSearch = useDebouncedValue(searchInput)
+  const { data: manufacturers = [] } = useManufacturers(filtersOpen || filters.manufacturerId !== undefined)
+  const { data: materials = [] } = useMaterials(filtersOpen || filters.materialId !== undefined)
+  const { data: locations = [] } = useLocations(filtersOpen || filters.locationId !== undefined)
+  const { data: spools, error, isFetching, isPending, refetch } = useSpools(filters)
+  const hasFilters = activeFilterCount(filters) > 0
+  const structuredFilterCount = activeFilterCount({ ...filters, search: undefined })
+
+  const applyFilters = (nextFilters: SpoolFilters) => setSearchParams(filtersToSearchParams(nextFilters))
+  useEffect(() => {
+    const search = debouncedSearch.trim() || undefined
+    if (search !== filters.search) applyFilters({ ...filters, search })
+  }, [debouncedSearch, filters])
+  useEffect(() => { setSearchInput(filters.search ?? '') }, [filters.search])
+  const removeFilter = (key: keyof SpoolFilters) => {
+    const nextFilters = { ...filters }
+    delete nextFilters[key]
+    applyFilters(nextFilters)
+  }
+  const filterLabels: Partial<Record<keyof SpoolFilters, string>> = {
+    search: filters.search ? `Search: “${filters.search}”` : undefined,
+    manufacturerId: manufacturers.find((item) => item.id === filters.manufacturerId)?.name ?? (filters.manufacturerId == null ? undefined : `Manufacturer ${filters.manufacturerId}`),
+    materialId: materials.find((item) => item.id === filters.materialId)?.name ?? (filters.materialId == null ? undefined : `Material ${filters.materialId}`),
+    locationId: locations.find((item) => item.id === filters.locationId)?.name ?? (filters.locationId == null ? undefined : `Location ${filters.locationId}`),
+    status: filters.status, needsDrying: filters.needsDrying === true ? 'Needs drying' : 'Does not need drying',
+    minWeightG: filters.minWeightG == null ? undefined : `Min ${filters.minWeightG} g`, maxWeightG: filters.maxWeightG == null ? undefined : `Max ${filters.maxWeightG} g`,
+    minRemainingPercent: filters.minRemainingPercent == null ? undefined : `Min ${filters.minRemainingPercent}%`, maxRemainingPercent: filters.maxRemainingPercent == null ? undefined : `Max ${filters.maxRemainingPercent}%`, includeArchived: 'Include archived',
+  }
 
   const changeView = (nextView: InventoryView) => {
     setView(nextView)
@@ -42,7 +83,21 @@ export function InventoryPage() {
         count={isPending ? null : error ? undefined : (spools?.length ?? 0)}
         onViewChange={changeView}
         view={view}
+        activeFilterCount={structuredFilterCount}
+        filtersOpen={filtersOpen}
+        onFiltersToggle={() => setFiltersOpen((open) => !open)}
       />
+
+      <InventorySearch onChange={setSearchInput} onClear={() => { setSearchInput(''); applyFilters({ ...filters, search: undefined }) }} value={searchInput} />
+
+      {filtersOpen && <InventoryFilters filters={filters} onApply={applyFilters} onClear={() => applyFilters({ search: filters.search })} />}
+      <ActiveFilters filters={filters} labels={filterLabels} onRemove={removeFilter} />
+
+      {typeof window.history.state?.usr?.createdSpoolCode === 'string' && (
+        <p className="mb-5 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-sm font-medium text-ink" role="status">
+          Spool {window.history.state.usr.createdSpoolCode} created successfully.
+        </p>
+      )}
 
       {isPending && <InventorySkeleton view={view} />}
 
@@ -81,7 +136,7 @@ export function InventoryPage() {
       )}
 
       {!isPending && !error && spools?.length === 0 && (
-        <InventoryEmptyState />
+        hasFilters ? <div className="rounded-lg border border-dashed border-line bg-surface px-5 py-14 text-center shadow-sm"><h3 className="text-lg font-semibold text-ink">{filters.search && structuredFilterCount === 0 ? `No spools found for “${filters.search}”.` : filters.search ? 'No spools match your search and filters.' : 'No spools match these filters.'}</h3><p className="mt-2 text-sm text-ink-muted">Try another search or clear the current filters.</p><div className="mt-5 flex justify-center gap-3">{filters.search && <button className="rounded-md border border-line px-4 py-2.5 text-sm font-bold text-ink" onClick={() => { setSearchInput(''); applyFilters({ ...filters, search: undefined }) }} type="button">Clear Search</button>}<button className="rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar" onClick={() => applyFilters({ search: filters.search })} type="button">Clear Filters</button></div></div> : <InventoryEmptyState />
       )}
     </section>
   )

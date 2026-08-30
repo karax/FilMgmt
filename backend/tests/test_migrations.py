@@ -32,6 +32,7 @@ def test_alembic_upgrade_and_downgrade_use_an_isolated_database(
             "materials",
             "spools",
             "weight_history",
+            "print_jobs",
         }
         spool_foreign_keys = {
             (foreign_key["constrained_columns"][0], foreign_key["referred_table"])
@@ -70,6 +71,25 @@ def test_alembic_upgrade_and_downgrade_use_an_isolated_database(
             "ck_weight_history_source",
             "ck_weight_history_weight_non_negative",
         }
+        print_job_foreign_keys = inspect(engine).get_foreign_keys("print_jobs")
+        assert len(print_job_foreign_keys) == 1
+        assert print_job_foreign_keys[0]["constrained_columns"] == ["spool_id"]
+        assert print_job_foreign_keys[0]["referred_table"] == "spools"
+        assert print_job_foreign_keys[0]["options"] == {"ondelete": "RESTRICT"}
+        assert {
+            index["name"] for index in inspect(engine).get_indexes("print_jobs")
+        } == {
+            "ix_print_jobs_spool_id",
+            "ix_print_jobs_status",
+            "uq_print_jobs_one_printing_per_spool",
+        }
+        assert {
+            column["name"] for column in inspect(engine).get_columns("print_jobs")
+        } >= {
+            "filament_cost_per_g",
+            "material_cost",
+            "material_cost_currency",
+        }
         with engine.connect() as connection:
             assert connection.execute(
                 text("SELECT version_num FROM alembic_version")
@@ -83,7 +103,23 @@ def test_alembic_upgrade_and_downgrade_use_an_isolated_database(
             "manufacturers",
             "materials",
             "spools",
+            "weight_history",
+            "print_jobs",
         }
+        assert {
+            index["name"] for index in inspect(engine).get_indexes("print_jobs")
+        } == {
+            "ix_print_jobs_spool_id",
+            "ix_print_jobs_status",
+            "uq_print_jobs_one_printing_per_spool",
+        }
+        assert {
+            column["name"] for column in inspect(engine).get_columns("print_jobs")
+        }.isdisjoint({
+            "filament_cost_per_g",
+            "material_cost",
+            "material_cost_currency",
+        })
 
         command.downgrade(alembic_config, "-1")
 
@@ -92,6 +128,23 @@ def test_alembic_upgrade_and_downgrade_use_an_isolated_database(
             "locations",
             "manufacturers",
             "materials",
+            "spools",
+            "weight_history",
+            "print_jobs",
+        }
+        assert {
+            index["name"] for index in inspect(engine).get_indexes("print_jobs")
+        } == {"ix_print_jobs_spool_id", "ix_print_jobs_status"}
+
+        command.downgrade(alembic_config, "-1")
+
+        assert set(inspect(engine).get_table_names()) == {
+            "alembic_version",
+            "locations",
+            "manufacturers",
+            "materials",
+            "spools",
+            "weight_history",
         }
 
         command.downgrade(alembic_config, "base")
@@ -110,6 +163,7 @@ def test_alembic_upgrade_and_downgrade_use_an_isolated_database(
             "materials",
             "spools",
             "weight_history",
+            "print_jobs",
         }
     finally:
         engine.dispose()

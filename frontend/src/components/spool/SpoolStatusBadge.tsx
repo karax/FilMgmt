@@ -1,6 +1,6 @@
 import type { SpoolStatus } from '../../types/spool'
 
-interface StatusBadgeProps {
+interface SpoolStatusBadgeProps {
   status: SpoolStatus
 }
 
@@ -15,7 +15,7 @@ const statusClasses: Record<SpoolStatus, string> = {
   ARCHIVED: 'border-slate-500/35 bg-slate-500/10 text-slate-700 dark:text-slate-300',
 }
 
-export function StatusBadge({ status }: StatusBadgeProps) {
+export function SpoolStatusBadge({ status }: SpoolStatusBadgeProps) {
   return (
     <span
       className={`inline-flex rounded border px-2 py-1 font-mono text-[0.62rem] font-bold tracking-[0.09em] ${statusClasses[status]}`}

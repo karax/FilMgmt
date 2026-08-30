@@ -5,6 +5,7 @@ from app.api.health import router as health_router
 from app.api.locations import router as locations_router
 from app.api.manufacturers import router as manufacturers_router
 from app.api.materials import router as materials_router
+from app.api.prints import router as prints_router
 from app.api.spools import router as spools_router
 
 app = FastAPI(title="Filament Command Center API", version="0.1.0")
@@ -25,4 +26,5 @@ app.include_router(health_router, prefix="/api")
 app.include_router(locations_router, prefix="/api")
 app.include_router(manufacturers_router, prefix="/api")
 app.include_router(materials_router, prefix="/api")
+app.include_router(prints_router, prefix="/api")
 app.include_router(spools_router, prefix="/api")

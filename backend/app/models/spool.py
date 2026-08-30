@@ -23,6 +23,7 @@ from app.db.base import Base
 from app.models.timestamps import utc_now
 
 if TYPE_CHECKING:
+    from app.models.print_job import PrintJob
     from app.models.weight_history import WeightHistory
 
 
@@ -219,6 +220,10 @@ class Spool(Base):
     weight_history: Mapped[list["WeightHistory"]] = relationship(
         back_populates="spool",
         order_by="WeightHistory.created_at",
+        passive_deletes="all",
+    )
+    print_jobs: Mapped[list["PrintJob"]] = relationship(
+        back_populates="spool",
         passive_deletes="all",
     )
 

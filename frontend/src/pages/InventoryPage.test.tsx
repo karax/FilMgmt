@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { makeSpool } from '../test/spoolFixture'
@@ -27,7 +28,7 @@ function createTestQueryClient() {
 function renderInventory(queryClient = createTestQueryClient()) {
   const rendered = render(
     <QueryClientProvider client={queryClient}>
-      <InventoryPage />
+      <MemoryRouter><InventoryPage /></MemoryRouter>
     </QueryClientProvider>,
   )
 
@@ -112,6 +113,10 @@ describe('InventoryPage', () => {
     }
     expect(within(card).getByText('Rack A / Slot 3')).toBeVisible()
     expect(within(card).getByLabelText('Color: Black')).toBeVisible()
+    expect(screen.getByRole('link', { name: 'View spool FIL-0001' })).toHaveAttribute(
+      'href',
+      '/spools/FIL-0001',
+    )
   })
 
   it('handles missing color and location without breaking the grid', async () => {
@@ -166,6 +171,10 @@ describe('InventoryPage', () => {
     expect(within(table).getByText('FIL-0001')).toBeVisible()
     expect(within(table).getByText('80.0%')).toBeVisible()
     expect(within(table).getByText('—')).toBeVisible()
+    expect(within(table).getByRole('link', { name: 'FIL-0001' })).toHaveAttribute(
+      'href',
+      '/spools/FIL-0001',
+    )
   })
 
   it('switches grid to table and back without fetching again', async () => {

@@ -1,6 +1,22 @@
 # Filament Command Center
 
-Aplicação self-hosted e local-first para gerenciamento inteligente de filamentos de impressoras 3D. Esta versão contém a base executável do backend e do frontend e a infraestrutura inicial de persistência, ainda sem modelos de domínio.
+Aplicação self-hosted e local-first para gerenciamento de filamentos de
+impressoras 3D. O projeto possui API FastAPI com persistência SQLite, CRUD de
+catálogos e spools, e um frontend React para acompanhar o inventário.
+
+## Estado atual
+
+- Dashboard operacional em `/`, com resumo de estoque, materiais e spools que
+  precisam de atenção.
+- Inventário operacional em `/inventory`, com Grid/Table, persistência da
+  preferência de visualização e estados loading, error e empty.
+- CRUD backend para Manufacturer, Material, Location e Spool.
+- Registro atômico de peso em `POST /api/spools/{code}/weight`, incluindo
+  histórico de peso e status derivado no backend.
+- Spools arquivados não são retornados pelo `GET /api/spools` padrão.
+
+Ainda não há filtros, busca, formulário de spool, detalhes de spool,
+autenticação ou integrações de hardware.
 
 ## Requisitos
 
@@ -18,10 +34,22 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
 A API estará disponível em `http://localhost:8000`. O health check poderá ser acessado em `http://localhost:8000/api/health` e a documentação interativa do FastAPI estará em `http://localhost:8000/docs`.
+
+Os principais recursos HTTP disponíveis são:
+
+- `GET /api/health`
+- CRUD em `/api/manufacturers`, `/api/materials` e `/api/locations`
+- CRUD em `/api/spools`, além de `POST /api/spools/{code}/weight` e
+  `POST /api/spools/{code}/archive`
+
+`GET /api/spools` retorna apenas spools ativos por padrão e aceita filtros
+estruturados já suportados pelo backend. O Dashboard e Inventory usam essa
+mesma fonte de dados; não existe endpoint específico de dashboard.
 
 Por padrão, o backend utiliza SQLite em `data/filament.db`. A URL pode ser substituída ao iniciar a aplicação por meio da variável de ambiente `DATABASE_URL`:
 
@@ -38,6 +66,9 @@ source .venv/bin/activate
 pip install -r requirements-dev.txt
 pytest
 ```
+
+Os testes de backend usam bancos isolados em memória ou em diretórios
+temporários e não devem alterar o banco local de desenvolvimento.
 
 ## Migrations do banco de dados
 
@@ -79,6 +110,34 @@ para um arquivo SQLite temporário:
 DATABASE_URL="sqlite+pysqlite:////tmp/filament-migration-test.db" alembic upgrade head
 ```
 
+## Seed manufacturers
+
+Para inserir uma seleção inicial de fabricantes de filamento sem sobrescrever
+websites já configurados pelo usuário, execute:
+
+```bash
+cd backend
+source .venv/bin/activate
+python -m app.scripts.seed_manufacturers
+```
+
+O comando usa a mesma configuração `DATABASE_URL` da aplicação, é idempotente
+e não cria spools ou materiais.
+
+## Seed materials
+
+Para inserir o catálogo técnico canônico de materiais, execute:
+
+```bash
+cd backend
+source .venv/bin/activate
+python -m app.scripts.seed_materials
+```
+
+O seed é idempotente e preserva valores já configurados. Materiais representam
+perfis técnicos reutilizáveis; nomes comerciais pertencem ao `product_name` do
+spool. Veja também [a cobertura do catálogo](docs/material-catalog-coverage.md).
+
 ## Frontend
 
 Instale as dependências e inicie o servidor de desenvolvimento:
@@ -102,6 +161,19 @@ Para o desenvolvimento local, o backend aceita leituras CORS originadas pelo
 Vite em `localhost` ou `127.0.0.1`, nas portas `5173` e `4173`. Outras origens
 não são liberadas por padrão.
 
+### Páginas disponíveis
+
+| Rota | Estado |
+| --- | --- |
+| `/` | Dashboard com totais, materiais e spools críticos. |
+| `/inventory` | Inventário de spools em Grid ou Table. |
+| `/prints`, `/advisor`, `/analytics`, `/settings` | Estrutura visual preparada para módulos futuros. |
+
+O frontend usa TanStack Query para `GET /api/spools`. A preferência Grid/Table
+é local ao dispositivo e fica em `localStorage` na chave `fcc-inventory-view`.
+Os valores de status e percentuais vêm do backend; o frontend não reproduz
+regras de LOW.
+
 Para gerar a compilação de produção:
 
 ```bash
@@ -110,6 +182,15 @@ npm run build
 ```
 
 Os arquivos gerados ficarão em `frontend/dist/`.
+
+Para executar os testes unitários e de componentes:
+
+```bash
+cd frontend
+npm test
+```
+
+Não há script de lint configurado atualmente.
 
 ### Testes visuais
 
@@ -127,8 +208,9 @@ Execute a suíte e compare a interface com as imagens de referência:
 npm run test:visual
 ```
 
-Os cenários cobrem o dashboard desktop em tema claro, o inventário desktop em
-tema escuro e o inventário móvel com o menu aberto. O relatório HTML é salvo em
+Os cenários cobrem Dashboard em desktop claro e mobile escuro, Inventory em
+tabela desktop escura, Inventory em grid mobile com drawer e a persistência da
+visualização após refresh. O relatório HTML é salvo em
 `frontend/playwright-report/` e evidências de falha em
 `frontend/test-results/playwright/`.
 
@@ -157,4 +239,10 @@ npm run test:visual:update
 └── data/             # Dados locais gerados em tempo de execução
 ```
 
-O projeto ainda não implementa modelos ou tabelas de domínio, inventário de filamentos, autenticação ou integrações de hardware.
+## Limitações atuais
+
+- Não há filtros ou busca no frontend do Inventory.
+- Não há criação, edição, arquivamento ou atualização de peso via interface.
+- Não há página de detalhes de spool.
+- Autenticação, MQTT, ESP32, sensores, QR/NFC, upload de G-code e PrintJobs
+  ainda não foram implementados.

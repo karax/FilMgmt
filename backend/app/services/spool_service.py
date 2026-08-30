@@ -10,6 +10,10 @@ from app.models import (
     SpoolStatus,
     WeightHistory,
 )
+from app.services.spool_weight_service import (
+    SpoolWeightOutOfRangeError,
+    apply_spool_weight_update,
+)
 from app.models.timestamps import utc_now
 from app.schemas import (
     SpoolCreate,
@@ -197,19 +201,18 @@ class SpoolService:
         spool = self.get_spool_by_code(code)
         if self._is_archived(spool):
             raise SpoolArchivedUpdateError
-        if payload.weight_g > spool.initial_filament_weight_g:
-            raise SpoolWeightExceedsInitialError
-
         try:
-            spool.current_filament_weight_g = payload.weight_g
-            update_inventory_status(spool)
-            self.db.add(
-                WeightHistory(
-                    spool_id=spool.id,
-                    **payload.model_dump(),
-                )
+            apply_spool_weight_update(
+                self.db,
+                spool,
+                payload.weight_g,
+                payload.source,
+                payload.notes,
             )
             self.db.commit()
+        except SpoolWeightOutOfRangeError as error:
+            self.db.rollback()
+            raise SpoolWeightExceedsInitialError from error
         except SQLAlchemyError as error:
             self.db.rollback()
             raise SpoolDataConflictError from error
