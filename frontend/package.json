@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run --pool=threads --maxWorkers=1 --reporter=verbose",
     "test:visual:install": "PLAYWRIGHT_BROWSERS_PATH=0 playwright install chromium",
     "test:visual": "PLAYWRIGHT_BROWSERS_PATH=0 playwright test",
     "test:visual:update": "PLAYWRIGHT_BROWSERS_PATH=0 playwright test --update-snapshots"
@@ -15,9 +16,11 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-query": "^5.102.8",
+    "i18next": "^26.4.0",
     "lucide-react": "^1.37.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "react-i18next": "^17.0.12",
     "react-router-dom": "^7.18.3",
     "tailwindcss": "^4.3.3"
   },

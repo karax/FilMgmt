@@ -33,6 +33,7 @@ export function makeSpool(overrides: Partial<Spool> = {}): Spool {
       updated_at: '2026-08-01T12:00:00Z',
     },
     location: null,
+    display_name: null,
     product_name: null,
     color_name: 'Black',
     color_hex: '#000000',

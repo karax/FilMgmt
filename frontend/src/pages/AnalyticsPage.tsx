@@ -1,11 +1,13 @@
 import { PagePlaceholder } from '../components/layout/PagePlaceholder'
+import { useTranslation } from 'react-i18next'
 
 export function AnalyticsPage() {
+  const { t } = useTranslation()
   return (
     <PagePlaceholder
-      description="Review filament usage and printing statistics."
+      description={t('placeholders.analyticsDescription')}
       moduleCode="05"
-      title="Analytics"
+      title={t('placeholders.analyticsTitle')}
     />
   )
 }

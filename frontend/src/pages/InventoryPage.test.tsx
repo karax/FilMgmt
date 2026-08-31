@@ -108,7 +108,7 @@ describe('InventoryPage', () => {
     const card = cardHeading.closest('article')
     if (!card) throw new Error('Spool card not found')
     expect(screen.getByText('1 spool')).toBeVisible()
-    for (const text of ['eSUN', 'PLA', 'Black', '800 g', '80.0%', 'OPEN']) {
+    for (const text of ['eSUN', 'PLA', 'Black', '800 g', '80.0%', 'Open']) {
       expect(within(card).getByText(text)).toBeVisible()
     }
     expect(within(card).getByText('Rack A / Slot 3')).toBeVisible()
@@ -141,8 +141,8 @@ describe('InventoryPage', () => {
 
     renderInventory()
 
-    expect(await screen.findByText('LOW')).toBeVisible()
-    expect(screen.getByText('EMPTY')).toBeVisible()
+    expect(await screen.findByText('Low')).toBeVisible()
+    expect(screen.getByText('Empty')).toBeVisible()
   })
 
   it('renders a semantic table with essential columns', async () => {
@@ -157,7 +157,7 @@ describe('InventoryPage', () => {
     const table = screen.getByRole('table', { name: 'Spool inventory' })
     expect(table).toBeVisible()
     for (const column of [
-      'Code',
+      'Spool',
       'Manufacturer',
       'Material',
       'Color',

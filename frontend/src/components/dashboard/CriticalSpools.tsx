@@ -1,5 +1,6 @@
 import { AlertTriangle, ArrowRight, Droplets } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import { SpoolColorIndicator } from '../spool/SpoolColorIndicator'
 import { SpoolStatusBadge } from '../spool/SpoolStatusBadge'
@@ -11,6 +12,7 @@ interface CriticalSpoolsProps {
 }
 
 export function CriticalSpools({ spools }: CriticalSpoolsProps) {
+  const { t } = useTranslation()
   return (
     <section
       aria-labelledby="critical-title"
@@ -27,17 +29,17 @@ export function CriticalSpools({ spools }: CriticalSpoolsProps) {
           </span>
           <div className="min-w-0">
             <h2 className="truncate text-base font-semibold tracking-tight" id="critical-title">
-              Needs Attention
+              {t('dashboard.attention')}
             </h2>
-            <p className="text-xs text-ink-muted">Most critical active spools</p>
+            <p className="text-xs text-ink-muted">{t('dashboard.description')}</p>
           </div>
         </div>
         <Link
           className="group flex shrink-0 items-center gap-1.5 rounded-md text-xs font-semibold text-accent focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
           to="/inventory"
         >
-          <span className="hidden sm:inline">View Inventory</span>
-          <span className="sm:hidden">View</span>
+          <span className="hidden sm:inline">{t('inventory.title')}</span>
+          <span className="sm:hidden">{t('common.appName')}</span>
           <ArrowRight
             aria-hidden="true"
             className="size-3.5 transition-transform group-hover:translate-x-0.5"
@@ -47,9 +49,9 @@ export function CriticalSpools({ spools }: CriticalSpoolsProps) {
 
       {spools.length === 0 ? (
         <div className="px-5 py-8 sm:px-6">
-          <p className="text-sm font-medium text-ink">No critical spools.</p>
+          <p className="text-sm font-medium text-ink">{t('dashboard.criticalEmpty')}</p>
           <p className="mt-1 text-sm text-ink-muted">
-            Low, empty, and drying alerts will appear here.
+            {t('dashboard.criticalEmptyDescription')}
           </p>
         </div>
       ) : (
@@ -64,9 +66,7 @@ export function CriticalSpools({ spools }: CriticalSpoolsProps) {
                     colorName={spool.color_name}
                   />
                   <div className="min-w-0">
-                    <h3 className="font-mono text-sm font-bold tracking-wide text-ink">
-                      {spool.code}
-                    </h3>
+                    {spool.display_name ? <><h3 className="truncate text-sm font-semibold text-ink">{spool.display_name}</h3><p className="mt-1 font-mono text-sm font-bold tracking-wide text-ink">{spool.code}</p></> : <h3 className="font-mono text-sm font-bold tracking-wide text-ink">{spool.code}</h3>}
                     <p className="mt-1 truncate text-sm text-ink-muted">
                       {spool.manufacturer.name} {spool.material.name}{' '}
                       <span className="text-ink">{spool.color_name}</span>

@@ -1,4 +1,5 @@
 import { Boxes } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 import { formatWeight, type MaterialGroup } from '../../lib/inventory'
 
@@ -7,6 +8,7 @@ interface MaterialSummaryProps {
 }
 
 export function MaterialSummary({ groups }: MaterialSummaryProps) {
+  const { t } = useTranslation()
   return (
     <section
       aria-labelledby="materials-title"
@@ -18,15 +20,15 @@ export function MaterialSummary({ groups }: MaterialSummaryProps) {
         </span>
         <div>
           <h2 className="text-base font-semibold tracking-tight" id="materials-title">
-            Materials
+            {t('dashboard.materials')}
           </h2>
-          <p className="text-xs text-ink-muted">Active stock by material</p>
+          <p className="text-xs text-ink-muted">{t('dashboard.active')} · {t('inventory.material').toLowerCase()}</p>
         </div>
       </div>
 
       {groups.length === 0 ? (
         <p className="px-5 py-8 text-sm text-ink-muted sm:px-6">
-          Material totals will appear when spools are added.
+          {t('dashboard.noSpoolsDescription')}
         </p>
       ) : (
         <ul className="divide-y divide-line" role="list">
@@ -44,7 +46,7 @@ export function MaterialSummary({ groups }: MaterialSummaryProps) {
               <div className="text-right">
                 <p className="font-semibold text-ink">{formatWeight(totalWeightG)}</p>
                 <p className="mt-0.5 text-xs text-ink-muted">
-                  {spoolCount} {spoolCount === 1 ? 'spool' : 'spools'}
+                  {t('inventory.spool', { count: spoolCount })}
                 </p>
               </div>
             </li>

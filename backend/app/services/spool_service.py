@@ -53,6 +53,10 @@ class SpoolArchivedUpdateError(Exception):
     """Raised when a mutable operation targets an archived spool."""
 
 
+class SpoolInUseArchiveError(Exception):
+    """Raised when an active print still owns the spool."""
+
+
 class SpoolWeightExceedsInitialError(Exception):
     """Raised when a measurement exceeds the spool's initial weight."""
 
@@ -116,6 +120,7 @@ class SpoolService:
             conditions.append(
                 or_(
                     Spool.code.ilike(search_pattern, escape="\\"),
+                    Spool.display_name.ilike(search_pattern, escape="\\"),
                     Spool.product_name.ilike(search_pattern, escape="\\"),
                     Spool.color_name.ilike(search_pattern, escape="\\"),
                     Spool.manufacturer.has(
@@ -226,6 +231,9 @@ class SpoolService:
             and spool.archived_at is not None
         ):
             return spool
+
+        if spool.status is SpoolStatus.IN_USE:
+            raise SpoolInUseArchiveError
 
         spool.status = SpoolStatus.ARCHIVED
         if spool.archived_at is None:

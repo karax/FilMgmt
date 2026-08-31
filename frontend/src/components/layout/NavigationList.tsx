@@ -1,11 +1,13 @@
 import { NavLink } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import { navigationItems } from '../../navigation'
 
 export function NavigationList() {
+  const { t } = useTranslation()
   return (
     <ul className="space-y-1" role="list">
-      {navigationItems.map(({ icon: Icon, label, path }) => (
+      {navigationItems.map(({ icon: Icon, labelKey, path }) => (
         <li key={path}>
           <NavLink
             className={({ isActive }) =>
@@ -24,7 +26,7 @@ export function NavigationList() {
               className="size-[1.1rem] shrink-0"
               strokeWidth={1.8}
             />
-            <span>{label}</span>
+            <span>{t(labelKey)}</span>
           </NavLink>
         </li>
       ))}

@@ -239,6 +239,14 @@ npm run test:visual:update
 └── data/             # Dados locais gerados em tempo de execução
 ```
 
+## Idiomas
+
+O frontend oferece Português (Brasil) (`pt-BR`) e English (`en`). O idioma
+inicial é `pt-BR`; a preferência é armazenada localmente na chave
+`fcc-language` e pode ser alterada em **Configurações → Idioma**. Para incluir
+novas traduções, adicione as chaves correspondentes em
+`frontend/src/i18n/locales/`.
+
 ## Limitações atuais
 
 - Não há filtros ou busca no frontend do Inventory.

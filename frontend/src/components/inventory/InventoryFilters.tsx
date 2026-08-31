@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { useLocations } from '../../hooks/useLocations'
 import { useManufacturers } from '../../hooks/useManufacturers'
@@ -9,6 +10,7 @@ import type { SpoolFilters, SpoolStatus } from '../../types/spool'
 interface InventoryFiltersProps { filters: SpoolFilters; onApply: (filters: SpoolFilters) => void; onClear: () => void }
 
 export function InventoryFilters({ filters, onApply, onClear }: InventoryFiltersProps) {
+  const { t } = useTranslation()
   const [draft, setDraft] = useState(filters)
   const [validationError, setValidationError] = useState<string | null>(null)
   const { data: manufacturers = [] } = useManufacturers()
@@ -20,27 +22,27 @@ export function InventoryFilters({ filters, onApply, onClear }: InventoryFilters
   const number = (key: keyof SpoolFilters, raw: string) => set(key, raw === '' ? undefined : Number(raw) as never)
   const apply = () => {
     const values = [draft.minWeightG, draft.maxWeightG, draft.minRemainingPercent, draft.maxRemainingPercent]
-    if (values.some((value) => value != null && (!Number.isFinite(value) || value < 0)) || [draft.minRemainingPercent, draft.maxRemainingPercent].some((value) => value != null && value > 100)) { setValidationError('Weight must be zero or greater and remaining percentage must be between 0 and 100.'); return }
-    if ((draft.minWeightG != null && draft.maxWeightG != null && draft.minWeightG > draft.maxWeightG) || (draft.minRemainingPercent != null && draft.maxRemainingPercent != null && draft.minRemainingPercent > draft.maxRemainingPercent)) { setValidationError('Minimum values must not exceed maximum values.'); return }
+    if (values.some((value) => value != null && (!Number.isFinite(value) || value < 0)) || [draft.minRemainingPercent, draft.maxRemainingPercent].some((value) => value != null && value > 100)) { setValidationError(t('filters.invalidRange')); return }
+    if ((draft.minWeightG != null && draft.maxWeightG != null && draft.minWeightG > draft.maxWeightG) || (draft.minRemainingPercent != null && draft.maxRemainingPercent != null && draft.minRemainingPercent > draft.maxRemainingPercent)) { setValidationError(t('filters.invalidMinMax')); return }
     setValidationError(null); onApply(draft)
   }
   const clear = () => { setDraft({}); setValidationError(null); onClear() }
 
   return <form className="mb-6 rounded-lg border border-line bg-surface p-4 shadow-sm sm:p-5" onSubmit={(event) => { event.preventDefault(); apply() }}>
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      <FilterSelect id="manufacturer" label="Manufacturer" onChange={(value) => set('manufacturerId', value ? Number(value) : undefined)} value={draft.manufacturerId ?? ''}><option value="">All manufacturers</option>{manufacturers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</FilterSelect>
-      <FilterSelect id="material" label="Material" onChange={(value) => set('materialId', value ? Number(value) : undefined)} value={draft.materialId ?? ''}><option value="">All materials</option>{materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</FilterSelect>
-      <FilterSelect id="location" label="Location" onChange={(value) => set('locationId', value ? Number(value) : undefined)} value={draft.locationId ?? ''}><option value="">All locations</option>{locations.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</FilterSelect>
-      <FilterSelect id="status" label="Status" onChange={(value) => set('status', value ? value as SpoolStatus : undefined)} value={draft.status ?? ''}><option value="">All statuses</option>{spoolStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</FilterSelect>
-      <FilterSelect id="needs-drying" label="Needs drying" onChange={(value) => set('needsDrying', value === '' ? undefined : value === 'true')} value={draft.needsDrying === undefined ? '' : String(draft.needsDrying)}><option value="">Any</option><option value="true">Needs drying</option><option value="false">Does not need drying</option></FilterSelect>
-      <NumberInput id="min-weight" label="Minimum weight" max={undefined} onChange={(value) => number('minWeightG', value)} suffix="g" value={draft.minWeightG} />
-      <NumberInput id="max-weight" label="Maximum weight" max={undefined} onChange={(value) => number('maxWeightG', value)} suffix="g" value={draft.maxWeightG} />
-      <label className="flex items-end gap-2 pb-2 text-sm font-medium text-ink"><input checked={draft.includeArchived === true} className="size-4 accent-accent" onChange={(event) => set('includeArchived', event.target.checked ? true : undefined)} type="checkbox" />Include archived</label>
-      <NumberInput id="min-remaining" label="Minimum remaining" max={100} onChange={(value) => number('minRemainingPercent', value)} suffix="%" value={draft.minRemainingPercent} />
-      <NumberInput id="max-remaining" label="Maximum remaining" max={100} onChange={(value) => number('maxRemainingPercent', value)} suffix="%" value={draft.maxRemainingPercent} />
+      <FilterSelect id="manufacturer" label={t('inventory.manufacturer')} onChange={(value) => set('manufacturerId', value ? Number(value) : undefined)} value={draft.manufacturerId ?? ''}><option value="">{t('filters.allManufacturers')}</option>{manufacturers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</FilterSelect>
+      <FilterSelect id="material" label={t('inventory.material')} onChange={(value) => set('materialId', value ? Number(value) : undefined)} value={draft.materialId ?? ''}><option value="">{t('filters.allMaterials')}</option>{materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</FilterSelect>
+      <FilterSelect id="location" label={t('inventory.location')} onChange={(value) => set('locationId', value ? Number(value) : undefined)} value={draft.locationId ?? ''}><option value="">{t('filters.allLocations')}</option>{locations.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</FilterSelect>
+      <FilterSelect id="status" label={t('inventory.status')} onChange={(value) => set('status', value ? value as SpoolStatus : undefined)} value={draft.status ?? ''}><option value="">{t('filters.allStatuses')}</option>{spoolStatuses.map((status) => <option key={status} value={status}>{t(`status.${status}`)}</option>)}</FilterSelect>
+      <FilterSelect id="needs-drying" label={t('filters.needsDrying')} onChange={(value) => set('needsDrying', value === '' ? undefined : value === 'true')} value={draft.needsDrying === undefined ? '' : String(draft.needsDrying)}><option value="">{t('filters.any')}</option><option value="true">{t('filters.needsDrying')}</option><option value="false">{t('filters.doesNotNeedDrying')}</option></FilterSelect>
+      <NumberInput id="min-weight" label={t('filters.minWeight')} max={undefined} onChange={(value) => number('minWeightG', value)} suffix="g" value={draft.minWeightG} />
+      <NumberInput id="max-weight" label={t('filters.maxWeight')} max={undefined} onChange={(value) => number('maxWeightG', value)} suffix="g" value={draft.maxWeightG} />
+      <label className="flex items-end gap-2 pb-2 text-sm font-medium text-ink"><input checked={draft.includeArchived === true} className="size-4 accent-accent" onChange={(event) => set('includeArchived', event.target.checked ? true : undefined)} type="checkbox" />{t('filters.includeArchived')}</label>
+      <NumberInput id="min-remaining" label={t('filters.minRemaining')} max={100} onChange={(value) => number('minRemainingPercent', value)} suffix="%" value={draft.minRemainingPercent} />
+      <NumberInput id="max-remaining" label={t('filters.maxRemaining')} max={100} onChange={(value) => number('maxRemainingPercent', value)} suffix="%" value={draft.maxRemainingPercent} />
     </div>
     {validationError && <p className="mt-4 text-sm font-medium text-red-600 dark:text-red-400" role="alert">{validationError}</p>}
-    <div className="mt-5 flex flex-wrap justify-end gap-3"><button className="rounded-md px-4 py-2 text-sm font-semibold text-ink-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" onClick={clear} type="button">Clear Filters</button><button className="rounded-md bg-accent px-4 py-2 text-sm font-bold text-sidebar focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" type="submit">Apply Filters</button></div>
+    <div className="mt-5 flex flex-wrap justify-end gap-3"><button className="rounded-md px-4 py-2 text-sm font-semibold text-ink-muted hover:text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" onClick={clear} type="button">{t('inventory.clearFilters')}</button><button className="rounded-md bg-accent px-4 py-2 text-sm font-bold text-sidebar focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" type="submit">{t('inventory.applyFilters')}</button></div>
   </form>
 }
 

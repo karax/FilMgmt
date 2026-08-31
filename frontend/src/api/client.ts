@@ -18,6 +18,19 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Uses an API-error shape rather than only `instanceof`. Vite HMR can retain
+ * an error created by an earlier module instance, for which `instanceof`
+ * would incorrectly return false.
+ */
+export function isApiError(error: unknown): error is ApiError {
+  return typeof error === 'object'
+    && error !== null
+    && 'status' in error
+    && typeof (error as { status?: unknown }).status === 'number'
+    && 'detail' in error
+}
+
 async function request<T>(
   path: string,
   init: RequestInit,
@@ -38,6 +51,7 @@ async function request<T>(
     )
   }
 
+  if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
 }
 
@@ -54,4 +68,20 @@ export function apiPost<TResponse, TPayload>(
     headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
+}
+
+export function apiPostWithoutBody<TResponse>(path: string): Promise<TResponse> {
+  return request<TResponse>(path, { method: 'POST' })
+}
+
+export function apiPatch<TResponse, TPayload>(path: string, payload: TPayload): Promise<TResponse> {
+  return request<TResponse>(path, {
+    method: 'PATCH',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
+export function apiDelete(path: string): Promise<void> {
+  return request<void>(path, { method: 'DELETE' })
 }

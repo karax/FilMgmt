@@ -9,31 +9,29 @@ import {
 } from 'lucide-react'
 
 export interface NavigationItem {
-  label: string
-  title: string
+  labelKey: string
   path: string
   icon: LucideIcon
 }
 
 export const navigationItems: readonly NavigationItem[] = [
-  { label: 'Dashboard', title: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { label: 'Inventory', title: 'Inventory', path: '/inventory', icon: PackageOpen },
-  { label: 'Prints', title: 'Prints', path: '/prints', icon: Printer },
-  { label: 'Advisor', title: 'Filament Advisor', path: '/advisor', icon: Lightbulb },
+  { labelKey: 'navigation.dashboard', path: '/', icon: LayoutDashboard },
+  { labelKey: 'navigation.inventory', path: '/inventory', icon: PackageOpen },
+  { labelKey: 'navigation.prints', path: '/prints', icon: Printer },
+  { labelKey: 'navigation.advisor', path: '/advisor', icon: Lightbulb },
   {
-    label: 'Analytics',
-    title: 'Analytics',
+    labelKey: 'navigation.analytics',
     path: '/analytics',
     icon: ChartNoAxesCombined,
   },
-  { label: 'Settings', title: 'Settings', path: '/settings', icon: Settings2 },
+  { labelKey: 'navigation.settings', path: '/settings', icon: Settings2 },
 ]
 
-export function getPageTitle(pathname: string): string {
-  if (pathname === '/inventory/new') return 'New Spool'
+export function getPageTitleKey(pathname: string): string {
+  if (pathname === '/inventory/new') return 'spool.new'
+  if (pathname === '/prints/new') return 'prints.actions.new'
+  if (pathname.startsWith('/prints/') && pathname.endsWith('/edit')) return 'prints.actions.edit'
+  if (pathname.endsWith('/edit')) return 'spool.edit'
 
-  return (
-    navigationItems.find((item) => item.path === pathname)?.title ??
-    'Filament Command Center'
-  )
+  return navigationItems.find((item) => item.path === pathname)?.labelKey ?? 'common.appName'
 }

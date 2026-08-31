@@ -206,6 +206,7 @@ describe('NewSpoolPage', () => {
     await screen.findByLabelText('Manufacturer')
     await fillRequired(user)
     await user.selectOptions(screen.getByRole('combobox', { name: /Location/ }), '3')
+    await user.type(screen.getByRole('textbox', { name: /Spool Name/ }), 'PLA Preto Principal')
     await user.type(screen.getByRole('textbox', { name: /Product Name/ }), 'PLA+ HS')
     await user.click(screen.getByRole('button', { name: 'Create Spool' }))
 
@@ -213,13 +214,13 @@ describe('NewSpoolPage', () => {
     const postCall = vi.mocked(fetch).mock.calls.find(([, init]) => init?.method === 'POST')
     expect(postCall).toBeDefined()
     const payload = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>
-    expect(payload).toMatchObject({ manufacturer_id: 1, material_id: 2, location_id: 3, product_name: 'PLA+ HS', color_name: 'Black', status: 'SEALED' })
+    expect(payload).toMatchObject({ manufacturer_id: 1, material_id: 2, location_id: 3, display_name: 'PLA Preto Principal', product_name: 'PLA+ HS', color_name: 'Black', status: 'SEALED' })
     expect(payload).not.toHaveProperty('code')
     expect(payload).not.toHaveProperty('remaining_percent')
     expect(queryClient.isFetching({ queryKey: ['spools'] })).toBe(0)
   })
 
-  it('shows an actionable API validation error and prevents duplicate submit while pending', async () => {
+  it('maps FastAPI 422 field errors, focuses the first field, and preserves values', async () => {
     let resolvePost: ((value: Response) => void) | undefined
     const pendingPost = new Promise<Response>((resolve) => { resolvePost = resolve })
     mockCatalogs({ post: pendingPost as unknown as Response })
@@ -228,8 +229,17 @@ describe('NewSpoolPage', () => {
     await fillRequired(user)
     await user.click(screen.getByRole('button', { name: 'Create Spool' }))
     expect(screen.getByRole('button', { name: 'Creating…' })).toBeDisabled()
-    resolvePost?.(response({ detail: [{ msg: 'bad input' }] }, 422))
-    expect(await screen.findByText('Some values were rejected. Review the highlighted fields.')).toBeVisible()
+    resolvePost?.(response({ detail: [
+      { loc: ['body', 'initial_filament_weight_g'], msg: 'Input should be greater than 0' },
+      { loc: ['body', 'color_hex'], msg: 'String should match pattern' },
+    ] }, 422))
+    expect(await screen.findByText('Some fields need to be corrected. Review the highlighted fields.')).toBeVisible()
+    const initialWeight = screen.getByRole('spinbutton', { name: /Initial Filament Weight/ })
+    expect(initialWeight).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByText('Input should be greater than 0')).toBeVisible()
+    expect(screen.getByLabelText('Color Hex')).toHaveAttribute('aria-invalid', 'true')
+    await waitFor(() => expect(initialWeight).toHaveFocus())
+    expect(screen.getByRole('textbox', { name: /Color Name/ })).toHaveValue('Black')
   })
 
   it('keeps the form usable without locations but blocks empty manufacturers', async () => {

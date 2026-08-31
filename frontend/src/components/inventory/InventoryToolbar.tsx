@@ -1,4 +1,5 @@
 import { Grid2X2, Plus, SlidersHorizontal, TableProperties } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export type InventoryView = 'grid' | 'table'
 
@@ -19,12 +20,13 @@ export function InventoryToolbar({
   filtersOpen,
   onFiltersToggle,
 }: InventoryToolbarProps) {
+  const { t } = useTranslation()
   const countLabel =
     count === null
-      ? 'Loading spools…'
+      ? t('common.retry')
       : count === undefined
-        ? 'Spool count unavailable'
-      : `${count} ${count === 1 ? 'spool' : 'spools'}`
+        ? '—'
+      : t('inventory.spool', { count })
 
   return (
     <div className="mb-6 border-b border-line pb-5 sm:flex sm:items-end sm:justify-between sm:gap-6">
@@ -39,10 +41,10 @@ export function InventoryToolbar({
           className="text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl"
           id="inventory-title"
         >
-          Inventory
+          {t('inventory.title')}
         </h2>
         <p className="mt-2 text-sm leading-6 text-ink-muted sm:text-base">
-          Manage and track your filament spools.
+          {t('inventory.description')}
         </p>
         <p className="mt-2 font-mono text-xs font-semibold text-ink" aria-live="polite">
           {countLabel}
@@ -50,8 +52,8 @@ export function InventoryToolbar({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 sm:mt-0">
-        <button aria-expanded={filtersOpen} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-line bg-surface px-3.5 text-sm font-bold text-ink transition-colors hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" onClick={onFiltersToggle} type="button"><SlidersHorizontal aria-hidden="true" className="size-4" />Filters{activeFilterCount ? ` (${activeFilterCount})` : ''}</button>
-        <a className="inline-flex min-h-10 items-center gap-2 rounded-md bg-accent px-3.5 text-sm font-bold text-sidebar transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href="/inventory/new"><Plus aria-hidden="true" className="size-4" />Add Spool</a>
+        <button aria-expanded={filtersOpen} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-line bg-surface px-3.5 text-sm font-bold text-ink transition-colors hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" onClick={onFiltersToggle} type="button"><SlidersHorizontal aria-hidden="true" className="size-4" />{t('inventory.filters')}{activeFilterCount ? ` (${activeFilterCount})` : ''}</button>
+        <a className="inline-flex min-h-10 items-center gap-2 rounded-md bg-accent px-3.5 text-sm font-bold text-sidebar transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href="/inventory/new"><Plus aria-hidden="true" className="size-4" />{t('inventory.add')}</a>
         <div
           aria-label="Inventory view"
           className="inline-flex rounded-md border border-line bg-surface p-1 shadow-sm"
@@ -60,13 +62,15 @@ export function InventoryToolbar({
           <ViewButton
             active={view === 'grid'}
             icon={Grid2X2}
-            label="Grid view"
+            label={t('inventory.grid')}
+            ariaLabel={t('inventory.gridView')}
             onClick={() => onViewChange('grid')}
           />
           <ViewButton
             active={view === 'table'}
             icon={TableProperties}
-            label="Table view"
+            label={t('inventory.table')}
+            ariaLabel={t('inventory.tableView')}
             onClick={() => onViewChange('table')}
           />
         </div>
@@ -79,13 +83,14 @@ interface ViewButtonProps {
   active: boolean
   icon: typeof Grid2X2
   label: string
+  ariaLabel: string
   onClick: () => void
 }
 
-function ViewButton({ active, icon: Icon, label, onClick }: ViewButtonProps) {
+function ViewButton({ active, icon: Icon, label, ariaLabel, onClick }: ViewButtonProps) {
   return (
     <button
-      aria-label={label}
+      aria-label={ariaLabel}
       aria-pressed={active}
       className={`inline-flex min-h-9 items-center gap-2 rounded px-3 text-xs font-bold uppercase tracking-[0.1em] transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
         active
@@ -96,7 +101,7 @@ function ViewButton({ active, icon: Icon, label, onClick }: ViewButtonProps) {
       type="button"
     >
       <Icon aria-hidden="true" className="size-4" strokeWidth={1.8} />
-      <span>{label.replace(' view', '')}</span>
+      <span>{label}</span>
     </button>
   )
 }

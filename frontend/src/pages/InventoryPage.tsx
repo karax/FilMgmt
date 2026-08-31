@@ -1,5 +1,6 @@
 import { AlertCircle } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams } from 'react-router-dom'
 
 import { ActiveFilters } from '../components/inventory/ActiveFilters'
@@ -34,6 +35,7 @@ function getInitialView(): InventoryView {
 }
 
 export function InventoryPage() {
+  const { t } = useTranslation()
   const [view, setView] = useState<InventoryView>(getInitialView)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [searchParams, setSearchParams] = useSearchParams()
@@ -59,13 +61,13 @@ export function InventoryPage() {
     applyFilters(nextFilters)
   }
   const filterLabels: Partial<Record<keyof SpoolFilters, string>> = {
-    search: filters.search ? `Search: “${filters.search}”` : undefined,
-    manufacturerId: manufacturers.find((item) => item.id === filters.manufacturerId)?.name ?? (filters.manufacturerId == null ? undefined : `Manufacturer ${filters.manufacturerId}`),
-    materialId: materials.find((item) => item.id === filters.materialId)?.name ?? (filters.materialId == null ? undefined : `Material ${filters.materialId}`),
-    locationId: locations.find((item) => item.id === filters.locationId)?.name ?? (filters.locationId == null ? undefined : `Location ${filters.locationId}`),
-    status: filters.status, needsDrying: filters.needsDrying === true ? 'Needs drying' : 'Does not need drying',
-    minWeightG: filters.minWeightG == null ? undefined : `Min ${filters.minWeightG} g`, maxWeightG: filters.maxWeightG == null ? undefined : `Max ${filters.maxWeightG} g`,
-    minRemainingPercent: filters.minRemainingPercent == null ? undefined : `Min ${filters.minRemainingPercent}%`, maxRemainingPercent: filters.maxRemainingPercent == null ? undefined : `Max ${filters.maxRemainingPercent}%`, includeArchived: 'Include archived',
+    search: filters.search ? `${t('inventory.search')}: “${filters.search}”` : undefined,
+    manufacturerId: manufacturers.find((item) => item.id === filters.manufacturerId)?.name ?? (filters.manufacturerId == null ? undefined : `${t('inventory.manufacturer')} ${filters.manufacturerId}`),
+    materialId: materials.find((item) => item.id === filters.materialId)?.name ?? (filters.materialId == null ? undefined : `${t('inventory.material')} ${filters.materialId}`),
+    locationId: locations.find((item) => item.id === filters.locationId)?.name ?? (filters.locationId == null ? undefined : `${t('inventory.location')} ${filters.locationId}`),
+    status: filters.status ? t(`status.${filters.status}`) : undefined, needsDrying: filters.needsDrying === true ? t('filters.needsDrying') : t('filters.doesNotNeedDrying'),
+    minWeightG: filters.minWeightG == null ? undefined : `${t('filters.minWeight')} ${filters.minWeightG} g`, maxWeightG: filters.maxWeightG == null ? undefined : `${t('filters.maxWeight')} ${filters.maxWeightG} g`,
+    minRemainingPercent: filters.minRemainingPercent == null ? undefined : `${t('filters.minRemaining')} ${filters.minRemainingPercent}%`, maxRemainingPercent: filters.maxRemainingPercent == null ? undefined : `${t('filters.maxRemaining')} ${filters.maxRemainingPercent}%`, includeArchived: t('filters.includeArchived'),
   }
 
   const changeView = (nextView: InventoryView) => {
@@ -95,7 +97,7 @@ export function InventoryPage() {
 
       {typeof window.history.state?.usr?.createdSpoolCode === 'string' && (
         <p className="mb-5 rounded-md border border-emerald-500/30 bg-emerald-500/5 px-4 py-3 text-sm font-medium text-ink" role="status">
-          Spool {window.history.state.usr.createdSpoolCode} created successfully.
+          {t('inventory.created', { code: window.history.state.usr.createdSpoolCode })}
         </p>
       )}
 
@@ -111,10 +113,10 @@ export function InventoryPage() {
             className="mx-auto size-6 text-red-600 dark:text-red-400"
           />
           <h3 className="mt-4 text-lg font-semibold text-ink">
-            Unable to load inventory.
+            {t('inventory.unable')}
           </h3>
           <p className="mt-2 text-sm text-ink-muted">
-            Please check the backend connection.
+            {t('inventory.connection')}
           </p>
           <button
             className="mt-6 rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-60"
@@ -122,7 +124,7 @@ export function InventoryPage() {
             onClick={() => void refetch()}
             type="button"
           >
-            {isFetching ? 'Retrying…' : 'Retry'}
+            {isFetching ? t('inventory.retrying') : t('common.retry')}
           </button>
         </div>
       )}
@@ -136,7 +138,7 @@ export function InventoryPage() {
       )}
 
       {!isPending && !error && spools?.length === 0 && (
-        hasFilters ? <div className="rounded-lg border border-dashed border-line bg-surface px-5 py-14 text-center shadow-sm"><h3 className="text-lg font-semibold text-ink">{filters.search && structuredFilterCount === 0 ? `No spools found for “${filters.search}”.` : filters.search ? 'No spools match your search and filters.' : 'No spools match these filters.'}</h3><p className="mt-2 text-sm text-ink-muted">Try another search or clear the current filters.</p><div className="mt-5 flex justify-center gap-3">{filters.search && <button className="rounded-md border border-line px-4 py-2.5 text-sm font-bold text-ink" onClick={() => { setSearchInput(''); applyFilters({ ...filters, search: undefined }) }} type="button">Clear Search</button>}<button className="rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar" onClick={() => applyFilters({ search: filters.search })} type="button">Clear Filters</button></div></div> : <InventoryEmptyState />
+        hasFilters ? <div className="rounded-lg border border-dashed border-line bg-surface px-5 py-14 text-center shadow-sm"><h3 className="text-lg font-semibold text-ink">{filters.search && structuredFilterCount === 0 ? t('inventory.noSearch', { search: filters.search }) : filters.search ? t('inventory.noSearchAndFilters') : t('inventory.noMatch')}</h3><p className="mt-2 text-sm text-ink-muted">{t('inventory.tryAnother')}</p><div className="mt-5 flex justify-center gap-3">{filters.search && <button className="rounded-md border border-line px-4 py-2.5 text-sm font-bold text-ink" onClick={() => { setSearchInput(''); applyFilters({ ...filters, search: undefined }) }} type="button">{t('inventory.clearSearch')}</button>}<button className="rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar" onClick={() => applyFilters({ search: filters.search })} type="button">{t('inventory.clearFilters')}</button></div></div> : <InventoryEmptyState />
       )}
     </section>
   )

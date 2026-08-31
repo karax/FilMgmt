@@ -53,7 +53,7 @@ describe('application layout', () => {
     renderRoute('/')
 
     expect(
-      screen.getByRole('heading', { level: 2, name: 'Inventory overview' }),
+      screen.getByRole('heading', { level: 2, name: 'Dashboard' }),
     ).toBeVisible()
     expect(screen.getByRole('heading', { name: 'Total Spools' })).toBeVisible()
   })
@@ -80,7 +80,6 @@ describe('application layout', () => {
   })
 
   it.each([
-    ['/prints', 'Prints', 'Track your print jobs.'],
     ['/advisor', 'Filament Advisor', 'Find the best spool for your next print.'],
     [
       '/analytics',

@@ -16,7 +16,7 @@ from app.schemas.material import (
     MaterialRead,
     MaterialUpdate,
 )
-from app.schemas.print_job import PrintJobCreate, PrintJobFilterParams, PrintJobFinishRequest, PrintJobRead, PrintJobUpdate
+from app.schemas.print_job import PrintJobCreate, PrintJobFilterParams, PrintJobFinishRequest, PrintJobRead, PrintJobSpoolConsumption, PrintJobSpoolCreate, PrintJobSpoolRead, PrintJobSpoolUpdate, PrintJobUpdate
 from app.schemas.spool import (
     SpoolBase,
     SpoolCreate,
@@ -47,6 +47,10 @@ __all__ = [
     "PrintJobFilterParams",
     "PrintJobFinishRequest",
     "PrintJobRead",
+    "PrintJobSpoolConsumption",
+    "PrintJobSpoolCreate",
+    "PrintJobSpoolRead",
+    "PrintJobSpoolUpdate",
     "PrintJobUpdate",
     "SpoolBase",
     "SpoolCreate",

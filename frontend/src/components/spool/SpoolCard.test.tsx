@@ -37,7 +37,7 @@ describe('SpoolCard', () => {
     expect(within(card).getByText('Black')).toBeVisible()
     expect(within(card).getByText('PLA+ HS')).toBeVisible()
     expect(within(card).getByText('74.2%')).toBeVisible()
-    expect(within(card).getByText('OPEN')).toBeVisible()
+    expect(within(card).getByText('Open')).toBeVisible()
     expect(within(card).getByText('Rack A / Slot 3')).toBeVisible()
     expect(within(card).getByText(/742 g/)).toHaveTextContent('742 g / 1.00 kg')
   })
@@ -48,6 +48,13 @@ describe('SpoolCard', () => {
     expect(screen.queryByText('PLA+ HS')).not.toBeInTheDocument()
   })
 
+  it('shows a custom spool name while keeping the code visible', () => {
+    render(<SpoolCard spool={makeSpool({ code: 'FIL-0042', display_name: 'PLA Preto Principal' })} />)
+
+    expect(screen.getByText('PLA Preto Principal')).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'FIL-0042' })).toBeVisible()
+  })
+
   it('uses a safe fallback for missing location and color', () => {
     render(<SpoolCard spool={makeSpool({ color_hex: null, location: null })} />)
 
@@ -55,12 +62,12 @@ describe('SpoolCard', () => {
     expect(screen.getByLabelText('Color: Black')).toBeVisible()
   })
 
-  it.each(['LOW', 'EMPTY'] as const)(
+  it.each([['LOW', 'Low'], ['EMPTY', 'Empty']] as const)(
     'renders the %s badge as text',
-    (status) => {
+    (status, label) => {
       render(<SpoolCard spool={makeSpool({ status })} />)
 
-      expect(screen.getByText(status)).toBeVisible()
+      expect(screen.getByText(label)).toBeVisible()
     },
   )
 
@@ -71,7 +78,7 @@ describe('SpoolCard', () => {
       />,
     )
 
-    expect(screen.getByText('OPEN')).toBeVisible()
+    expect(screen.getByText('Open')).toBeVisible()
     expect(screen.getByText('Needs drying')).toBeVisible()
   })
 

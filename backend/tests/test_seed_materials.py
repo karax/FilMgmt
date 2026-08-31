@@ -87,7 +87,9 @@ def test_seed_preserves_custom_values_and_only_fills_null_defaults(db_session: S
     assert pa.notes == "Hygroscopic; drying is often recommended."
     assert pa_custom.notes == "User-maintained note"
     assert "PA" in result.defaults_updated
-    assert "PLA" not in result.defaults_updated
+    # The custom nozzle minimum is preserved while the other missing
+    # technical defaults are safely enriched.
+    assert "PLA" in result.defaults_updated
 
 
 def test_seed_preserves_existing_spool_relations(db_session: Session) -> None:

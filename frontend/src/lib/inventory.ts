@@ -1,4 +1,5 @@
 import type { Material, Spool } from '../types/spool'
+import i18n from '../i18n'
 
 export interface InventorySummary {
   totalSpools: number
@@ -91,33 +92,27 @@ export function sortCriticalSpools(spools: readonly Spool[]): Spool[] {
     )
 }
 
-const gramsFormatter = new Intl.NumberFormat('en-US', {
-  maximumFractionDigits: 2,
-})
+function locale(): string { return i18n.language === 'en' ? 'en-US' : 'pt-BR' }
 
 export function formatWeight(weightG: number): string {
-  if (weightG >= 1000) return `${(weightG / 1000).toFixed(2)} kg`
-  return `${gramsFormatter.format(weightG)} g`
+  if (weightG >= 1000) return `${new Intl.NumberFormat(locale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(weightG / 1000)} kg`
+  return `${new Intl.NumberFormat(locale(), { maximumFractionDigits: 2 }).format(weightG)} g`
 }
 
 export function formatPercent(percent: number): string {
-  return `${new Intl.NumberFormat('en-US', {
+  return `${new Intl.NumberFormat(locale(), {
     minimumFractionDigits: 1,
     maximumFractionDigits: 1,
   }).format(percent)}%`
 }
 
 export function formatCurrency(value: number | string, currency: string): string {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat(locale(), {
     style: 'currency',
     currency,
   }).format(Number(value))
 }
 
 export function formatDate(value: string): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(value))
+  return new Intl.DateTimeFormat(locale(), i18n.language === 'en' ? { month: 'short', day: 'numeric', year: 'numeric' } : { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(value))
 }

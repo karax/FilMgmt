@@ -23,7 +23,7 @@ from app.db.base import Base
 from app.models.timestamps import utc_now
 
 if TYPE_CHECKING:
-    from app.models.print_job import PrintJob
+    from app.models.print_job import PrintJobSpool, PrintSpoolLock
     from app.models.weight_history import WeightHistory
 
 
@@ -122,6 +122,7 @@ class Spool(Base):
         index=True,
     )
 
+    display_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
     product_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     color_name: Mapped[str] = mapped_column(String(100), nullable=False)
     color_hex: Mapped[str | None] = mapped_column(String(7), nullable=True)
@@ -222,7 +223,11 @@ class Spool(Base):
         order_by="WeightHistory.created_at",
         passive_deletes="all",
     )
-    print_jobs: Mapped[list["PrintJob"]] = relationship(
+    print_job_links: Mapped[list["PrintJobSpool"]] = relationship(
+        back_populates="spool",
+        passive_deletes="all",
+    )
+    print_spool_locks: Mapped[list["PrintSpoolLock"]] = relationship(
         back_populates="spool",
         passive_deletes="all",
     )

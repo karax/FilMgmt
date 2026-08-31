@@ -62,6 +62,7 @@ export interface Spool {
   manufacturer: Manufacturer
   material: Material
   location: Location | null
+  display_name: string | null
   product_name: string | null
   color_name: string
   color_hex: string | null
@@ -93,6 +94,7 @@ export interface CreateSpoolPayload {
   manufacturer_id: number
   material_id: number
   location_id: number | null
+  display_name: string | null
   product_name: string | null
   color_name: string
   color_hex: string | null
@@ -109,5 +111,30 @@ export interface CreateSpoolPayload {
   bed_temp_max: number | null
   status: Extract<SpoolStatus, 'SEALED' | 'OPEN'>
   needs_drying: boolean
+  last_dried_at: string | null
   notes: string | null
+}
+
+/** Fields editable through PATCH /api/spools/{code}; measurements stay on their dedicated endpoint. */
+export interface UpdateSpoolPayload {
+  manufacturer_id?: number
+  material_id?: number
+  location_id?: number | null
+  display_name?: string | null
+  product_name?: string | null
+  color_name?: string
+  color_hex?: string | null
+  diameter_mm?: number
+  initial_filament_weight_g?: number
+  empty_spool_weight_g?: number | null
+  purchase_price?: number | null
+  currency?: string
+  purchase_date?: string | null
+  nozzle_temp_min?: number | null
+  nozzle_temp_max?: number | null
+  bed_temp_min?: number | null
+  bed_temp_max?: number | null
+  needs_drying?: boolean
+  last_dried_at?: string | null
+  notes?: string | null
 }

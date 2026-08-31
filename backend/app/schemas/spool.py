@@ -22,6 +22,10 @@ SpoolProductName = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=200),
 ]
+SpoolDisplayName = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=150),
+]
 SpoolColorName = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=100),
@@ -142,6 +146,7 @@ class SpoolBase(BaseModel):
     manufacturer_id: SpoolId
     material_id: SpoolId
     location_id: SpoolId | None = None
+    display_name: SpoolDisplayName | None = None
     product_name: SpoolProductName | None = None
     color_name: SpoolColorName
     color_hex: SpoolColorHex | None = None
@@ -152,8 +157,6 @@ class SpoolBase(BaseModel):
     purchase_price: SpoolPrice | None = None
     currency: SpoolCurrency = "EUR"
     purchase_date: date | None = None
-    opened_at: UtcDatetime | None = None
-    last_used_at: UtcDatetime | None = None
     nozzle_temp_min: SpoolTemperature | None = None
     nozzle_temp_max: SpoolTemperature | None = None
     bed_temp_min: SpoolTemperature | None = None
@@ -162,6 +165,13 @@ class SpoolBase(BaseModel):
     needs_drying: bool = False
     last_dried_at: UtcDatetime | None = None
     notes: str | None = None
+
+    @field_validator("display_name", mode="before")
+    @classmethod
+    def normalize_display_name(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
     @model_validator(mode="after")
     def validate_ranges(self) -> Self:
@@ -212,6 +222,7 @@ class SpoolUpdate(BaseModel):
     manufacturer_id: SpoolId | None = None
     material_id: SpoolId | None = None
     location_id: SpoolId | None = None
+    display_name: SpoolDisplayName | None = None
     product_name: SpoolProductName | None = None
     color_name: SpoolColorName | None = None
     color_hex: SpoolColorHex | None = None
@@ -227,10 +238,16 @@ class SpoolUpdate(BaseModel):
     nozzle_temp_max: SpoolTemperature | None = None
     bed_temp_min: SpoolTemperature | None = None
     bed_temp_max: SpoolTemperature | None = None
-    status: SpoolStatus | None = None
     needs_drying: bool | None = None
     last_dried_at: UtcDatetime | None = None
     notes: str | None = None
+
+    @field_validator("display_name", mode="before")
+    @classmethod
+    def normalize_display_name(cls, value: object) -> object:
+        if isinstance(value, str) and not value.strip():
+            return None
+        return value
 
     @field_validator(
         "manufacturer_id",
@@ -239,7 +256,6 @@ class SpoolUpdate(BaseModel):
         "diameter_mm",
         "initial_filament_weight_g",
         "currency",
-        "status",
         "needs_drying",
     )
     @classmethod

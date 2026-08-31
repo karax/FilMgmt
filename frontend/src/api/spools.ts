@@ -1,5 +1,5 @@
-import type { CreateSpoolPayload, Spool, SpoolFilters } from '../types/spool'
-import { apiGet, apiPost } from './client'
+import type { CreateSpoolPayload, Spool, SpoolFilters, UpdateSpoolPayload } from '../types/spool'
+import { apiDelete, apiGet, apiPatch, apiPost } from './client'
 
 export function getSpools(filters: SpoolFilters = {}, signal?: AbortSignal): Promise<Spool[]> {
   const params = new URLSearchParams()
@@ -29,4 +29,16 @@ export function getSpool(code: string, signal?: AbortSignal): Promise<Spool> {
 
 export function createSpool(payload: CreateSpoolPayload): Promise<Spool> {
   return apiPost<Spool, CreateSpoolPayload>('/api/spools', payload)
+}
+
+export function updateSpool(code: string, payload: UpdateSpoolPayload): Promise<Spool> {
+  return apiPatch<Spool, UpdateSpoolPayload>(`/api/spools/${encodeURIComponent(code)}`, payload)
+}
+
+export function archiveSpool(code: string): Promise<Spool> {
+  return apiPost<Spool, Record<string, never>>(`/api/spools/${encodeURIComponent(code)}/archive`, {})
+}
+
+export function deleteSpool(code: string): Promise<void> {
+  return apiDelete(`/api/spools/${encodeURIComponent(code)}`)
 }

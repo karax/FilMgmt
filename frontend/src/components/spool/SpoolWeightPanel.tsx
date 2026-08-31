@@ -1,17 +1,19 @@
 import { formatWeight } from '../../lib/inventory'
+import { useTranslation } from 'react-i18next'
 import type { Spool } from '../../types/spool'
 import { SpoolProgressBar } from './SpoolProgressBar'
 
 export function SpoolWeightPanel({ spool }: { spool: Spool }) {
+  const { t } = useTranslation()
   return (
     <section aria-labelledby="weight-title" className="rounded-lg border border-line bg-surface p-5 shadow-sm">
-      <h2 id="weight-title" className="text-lg font-semibold text-ink">Weight</h2>
+      <h2 id="weight-title" className="text-lg font-semibold text-ink">{t('inventory.weight')}</h2>
       <div className="mt-5 grid grid-cols-2 gap-4">
-        <Metric label="Current weight" value={formatWeight(Number(spool.current_filament_weight_g))} />
-        <Metric label="Initial weight" value={formatWeight(Number(spool.initial_filament_weight_g))} />
+        <Metric label={t('spool.current')} value={formatWeight(Number(spool.current_filament_weight_g))} />
+        <Metric label={t('spool.initial')} value={formatWeight(Number(spool.initial_filament_weight_g))} />
       </div>
       <div className="mt-5"><SpoolProgressBar label={spool.code} remainingPercent={spool.remaining_percent} /></div>
-      <div className="mt-5 border-t border-line pt-4"><Metric label="Empty spool weight" value={spool.empty_spool_weight_g == null ? 'Not configured' : formatWeight(Number(spool.empty_spool_weight_g))} /></div>
+      <div className="mt-5 border-t border-line pt-4"><Metric label={t('spool.empty')} value={spool.empty_spool_weight_g == null ? t('common.unconfigured') : formatWeight(Number(spool.empty_spool_weight_g))} /></div>
     </section>
   )
 }

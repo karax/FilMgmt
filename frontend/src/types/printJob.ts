@@ -1,0 +1,10 @@
+export type ApiDecimal = string | number
+export type PrintJobStatus = 'PLANNED' | 'PRINTING' | 'SUCCESS' | 'FAILED' | 'CANCELLED'
+export type PrintJobSpool = { id: number; spool_id: number; position: number; estimated_weight_g: ApiDecimal | null; actual_weight_g: ApiDecimal | null; filament_cost_per_g: ApiDecimal | null; material_cost: ApiDecimal | null; material_cost_currency: string | null; created_at: string; updated_at: string }
+export type PrintJob = { id:number; name:string; status:PrintJobStatus; spools:PrintJobSpool[]; total_estimated_weight_g:ApiDecimal|null; total_actual_weight_g:ApiDecimal|null; estimated_time_minutes:number|null; actual_time_minutes:number|null; printer_name:string|null; started_at:string|null; finished_at:string|null; notes:string|null; created_at:string; updated_at:string; /** @deprecated test-fixture compatibility only; API no longer provides these. */ spool_id?: number; estimated_weight_g?: ApiDecimal | null; actual_weight_g?: ApiDecimal | null; filament_cost_per_g?: ApiDecimal | null; material_cost?: ApiDecimal | null; material_cost_currency?: string | null }
+export type PrintJobSpoolPayload = { spool_id:number; estimated_weight_g:number|null }
+export type PrintJobPayload = { name:string; spools:PrintJobSpoolPayload[]; estimated_time_minutes:number|null; printer_name:string|null; notes:string|null }
+export type UpdatePrintJobPayload = Partial<PrintJobPayload>
+export type PrintJobFilters = { status?:PrintJobStatus; spoolId?:number }
+export type PrintJobSpoolConsumption = { spool_id: number; actual_weight_g: number }
+export type PrintJobFinishPayload = { consumptions: PrintJobSpoolConsumption[] }

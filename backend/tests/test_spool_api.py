@@ -113,6 +113,15 @@ def test_list_spools_is_empty(api_environment: ApiEnvironment) -> None:
     assert response.json() == []
 
 
+def test_spool_openapi_exposes_display_name(api_environment: ApiEnvironment) -> None:
+    response = api_environment.client.get("/openapi.json")
+
+    assert response.status_code == 200
+    schemas = response.json()["components"]["schemas"]
+    for schema_name in ("SpoolCreate", "SpoolUpdate", "SpoolRead"):
+        assert "display_name" in schemas[schema_name]["properties"]
+
+
 def test_create_basic_spool_with_automatic_code(
     api_environment: ApiEnvironment,
 ) -> None:
@@ -300,6 +309,54 @@ def test_update_color_name_preserves_code(api_environment: ApiEnvironment) -> No
     assert response.json()["code"] == spool["code"]
 
 
+def test_create_normalizes_optional_display_name(api_environment: ApiEnvironment) -> None:
+    created = create_spool(
+        api_environment,
+        display_name="  PLA Preto Principal  ",
+    )
+    unnamed = create_spool(api_environment, display_name="   ")
+
+    assert created["display_name"] == "PLA Preto Principal"
+    assert unnamed["display_name"] is None
+
+
+def test_display_names_can_repeat_and_be_updated_or_cleared(
+    api_environment: ApiEnvironment,
+) -> None:
+    first = create_spool(api_environment, display_name="PLA Preto")
+    second = create_spool(api_environment, display_name="PLA Preto")
+
+    changed = api_environment.client.patch(
+        f"/api/spools/{first['code']}",
+        json={"display_name": "PLA Preto Reserva"},
+    )
+    cleared = api_environment.client.patch(
+        f"/api/spools/{second['code']}",
+        json={"display_name": None},
+    )
+
+    assert changed.status_code == 200
+    assert changed.json()["display_name"] == "PLA Preto Reserva"
+    assert changed.json()["code"] == first["code"]
+    assert cleared.status_code == 200
+    assert cleared.json()["display_name"] is None
+
+
+def test_patch_updates_spool_without_exposing_read_only_fields(
+    api_environment: ApiEnvironment,
+) -> None:
+    spool = create_spool(api_environment)
+
+    response = api_environment.client.patch(
+        f"/api/spools/{spool['code']}",
+        json={"color_name": "Galaxy Purple"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["color_name"] == "Galaxy Purple"
+    assert response.json()["current_filament_weight_g"] == spool["current_filament_weight_g"]
+
+
 def test_partial_update_changes_only_location(
     api_environment: ApiEnvironment,
 ) -> None:
@@ -477,6 +534,18 @@ def test_archive_unknown_spool_returns_not_found(
     assert response.json() == {"detail": "Spool not found."}
 
 
+def test_archive_in_use_spool_returns_conflict(
+    api_environment: ApiEnvironment,
+) -> None:
+    spool = create_spool(api_environment, status="IN_USE")
+
+    response = api_environment.client.post(f"/api/spools/{spool['code']}/archive")
+
+    assert response.status_code == 409
+    assert response.json() == {"detail": "Spool in use cannot be archived."}
+    assert api_environment.client.get(f"/api/spools/{spool['code']}").json()["status"] == "IN_USE"
+
+
 def test_delete_active_spool_requires_archive(
     api_environment: ApiEnvironment,
 ) -> None:
@@ -587,12 +656,22 @@ def test_create_and_update_reject_protected_fields(
         f"/api/spools/{spool['code']}",
         json={"remaining_percent": 20},
     )
+    update_status = api_environment.client.patch(
+        f"/api/spools/{spool['code']}",
+        json={"status": "EMPTY"},
+    )
+    update_operational_time = api_environment.client.patch(
+        f"/api/spools/{spool['code']}",
+        json={"last_used_at": "2026-01-01T00:00:00Z"},
+    )
 
     assert create_response.status_code == 422
     assert create_percent.status_code == 422
     assert update_code.status_code == 422
     assert update_archive_timestamp.status_code == 422
     assert update_percent.status_code == 422
+    assert update_status.status_code == 422
+    assert update_operational_time.status_code == 422
 
 
 def test_update_rejects_null_for_required_fields(
@@ -1351,6 +1430,23 @@ def test_search_by_partial_product_name(
         search_dataset,
         "polymaker_petg",
     )
+
+
+@pytest.mark.parametrize("search", ["principal", "PRETO PRINCIPAL"])
+def test_search_by_display_name_is_case_insensitive(
+    api_environment: ApiEnvironment,
+    search_dataset: SearchDataset,
+    search: str,
+) -> None:
+    spool = search_dataset.spools["esun_pla"]
+    api_environment.client.patch(
+        f"/api/spools/{spool['code']}",
+        json={"display_name": "PLA Preto Principal"},
+    )
+
+    response = api_environment.client.get("/api/spools", params={"search": search})
+
+    assert response_codes(response) == [spool["code"]]
 
 
 def test_search_by_manufacturer_name(

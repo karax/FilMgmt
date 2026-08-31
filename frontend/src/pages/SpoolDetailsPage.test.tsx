@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
@@ -29,7 +29,14 @@ describe('SpoolDetailsPage', () => {
   it('renders full spool details and optional product information', async () => {
     vi.mocked(fetch).mockResolvedValue(response(makeSpool({ code: 'FIL-0042', product_name: 'PLA+ HS', current_filament_weight_g: '742', remaining_percent: 74.2, purchase_price: '21.99', purchase_date: '2026-08-12T12:00:00Z', nozzle_temp_min: 210, nozzle_temp_max: 230, bed_temp_min: 50, bed_temp_max: 60, needs_drying: true, location: { id: 2, name: 'Rack A / Slot 3', description: null, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' } })))
     renderPage()
-    for (const text of ['FIL-0042', 'eSUN', 'PLA', 'PLA+ HS', 'Black', '742 g', '74.2%', 'Rack A / Slot 3', '€21.99', '12 Aug 2026', '210–230 °C', '50–60 °C', 'Needs drying']) expect((await screen.findAllByText(text))[0]).toBeVisible()
+    for (const text of ['FIL-0042', 'eSUN', 'PLA', 'PLA+ HS', 'Black', '742 g', '74.2%', 'Rack A / Slot 3', '€21.99', 'Aug 12, 2026', '210–230 °C', '50–60 °C', 'Needs drying']) expect((await screen.findAllByText(text))[0]).toBeVisible()
+  })
+
+  it('uses a custom spool name as the detail title while retaining the code', async () => {
+    vi.mocked(fetch).mockResolvedValue(response(makeSpool({ code: 'FIL-0042', display_name: 'PLA Preto Principal' })))
+    renderPage()
+    expect(await screen.findByRole('heading', { name: 'PLA Preto Principal' })).toBeVisible()
+    expect(screen.getByText('FIL-0042')).toBeVisible()
   })
 
   it('handles nullable fields without breaking the layout', async () => {
@@ -59,5 +66,27 @@ describe('SpoolDetailsPage', () => {
     renderPage()
     expect((await screen.findAllByText('ARCHIVED'))[0]).toBeVisible()
     expect(screen.getByText('This archived spool is retained as a historical record.')).toBeVisible()
+  })
+
+  it('archives an active spool only after confirmation', async () => {
+    const spool = makeSpool({ code: 'FIL-0042' })
+    vi.mocked(fetch).mockResolvedValueOnce(response(spool)).mockResolvedValueOnce(response({ ...spool, status: 'ARCHIVED', archived_at: '2026-08-20T00:00:00Z' }))
+    renderPage()
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Archive Spool' }))
+    expect(screen.getByRole('dialog', { name: 'Archive FIL-0042?' })).toBeVisible()
+    await user.click(within(screen.getByRole('dialog', { name: 'Archive FIL-0042?' })).getByRole('button', { name: 'Archive Spool' }))
+    expect(fetch).toHaveBeenCalledWith('/api/spools/FIL-0042/archive', expect.objectContaining({ method: 'POST' }))
+  })
+
+  it('requires the exact code before permanently deleting an archived spool', async () => {
+    vi.mocked(fetch).mockResolvedValue(response(makeSpool({ code: 'FIL-0042', status: 'ARCHIVED', archived_at: '2026-08-20T00:00:00Z' })))
+    renderPage()
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Delete Spool' }))
+    const deleteButton = screen.getByRole('button', { name: 'Delete Permanently' })
+    expect(deleteButton).toBeDisabled()
+    await user.type(screen.getByLabelText('Type FIL-0042 to confirm'), 'FIL-0042')
+    expect(deleteButton).toBeEnabled()
   })
 })

@@ -16,6 +16,7 @@ from app.schemas import (
 from app.services.spool_service import (
     SpoolArchivedUpdateError,
     SpoolDataConflictError,
+    SpoolInUseArchiveError,
     SpoolLocationNotFoundError,
     SpoolManufacturerNotFoundError,
     SpoolMaterialNotFoundError,
@@ -36,6 +37,7 @@ MATERIAL_NOT_FOUND_DETAIL = "Material not found."
 LOCATION_NOT_FOUND_DETAIL = "Location not found."
 MUST_ARCHIVE_DETAIL = "Spool must be archived before deletion."
 DATA_CONFLICT_DETAIL = "Spool operation conflicts with current data."
+SPOOL_IN_USE_ARCHIVE_DETAIL = "Spool in use cannot be archived."
 ARCHIVED_UPDATE_DETAIL = "Archived spool cannot be updated."
 WEIGHT_EXCEEDS_INITIAL_DETAIL = (
     "Weight cannot exceed the spool's initial filament weight."
@@ -89,7 +91,7 @@ def get_spool(code: str, db: DbSession) -> SpoolRead:
     return SpoolRead.model_validate(spool)
 
 
-@router.put(
+@router.patch(
     "/{code}",
     response_model=SpoolRead,
     status_code=status.HTTP_200_OK,
@@ -120,6 +122,16 @@ def update_spool(
     except ValidationError as error:
         raise RequestValidationError(error.errors()) from error
     return SpoolRead.model_validate(spool)
+
+
+@router.put("/{code}", response_model=SpoolRead, include_in_schema=False)
+def update_spool_legacy(
+    code: str,
+    payload: SpoolUpdate,
+    db: DbSession,
+) -> SpoolRead:
+    """Temporary backwards compatibility for the original update route."""
+    return update_spool(code, payload, db)
 
 
 @router.post(
@@ -169,6 +181,8 @@ def archive_spool(code: str, db: DbSession) -> SpoolRead:
         spool = SpoolService(db).archive_spool(code)
     except SpoolNotFoundError as error:
         raise _not_found(SPOOL_NOT_FOUND_DETAIL) from error
+    except SpoolInUseArchiveError as error:
+        raise _conflict(SPOOL_IN_USE_ARCHIVE_DETAIL) from error
     except SpoolDataConflictError as error:
         raise _conflict(DATA_CONFLICT_DETAIL) from error
     return SpoolRead.model_validate(spool)

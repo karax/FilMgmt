@@ -1,4 +1,5 @@
 import type { SpoolStatus } from '../../types/spool'
+import { useTranslation } from 'react-i18next'
 
 interface SpoolStatusBadgeProps {
   status: SpoolStatus
@@ -16,11 +17,12 @@ const statusClasses: Record<SpoolStatus, string> = {
 }
 
 export function SpoolStatusBadge({ status }: SpoolStatusBadgeProps) {
+  const { t } = useTranslation()
   return (
     <span
       className={`inline-flex rounded border px-2 py-1 font-mono text-[0.62rem] font-bold tracking-[0.09em] ${statusClasses[status]}`}
     >
-      {status}
+      {t(`status.${status}`)}
     </span>
   )
 }
