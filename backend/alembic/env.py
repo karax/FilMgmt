@@ -7,7 +7,6 @@ from alembic import context
 from app.db.base import Base
 from app.db.config import get_database_url
 from app.models import (  # noqa: F401
-    Location,
     Manufacturer,
     Material,
     Spool,

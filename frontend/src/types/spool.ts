@@ -13,7 +13,6 @@ export interface SpoolFilters {
   search?: string
   manufacturerId?: number
   materialId?: number
-  locationId?: number
   status?: SpoolStatus
   needsDrying?: boolean
   minWeightG?: number
@@ -45,12 +44,9 @@ export interface Material {
   updated_at: string
 }
 
-export interface Location {
-  id: number
+export interface SpoolLocation {
+  id?: number
   name: string
-  description: string | null
-  created_at: string
-  updated_at: string
 }
 
 export interface Spool {
@@ -58,10 +54,10 @@ export interface Spool {
   code: string
   manufacturer_id: number
   material_id: number
-  location_id: number | null
   manufacturer: Manufacturer
   material: Material
-  location: Location | null
+  /** Optional because current installations may not expose storage locations. */
+  location?: SpoolLocation | null
   display_name: string | null
   product_name: string | null
   color_name: string
@@ -71,6 +67,7 @@ export interface Spool {
   current_filament_weight_g: ApiDecimal
   empty_spool_weight_g: ApiDecimal | null
   purchase_price: ApiDecimal | null
+  store_name: string | null
   currency: string
   purchase_date: string | null
   opened_at: string | null
@@ -93,7 +90,6 @@ export interface Spool {
 export interface CreateSpoolPayload {
   manufacturer_id: number
   material_id: number
-  location_id: number | null
   display_name: string | null
   product_name: string | null
   color_name: string
@@ -103,6 +99,7 @@ export interface CreateSpoolPayload {
   current_filament_weight_g: number | null
   empty_spool_weight_g: number | null
   purchase_price: number | null
+  store_name: string | null
   currency: string
   purchase_date: string | null
   nozzle_temp_min: number | null
@@ -119,7 +116,6 @@ export interface CreateSpoolPayload {
 export interface UpdateSpoolPayload {
   manufacturer_id?: number
   material_id?: number
-  location_id?: number | null
   display_name?: string | null
   product_name?: string | null
   color_name?: string
@@ -128,6 +124,7 @@ export interface UpdateSpoolPayload {
   initial_filament_weight_g?: number
   empty_spool_weight_g?: number | null
   purchase_price?: number | null
+  store_name?: string | null
   currency?: string
   purchase_date?: string | null
   nozzle_temp_min?: number | null

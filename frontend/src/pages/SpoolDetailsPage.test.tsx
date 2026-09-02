@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import i18n from '../i18n'
 import { makeSpool } from '../test/spoolFixture'
 import type { Spool } from '../types/spool'
 import { SpoolDetailsPage } from './SpoolDetailsPage'
@@ -27,22 +28,89 @@ describe('SpoolDetailsPage', () => {
   })
 
   it('renders full spool details and optional product information', async () => {
-    vi.mocked(fetch).mockResolvedValue(response(makeSpool({ code: 'FIL-0042', product_name: 'PLA+ HS', current_filament_weight_g: '742', remaining_percent: 74.2, purchase_price: '21.99', purchase_date: '2026-08-12T12:00:00Z', nozzle_temp_min: 210, nozzle_temp_max: 230, bed_temp_min: 50, bed_temp_max: 60, needs_drying: true, location: { id: 2, name: 'Rack A / Slot 3', description: null, created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-01T00:00:00Z' } })))
+    vi.mocked(fetch).mockResolvedValue(response(makeSpool({ code: 'FIL-0042', product_name: 'PLA+ HS', current_filament_weight_g: '742', remaining_percent: 74.2, purchase_price: '21.99', store_name: 'Filament World', purchase_date: '2026-08-12T12:00:00Z', nozzle_temp_min: 210, nozzle_temp_max: 230, bed_temp_min: 50, bed_temp_max: 60, needs_drying: true })))
     renderPage()
-    for (const text of ['FIL-0042', 'eSUN', 'PLA', 'PLA+ HS', 'Black', '742 g', '74.2%', 'Rack A / Slot 3', '€21.99', 'Aug 12, 2026', '210–230 °C', '50–60 °C', 'Needs drying']) expect((await screen.findAllByText(text))[0]).toBeVisible()
+    for (const text of ['FIL-0042', 'eSUN', 'PLA', 'PLA+ HS', 'Black', '742 g', '74.2%', 'Filament World', '€21.99', 'Aug 12, 2026', '210–230 °C', '50–60 °C', 'Needs drying']) expect((await screen.findAllByText(text))[0]).toBeVisible()
+    expect(screen.queryByRole('heading', { name: 'Storage' })).not.toBeInTheDocument()
+  })
+
+  it('places Print Settings immediately before Basic Information', async () => {
+    vi.mocked(fetch).mockResolvedValue(response(makeSpool()))
+    renderPage()
+
+    const printingSettings = await screen.findByRole('heading', { name: 'Print Settings' })
+    const basicInformation = screen.getByRole('heading', { name: 'Basic Information' })
+    expect(printingSettings.closest('section')?.nextElementSibling).toContainElement(
+      basicInformation,
+    )
   })
 
   it('uses a custom spool name as the detail title while retaining the code', async () => {
     vi.mocked(fetch).mockResolvedValue(response(makeSpool({ code: 'FIL-0042', display_name: 'PLA Preto Principal' })))
     renderPage()
     expect(await screen.findByRole('heading', { name: 'PLA Preto Principal' })).toBeVisible()
-    expect(screen.getByText('FIL-0042')).toBeVisible()
+    expect(screen.getAllByText('FIL-0042')[0]).toBeVisible()
+  })
+
+  it('shows the QR section with the canonical code, display name, and payload', async () => {
+    vi.mocked(fetch).mockResolvedValue(response(makeSpool({ code: 'FIL-0007', display_name: 'Bambu Lab Preto' })))
+    renderPage('/spools/FIL-0007')
+
+    const title = await screen.findByRole('heading', { name: 'QR Code' })
+    const section = title.closest('section')
+    expect(section).not.toBeNull()
+    expect(within(section as HTMLElement).getByText('Bambu Lab Preto')).toBeVisible()
+    expect(within(section as HTMLElement).getByText('FIL-0007')).toBeVisible()
+    expect(within(section as HTMLElement).getByRole('img', { name: 'QR code for spool FIL-0007' }))
+      .toHaveAttribute('data-qr-payload', 'fcc:spool:FIL-0007')
+    expect(within(section as HTMLElement).getByRole('button', { name: 'Download QR' })).toBeEnabled()
+  })
+
+  it('keeps the QR and code visible when display_name is null', async () => {
+    vi.mocked(fetch).mockResolvedValue(response(makeSpool({ code: 'FIL-0007', display_name: null })))
+    renderPage('/spools/FIL-0007')
+
+    const section = (await screen.findByRole('heading', { name: 'QR Code' })).closest('section')
+    expect(section).not.toBeNull()
+    expect(within(section as HTMLElement).getByText('FIL-0007')).toBeVisible()
+    expect(within(section as HTMLElement).getByRole('img', { name: 'QR code for spool FIL-0007' }))
+      .toHaveAttribute('data-qr-payload', 'fcc:spool:FIL-0007')
+  })
+
+  it('downloads the QR using the predictable SVG filename', async () => {
+    const createObjectURL = vi.fn().mockReturnValue('blob:spool-qr')
+    const revokeObjectURL = vi.fn()
+    class MockURL extends URL {}
+    Object.assign(MockURL, { createObjectURL, revokeObjectURL })
+    vi.stubGlobal('URL', MockURL)
+    let downloadedFilename = ''
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function captureDownload(this: HTMLAnchorElement) {
+      downloadedFilename = this.download
+    })
+    vi.mocked(fetch).mockResolvedValue(response(makeSpool({ code: 'FIL-0007' })))
+    renderPage('/spools/FIL-0007')
+
+    await userEvent.setup().click(await screen.findByRole('button', { name: 'Download QR' }))
+
+    expect(downloadedFilename).toBe('FIL-0007-qr.svg')
+    expect(createObjectURL).toHaveBeenCalledWith(expect.objectContaining({ type: 'image/svg+xml;charset=utf-8' }))
+    expect(revokeObjectURL).toHaveBeenCalledWith('blob:spool-qr')
+  })
+
+  it('renders the QR copy in pt-BR', async () => {
+    await i18n.changeLanguage('pt-BR')
+    vi.mocked(fetch).mockResolvedValue(response(makeSpool({ code: 'FIL-0007' })))
+    renderPage('/spools/FIL-0007')
+
+    expect(await screen.findByText('Identifique este spool usando o QR Code.')).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Baixar QR' })).toBeEnabled()
+    expect(screen.getByRole('img', { name: 'QR Code do spool FIL-0007' })).toBeVisible()
   })
 
   it('handles nullable fields without breaking the layout', async () => {
-    vi.mocked(fetch).mockResolvedValue(response(makeSpool({ location: null, color_hex: null, purchase_price: null, purchase_date: null, nozzle_temp_min: null, nozzle_temp_max: null })))
+    vi.mocked(fetch).mockResolvedValue(response(makeSpool({ store_name: null, color_hex: null, purchase_price: null, purchase_date: null, nozzle_temp_min: null, nozzle_temp_max: null })))
     renderPage()
-    expect(await screen.findByText('Unassigned')).toBeVisible()
+    expect((await screen.findAllByText('—')).length).toBeGreaterThan(0)
     expect(screen.getAllByText('Not configured')[0]).toBeVisible()
   })
 

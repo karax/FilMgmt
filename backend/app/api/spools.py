@@ -17,7 +17,6 @@ from app.services.spool_service import (
     SpoolArchivedUpdateError,
     SpoolDataConflictError,
     SpoolInUseArchiveError,
-    SpoolLocationNotFoundError,
     SpoolManufacturerNotFoundError,
     SpoolMaterialNotFoundError,
     SpoolMustBeArchivedError,
@@ -34,7 +33,6 @@ SpoolFilters = Annotated[SpoolFilterParams, Query()]
 SPOOL_NOT_FOUND_DETAIL = "Spool not found."
 MANUFACTURER_NOT_FOUND_DETAIL = "Manufacturer not found."
 MATERIAL_NOT_FOUND_DETAIL = "Material not found."
-LOCATION_NOT_FOUND_DETAIL = "Location not found."
 MUST_ARCHIVE_DETAIL = "Spool must be archived before deletion."
 DATA_CONFLICT_DETAIL = "Spool operation conflicts with current data."
 SPOOL_IN_USE_ARCHIVE_DETAIL = "Spool in use cannot be archived."
@@ -68,8 +66,6 @@ def create_spool(payload: SpoolCreate, db: DbSession) -> SpoolRead:
         raise _not_found(MANUFACTURER_NOT_FOUND_DETAIL) from error
     except SpoolMaterialNotFoundError as error:
         raise _not_found(MATERIAL_NOT_FOUND_DETAIL) from error
-    except SpoolLocationNotFoundError as error:
-        raise _not_found(LOCATION_NOT_FOUND_DETAIL) from error
     except SpoolDataConflictError as error:
         raise _conflict(DATA_CONFLICT_DETAIL) from error
     return SpoolRead.model_validate(spool)
@@ -115,8 +111,6 @@ def update_spool(
         raise _not_found(MANUFACTURER_NOT_FOUND_DETAIL) from error
     except SpoolMaterialNotFoundError as error:
         raise _not_found(MATERIAL_NOT_FOUND_DETAIL) from error
-    except SpoolLocationNotFoundError as error:
-        raise _not_found(LOCATION_NOT_FOUND_DETAIL) from error
     except SpoolDataConflictError as error:
         raise _conflict(DATA_CONFLICT_DETAIL) from error
     except ValidationError as error:

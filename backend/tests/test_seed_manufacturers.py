@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db.base import Base
 from app.db.session import create_database_engine, create_session_factory
-from app.models import Location, Manufacturer, Material, Spool
+from app.models import Manufacturer, Material, Spool
 from app.scripts.seed_manufacturers import MANUFACTURER_SEED, seed_manufacturers
 
 
@@ -77,14 +77,12 @@ def test_seed_preserves_custom_website_and_fills_a_missing_one(
 def test_seed_preserves_existing_spool_relationships(db_session: Session) -> None:
     manufacturer = Manufacturer(name="eSUN", website="https://custom.example")
     material = Material(name="PLA", category="PLA")
-    location = Location(name="Rack A")
-    db_session.add_all([manufacturer, material, location])
+    db_session.add_all([manufacturer, material])
     db_session.flush()
     spool = Spool(
         code="FIL-0001",
         manufacturer_id=manufacturer.id,
         material_id=material.id,
-        location_id=location.id,
         color_name="Black",
         initial_filament_weight_g=Decimal("1000"),
         current_filament_weight_g=Decimal("1000"),

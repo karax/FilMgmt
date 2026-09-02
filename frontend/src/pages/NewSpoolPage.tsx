@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 
 import { SpoolForm } from '../components/spool/SpoolForm'
 import { useCreateSpool } from '../hooks/useCreateSpool'
-import { useLocations } from '../hooks/useLocations'
 import { useManufacturers } from '../hooks/useManufacturers'
 import { useMaterials } from '../hooks/useMaterials'
 import type { CreateSpoolPayload } from '../types/spool'
@@ -12,16 +11,14 @@ export function NewSpoolPage() {
   const navigate = useNavigate()
   const manufacturers = useManufacturers()
   const materials = useMaterials()
-  const locations = useLocations()
   const createSpool = useCreateSpool()
 
-  const isLoading = manufacturers.isPending || materials.isPending || locations.isPending
-  const catalogError = manufacturers.error || materials.error || locations.error
+  const isLoading = manufacturers.isPending || materials.isPending
+  const catalogError = manufacturers.error || materials.error
 
   const retryCatalogs = () => {
     void manufacturers.refetch()
     void materials.refetch()
-    void locations.refetch()
   }
 
   const submit = (payload: CreateSpoolPayload) => {
@@ -66,7 +63,6 @@ export function NewSpoolPage() {
       {!isLoading && !catalogError && (
         <SpoolForm
           isSubmitting={createSpool.isPending}
-          locations={locations.data ?? []}
           manufacturers={manufacturers.data ?? []}
           materials={materials.data ?? []}
           onCancel={() => navigate('/inventory')}

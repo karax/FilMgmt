@@ -36,6 +36,7 @@ env/
 *.db
 *.sqlite
 *.sqlite3
+/data/uploads/
 
 # ==========================================
 # Frontend / Node
@@ -43,6 +44,9 @@ env/
 frontend/node_modules/
 frontend/dist/
 frontend/build/
+frontend/playwright-report/
+frontend/test-results/
+frontend/artifacts/browser/
 node_modules/
 
 # ==========================================

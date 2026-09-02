@@ -3,10 +3,14 @@ import { type FormEvent, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { isApiError } from '../../api/client'
-import { mapSpoolApiValidationErrors, type SpoolFormField } from '../../lib/spoolValidation'
+import {
+  mapSpoolApiValidationErrors,
+  MAX_SPOOL_FILAMENT_WEIGHT_G,
+  MAX_SPOOL_PURCHASE_PRICE,
+  type SpoolFormField,
+} from '../../lib/spoolValidation'
 import type {
   CreateSpoolPayload,
-  Location,
   Manufacturer,
   Material,
 } from '../../types/spool'
@@ -14,7 +18,6 @@ import type {
 type FormValues = {
   manufacturerId: string
   materialId: string
-  locationId: string
   displayName: string
   productName: string
   colorName: string
@@ -24,6 +27,7 @@ type FormValues = {
   currentWeight: string
   emptySpoolWeight: string
   purchasePrice: string
+  storeName: string
   currency: string
   purchaseDate: string
   status: 'SEALED' | 'OPEN'
@@ -42,7 +46,6 @@ type PrintSettingKey = 'nozzleTempMin' | 'nozzleTempMax' | 'bedTempMin' | 'bedTe
 export interface SpoolFormProps {
   manufacturers: Manufacturer[]
   materials: Material[]
-  locations: Location[]
   isSubmitting: boolean
   submitError: unknown
   onCancel: () => void
@@ -54,7 +57,6 @@ export interface SpoolFormProps {
 const initialValues: FormValues = {
   manufacturerId: '',
   materialId: '',
-  locationId: '',
   displayName: '',
   productName: '',
   colorName: '',
@@ -64,6 +66,7 @@ const initialValues: FormValues = {
   currentWeight: '1000',
   emptySpoolWeight: '',
   purchasePrice: '',
+  storeName: '',
   currency: 'EUR',
   purchaseDate: '',
   status: 'SEALED',
@@ -95,6 +98,10 @@ function optionalNumber(value: string): number | null {
   return value.trim() === '' ? null : Number(value)
 }
 
+function normalizeNamePart(value: string): string {
+  return value.trim().replaceAll(/\s+/g, ' ')
+}
+
 function errorMessage(error: unknown, hasFieldErrors: boolean, t: (key: string) => string): string | null {
   if (!isApiError(error)) return null
   if (error.status === 422) return hasFieldErrors ? t('errors.reviewFields') : t('errors.validationFallback')
@@ -103,7 +110,24 @@ function errorMessage(error: unknown, hasFieldErrors: boolean, t: (key: string) 
   return t('errors.save')
 }
 
-function validate(values: FormValues): FieldErrors {
+function formatMaximumPrice(currency: string, language: string): string {
+  try {
+    return new Intl.NumberFormat(language, {
+      style: 'currency',
+      currency,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(MAX_SPOOL_PURCHASE_PRICE).replaceAll(/\s/g, '')
+  } catch {
+    return String(MAX_SPOOL_PURCHASE_PRICE)
+  }
+}
+
+function validate(
+  values: FormValues,
+  t: (key: string, options?: Record<string, unknown>) => string,
+  language: string,
+): FieldErrors {
   const errors: FieldErrors = {}
   const initialWeight = Number(values.initialWeight)
   const currentWeight = Number(values.currentWeight)
@@ -120,14 +144,22 @@ function validate(values: FormValues): FieldErrors {
   if (!Number.isFinite(diameter) || diameter <= 0) errors.diameter = 'Diameter must be greater than zero.'
   if (!Number.isFinite(initialWeight) || initialWeight <= 0) {
     errors.initialWeight = 'Initial weight must be greater than zero.'
+  } else if (initialWeight > MAX_SPOOL_FILAMENT_WEIGHT_G) {
+    errors.initialWeight = t('spool.validation.maxFilamentWeight')
   }
   if (!Number.isFinite(currentWeight) || currentWeight < 0) {
     errors.currentWeight = 'Current weight cannot be negative.'
+  } else if (currentWeight > MAX_SPOOL_FILAMENT_WEIGHT_G) {
+    errors.currentWeight = t('spool.validation.maxFilamentWeight')
   } else if (Number.isFinite(initialWeight) && currentWeight > initialWeight) {
     errors.currentWeight = 'Current weight cannot exceed initial weight.'
   }
   if (purchasePrice !== null && (!Number.isFinite(purchasePrice) || purchasePrice < 0)) {
     errors.purchasePrice = 'Purchase price cannot be negative.'
+  } else if (purchasePrice !== null && purchasePrice > MAX_SPOOL_PURCHASE_PRICE) {
+    errors.purchasePrice = t('spool.validation.maxPurchasePrice', {
+      price: formatMaximumPrice(values.currency, language),
+    })
   }
   if (nozzleMin !== null && (!Number.isFinite(nozzleMin) || nozzleMin < 0 || nozzleMin > 500)) {
     errors.nozzleTempMin = 'Use a valid temperature.'
@@ -182,7 +214,6 @@ function FormField({
 export function SpoolForm({
   manufacturers,
   materials,
-  locations,
   isSubmitting,
   submitError,
   onCancel,
@@ -190,10 +221,11 @@ export function SpoolForm({
   mode = 'create',
   initialValues: providedInitialValues,
 }: SpoolFormProps) {
-  const { t } = useTranslation()
+  const { i18n, t } = useTranslation()
   const [values, setValues] = useState<FormValues>(() => ({ ...initialValues, ...providedInitialValues }))
   const [errors, setErrors] = useState<FieldErrors>({})
   const [apiFormError, setApiFormError] = useState<string | null>(null)
+  const [displayNameEdited, setDisplayNameEdited] = useState(mode === 'edit')
   const [printSettingsEdited, setPrintSettingsEdited] = useState(mode === 'edit')
   const [materialDefaultsMessage, setMaterialDefaultsMessage] = useState<string | null>(null)
 
@@ -204,11 +236,22 @@ export function SpoolForm({
   }
 
   useEffect(() => {
-    const mapped = mapSpoolApiValidationErrors(submitError, (issue) => (
-      issue.type === 'extra_forbidden'
-        ? t('errors.extraForbidden')
-        : typeof issue.msg === 'string' ? issue.msg : t('errors.validationFallback')
-    ))
+    const mapped = mapSpoolApiValidationErrors(submitError, (issue) => {
+      if (issue.type === 'extra_forbidden') return t('errors.extraForbidden')
+      if (typeof issue.msg !== 'string') return t('errors.validationFallback')
+      if (issue.msg.includes('Filament weight cannot exceed 2000 g.')) {
+        return t('spool.validation.maxFilamentWeight')
+      }
+      if (issue.msg.includes('Purchase price cannot exceed 100.')) {
+        return t('spool.validation.maxPurchasePrice', {
+          price: formatMaximumPrice(
+            values.currency,
+            i18n.resolvedLanguage ?? i18n.language,
+          ),
+        })
+      }
+      return issue.msg
+    })
     if (!mapped) return
     setErrors((current) => ({ ...current, ...mapped.fieldErrors }))
     setApiFormError(mapped.formError)
@@ -220,6 +263,24 @@ export function SpoolForm({
     setErrors((current) => ({ ...current, [key]: undefined }))
     setApiFormError(null)
   }
+
+  useEffect(() => {
+    if (mode !== 'create' || displayNameEdited) return
+
+    const manufacturerName = normalizeNamePart(
+      manufacturers.find(
+        (manufacturer) => manufacturer.id === Number(values.manufacturerId),
+      )?.name ?? '',
+    )
+    const colorName = normalizeNamePart(values.colorName)
+    const generatedName = manufacturerName && colorName
+      ? `${manufacturerName} ${colorName}`
+      : ''
+
+    setValues((current) => current.displayName === generatedName
+      ? current
+      : { ...current, displayName: generatedName })
+  }, [displayNameEdited, manufacturers, mode, values.colorName, values.manufacturerId])
 
   const selectedMaterial = materials.find((material) => material.id === Number(values.materialId))
 
@@ -265,7 +326,11 @@ export function SpoolForm({
 
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    const nextErrors = validate(values)
+    const nextErrors = validate(
+      values,
+      t,
+      i18n.resolvedLanguage ?? i18n.language,
+    )
     setErrors(nextErrors)
     setApiFormError(null)
     if (Object.keys(nextErrors).length > 0 || manufacturers.length === 0 || materials.length === 0) {
@@ -276,7 +341,6 @@ export function SpoolForm({
     onSubmit({
       manufacturer_id: Number(values.manufacturerId),
       material_id: Number(values.materialId),
-      location_id: values.locationId ? Number(values.locationId) : null,
       display_name: optionalText(values.displayName),
       product_name: optionalText(values.productName),
       color_name: values.colorName.trim(),
@@ -286,6 +350,7 @@ export function SpoolForm({
       current_filament_weight_g: optionalNumber(values.currentWeight),
       empty_spool_weight_g: optionalNumber(values.emptySpoolWeight),
       purchase_price: optionalNumber(values.purchasePrice),
+      store_name: optionalText(values.storeName),
       currency: values.currency.trim().toUpperCase(),
       purchase_date: optionalText(values.purchaseDate),
       nozzle_temp_min: optionalNumber(values.nozzleTempMin),
@@ -313,7 +378,7 @@ export function SpoolForm({
 
       <FormSection title={t('spool.basic')}>
         <FormField error={errors.displayName} label={t('spool.name')} hint={t('spool.nameHint')}>
-          <input aria-invalid={Boolean(errors.displayName)} className={`${inputClass} ${errors.displayName ? 'border-red-500 focus:border-red-500' : ''}`} disabled={isSubmitting} id="spool-displayName" onChange={(event) => update('displayName', event.target.value)} placeholder={t('spool.namePlaceholder')} value={values.displayName} />
+          <input aria-invalid={Boolean(errors.displayName)} className={`${inputClass} ${errors.displayName ? 'border-red-500 focus:border-red-500' : ''}`} disabled={isSubmitting} id="spool-displayName" onChange={(event) => { setDisplayNameEdited(true); update('displayName', event.target.value) }} placeholder={t('spool.namePlaceholder')} value={values.displayName} />
         </FormField>
         <div className="grid gap-5 sm:grid-cols-2">
           <FormField error={errors.manufacturerId} label={t('spool.manufacturer')}>
@@ -355,15 +420,18 @@ export function SpoolForm({
 
       <FormSection title={t('inventory.weight')}>
         <div className="grid gap-5 sm:grid-cols-2">
-          <NumberField error={errors.initialWeight} id="initialWeight" label={t('spool.initialWeight')} onChange={(value) => update('initialWeight', value)} value={values.initialWeight} />
-          {mode === 'create' && <NumberField error={errors.currentWeight} id="currentWeight" label={t('spool.currentWeight')} onChange={(value) => update('currentWeight', value)} value={values.currentWeight} />}
+          <NumberField error={errors.initialWeight} id="initialWeight" label={t('spool.initialWeight')} max={MAX_SPOOL_FILAMENT_WEIGHT_G} onChange={(value) => update('initialWeight', value)} value={values.initialWeight} />
+          {mode === 'create' && <NumberField error={errors.currentWeight} id="currentWeight" label={t('spool.currentWeight')} max={MAX_SPOOL_FILAMENT_WEIGHT_G} onChange={(value) => update('currentWeight', value)} value={values.currentWeight} />}
           <NumberField error={errors.emptySpoolWeight} id="emptySpoolWeight" label={t('spool.emptyWeight')} onChange={(value) => update('emptySpoolWeight', value)} optional value={values.emptySpoolWeight} />
         </div>
       </FormSection>
 
       <FormSection title={t('spool.purchase')}>
         <div className="grid gap-5 sm:grid-cols-3">
-          <NumberField error={errors.purchasePrice} id="purchasePrice" label={t('spool.price')} onChange={(value) => update('purchasePrice', value)} optional unit="" value={values.purchasePrice} />
+          <FormField error={errors.storeName} label={t('spool.storeName')} hint={t('common.optional')}>
+            <input aria-invalid={Boolean(errors.storeName)} className={`${inputClass} ${errors.storeName ? 'border-red-500 focus:border-red-500' : ''}`} disabled={isSubmitting} id="spool-storeName" onChange={(event) => update('storeName', event.target.value)} value={values.storeName} />
+          </FormField>
+          <NumberField error={errors.purchasePrice} id="purchasePrice" label={t('spool.price')} max={MAX_SPOOL_PURCHASE_PRICE} onChange={(value) => update('purchasePrice', value)} optional unit="" value={values.purchasePrice} />
           <FormField error={errors.currency} label={t('spool.currency')}>
             <select aria-invalid={Boolean(errors.currency)} className={`${inputClass} ${errors.currency ? 'border-red-500 focus:border-red-500' : ''}`} disabled={isSubmitting} id="spool-currency" onChange={(event) => update('currency', event.target.value)} value={values.currency}><option>EUR</option><option>USD</option><option>GBP</option></select>
           </FormField>
@@ -393,13 +461,8 @@ export function SpoolForm({
         </div>
       </FormSection>
 
-      <FormSection title={mode === 'create' ? 'Storage & Status' : 'Storage'}>
-        <div className="grid gap-5 sm:grid-cols-2">
-          <FormField error={errors.locationId} label="Location" hint="Optional">
-            <select aria-invalid={Boolean(errors.locationId)} className={`${inputClass} ${errors.locationId ? 'border-red-500 focus:border-red-500' : ''}`} disabled={isSubmitting} id="spool-locationId" onChange={(event) => update('locationId', event.target.value)} value={values.locationId}><option value="">No location</option>{locations.map((location) => <option key={location.id} value={location.id}>{location.name}</option>)}</select>
-          </FormField>
-          {mode === 'create' && <FormField label="Initial Status"><select className={inputClass} disabled={isSubmitting} onChange={(event) => update('status', event.target.value as FormValues['status'])} value={values.status}><option value="SEALED">SEALED</option><option value="OPEN">OPEN</option></select></FormField>}
-        </div>
+      <FormSection title={t('spool.status')}>
+        {mode === 'create' && <div className="grid gap-5 sm:grid-cols-2"><FormField label="Initial Status"><select className={inputClass} disabled={isSubmitting} onChange={(event) => update('status', event.target.value as FormValues['status'])} value={values.status}><option value="SEALED">SEALED</option><option value="OPEN">OPEN</option></select></FormField></div>}
         <label className={`mt-5 flex cursor-pointer items-center gap-3 rounded-md border bg-surface-raised px-3 py-3 text-sm text-ink ${errors.needsDrying ? 'border-red-500' : 'border-line'}`}><input aria-invalid={Boolean(errors.needsDrying)} checked={values.needsDrying} className="size-4 accent-accent" disabled={isSubmitting} id="spool-needsDrying" onChange={(event) => update('needsDrying', event.target.checked)} type="checkbox" />Needs drying<InputError error={errors.needsDrying} /></label>
         {mode === 'edit' && <FormField error={errors.lastDriedAt} label="Last Dried At" hint="Optional"><input aria-invalid={Boolean(errors.lastDriedAt)} className={`${inputClass} ${errors.lastDriedAt ? 'border-red-500 focus:border-red-500' : ''}`} disabled={isSubmitting} id="spool-lastDriedAt" onChange={(event) => update('lastDriedAt', event.target.value)} type="datetime-local" value={values.lastDriedAt} /></FormField>}
       </FormSection>
@@ -421,6 +484,6 @@ function FormSection({ children, title, optional = false }: { children: React.Re
   return <section aria-labelledby={`${title.toLowerCase().replaceAll(' ', '-')}-title`}><div className="mb-4 flex items-baseline gap-2"><h2 className="text-base font-semibold text-ink" id={`${title.toLowerCase().replaceAll(' ', '-')}-title`}>{title}</h2>{optional && <span className="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-ink-muted">Optional</span>}</div>{children}</section>
 }
 
-function NumberField({ error, hint, id, label, onChange, optional = false, unit = 'g', value }: { error?: string; hint?: string; id: string; label: string; onChange: (value: string) => void; optional?: boolean; unit?: string; value: string }) {
-  return <FormField error={error} hint={hint ?? (optional ? 'Optional' : undefined)} label={label}><div className="relative mt-1.5"><input aria-invalid={Boolean(error)} className={`${inputClass} mt-0 ${unit ? 'pr-12' : ''} ${error ? 'border-red-500 focus:border-red-500' : ''}`} id={`spool-${id}`} min="0" onChange={(event) => onChange(event.target.value)} step="any" type="number" value={value} />{unit && <span className="pointer-events-none absolute right-3 top-2.5 text-sm text-ink-muted">{unit}</span>}</div></FormField>
+function NumberField({ error, hint, id, label, max, onChange, optional = false, unit = 'g', value }: { error?: string; hint?: string; id: string; label: string; max?: number; onChange: (value: string) => void; optional?: boolean; unit?: string; value: string }) {
+  return <FormField error={error} hint={hint ?? (optional ? 'Optional' : undefined)} label={label}><div className="relative mt-1.5"><input aria-invalid={Boolean(error)} className={`${inputClass} mt-0 ${unit ? 'pr-12' : ''} ${error ? 'border-red-500 focus:border-red-500' : ''}`} id={`spool-${id}`} max={max} min="0" onChange={(event) => onChange(event.target.value)} step="any" type="number" value={value} />{unit && <span className="pointer-events-none absolute right-3 top-2.5 text-sm text-ink-muted">{unit}</span>}</div></FormField>
 }

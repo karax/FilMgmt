@@ -4,14 +4,6 @@ import { describe, expect, it } from 'vitest'
 import { makeSpool } from '../../test/spoolFixture'
 import { SpoolCard } from './SpoolCard'
 
-const rackLocation = {
-  id: 1,
-  name: 'Rack A / Slot 3',
-  description: null,
-  created_at: '2026-08-01T12:00:00Z',
-  updated_at: '2026-08-01T12:00:00Z',
-}
-
 function completeSpool() {
   return makeSpool({
     code: 'FIL-0042',
@@ -20,8 +12,6 @@ function completeSpool() {
     current_filament_weight_g: '742.000',
     initial_filament_weight_g: '1000.000',
     remaining_percent: 74.2,
-    location_id: 1,
-    location: rackLocation,
   })
 }
 
@@ -38,7 +28,6 @@ describe('SpoolCard', () => {
     expect(within(card).getByText('PLA+ HS')).toBeVisible()
     expect(within(card).getByText('74.2%')).toBeVisible()
     expect(within(card).getByText('Open')).toBeVisible()
-    expect(within(card).getByText('Rack A / Slot 3')).toBeVisible()
     expect(within(card).getByText(/742 g/)).toHaveTextContent('742 g / 1.00 kg')
   })
 
@@ -55,10 +44,9 @@ describe('SpoolCard', () => {
     expect(screen.getByRole('heading', { name: 'FIL-0042' })).toBeVisible()
   })
 
-  it('uses a safe fallback for missing location and color', () => {
-    render(<SpoolCard spool={makeSpool({ color_hex: null, location: null })} />)
+  it('uses a safe fallback for missing color', () => {
+    render(<SpoolCard spool={makeSpool({ color_hex: null })} />)
 
-    expect(screen.getByText('Unassigned')).toBeVisible()
     expect(screen.getByLabelText('Color: Black')).toBeVisible()
   })
 

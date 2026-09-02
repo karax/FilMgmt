@@ -70,9 +70,6 @@ async function mockSpoolCatalogs(page: Page) {
   await page.route('**/api/materials', (route) =>
     route.fulfill({ json: [{ id: 2, name: 'PLA+', category: 'PLA' }] }),
   )
-  await page.route('**/api/locations', (route) =>
-    route.fulfill({ json: [{ id: 3, name: 'Rack A / Slot 3' }] }),
-  )
 }
 
 async function useInventoryView(page: Page, view: 'grid' | 'table') {
@@ -88,7 +85,7 @@ test('desktop dashboard in light mode', async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 })
   await useTheme(page, 'light')
   await mockDashboardSpools(page)
-  await page.goto('/')
+  await page.goto('/dashboard')
 
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dashboard')
   await expect(page.getByRole('heading', { name: 'Total Spools' })).toBeVisible()
@@ -107,7 +104,7 @@ test('mobile dashboard in dark mode without horizontal overflow', async ({
   await page.setViewportSize({ width: 390, height: 844 })
   await useTheme(page, 'dark')
   await mockDashboardSpools(page)
-  await page.goto('/')
+  await page.goto('/dashboard')
 
   await expect(page.locator('html')).toHaveClass(/dark/)
   await expect(page.getByRole('heading', { name: 'Inventory overview' })).toBeVisible()
@@ -140,6 +137,7 @@ test('desktop inventory in dark mode with active navigation', async ({ page }) =
 test('mobile inventory and open navigation drawer', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await useTheme(page, 'light')
+  await useInventoryView(page, 'grid')
   await mockDashboardSpools(page)
   await page.goto('/inventory')
 

@@ -134,7 +134,10 @@ describe('FinishPrintDialog', () => {
     expect(init?.body).not.toContain('material_cost')
     expect(init?.body).not.toContain('new_weight')
     expect(invalidation).toHaveBeenCalledWith({ queryKey: ['prints'] })
+    expect(invalidation).toHaveBeenCalledWith({ queryKey: ['print', 42] })
     expect(invalidation).toHaveBeenCalledWith({ queryKey: ['spools'] })
+    expect(invalidation).toHaveBeenCalledWith({ queryKey: ['spool', 'FIL-0001'] })
+    expect(invalidation).toHaveBeenCalledWith({ queryKey: ['spool', 'FIL-0002'] })
     expect(invalidation).toHaveBeenCalledWith({ queryKey: ['spool', 'FIL-0003'] })
   })
 
@@ -168,7 +171,7 @@ describe('FinishPrintDialog', () => {
   it('preserves inputs after a network failure and prevents double finish', async () => {
     let rejectRequest!: (reason: unknown) => void
     vi.mocked(fetch).mockImplementation(() => new Promise((_resolve, reject) => { rejectRequest = reject }))
-    renderWithClient(<FinishPrintDialog entries={[entry(1)]} onCancel={vi.fn()} onSuccess={vi.fn()} printJob={job('PRINTING')} />)
+    const { invalidation } = renderWithClient(<FinishPrintDialog entries={[entry(1)]} onCancel={vi.fn()} onSuccess={vi.fn()} printJob={job('PRINTING')} />)
     const user = userEvent.setup()
     const input = screen.getByLabelText(/Filamento Consumido/)
     await user.type(input, '4.25')
@@ -180,5 +183,6 @@ describe('FinishPrintDialog', () => {
     rejectRequest(new TypeError('network failed'))
     expect(await screen.findByRole('alert')).toHaveTextContent('Não foi possível finalizar a impressão. Verifique a conexão')
     expect(input).toHaveValue('4.25')
+    expect(invalidation).not.toHaveBeenCalled()
   })
 })

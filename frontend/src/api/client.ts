@@ -74,6 +74,16 @@ export function apiPostWithoutBody<TResponse>(path: string): Promise<TResponse> 
   return request<TResponse>(path, { method: 'POST' })
 }
 
+export function apiPostFormData<TResponse>(
+  path: string,
+  formData: FormData,
+): Promise<TResponse> {
+  return request<TResponse>(path, {
+    method: 'POST',
+    body: formData,
+  })
+}
+
 export function apiPatch<TResponse, TPayload>(path: string, payload: TPayload): Promise<TResponse> {
   return request<TResponse>(path, {
     method: 'PATCH',

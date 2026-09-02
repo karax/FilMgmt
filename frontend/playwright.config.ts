@@ -1,5 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
+import { findChromiumExecutable } from './scripts/browser-support.mjs'
+
 export default defineConfig({
   testDir: './tests/visual',
   outputDir: './test-results/playwright',
@@ -17,9 +19,13 @@ export default defineConfig({
   },
   use: {
     baseURL: 'http://127.0.0.1:4173',
+    launchOptions: {
+      executablePath: findChromiumExecutable(),
+    },
     colorScheme: 'light',
     screenshot: 'only-on-failure',
     trace: 'retain-on-failure',
+    video: 'off',
   },
   projects: [
     {

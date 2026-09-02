@@ -1,4 +1,4 @@
-import { Droplets, MapPin } from 'lucide-react'
+import { Droplets } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -105,12 +105,6 @@ function SpoolCardContent({
         )}
       </div>
 
-      {!compact && (
-        <p className="mt-auto flex items-center gap-2 border-t border-line pt-5 text-xs text-ink-muted">
-          <MapPin aria-hidden="true" className="size-3.5 shrink-0" />
-          <span className="truncate">{spool.location?.name ?? 'Unassigned'}</span>
-        </p>
-      )}
     </>
   )
 }

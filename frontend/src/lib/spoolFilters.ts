@@ -16,7 +16,6 @@ export function filtersFromSearchParams(params: URLSearchParams): SpoolFilters {
     search: params.get('search')?.trim() || undefined,
     manufacturerId: numberParam(params, 'manufacturer_id', [0, Number.MAX_SAFE_INTEGER]),
     materialId: numberParam(params, 'material_id', [0, Number.MAX_SAFE_INTEGER]),
-    locationId: numberParam(params, 'location_id', [0, Number.MAX_SAFE_INTEGER]),
     status: statuses.includes(status as SpoolStatus) ? status as SpoolStatus : undefined,
     needsDrying: bool('needs_drying'),
     minWeightG: numberParam(params, 'min_weight_g', [0, Number.MAX_SAFE_INTEGER]),
@@ -31,7 +30,7 @@ export function filtersToSearchParams(filters: SpoolFilters): URLSearchParams {
   const params = new URLSearchParams()
   const entries: [string, number | string | boolean | undefined][] = [
     ['search', filters.search?.trim() || undefined],
-    ['manufacturer_id', filters.manufacturerId], ['material_id', filters.materialId], ['location_id', filters.locationId], ['status', filters.status], ['needs_drying', filters.needsDrying], ['min_weight_g', filters.minWeightG], ['max_weight_g', filters.maxWeightG], ['min_remaining_percent', filters.minRemainingPercent], ['max_remaining_percent', filters.maxRemainingPercent], ['include_archived', filters.includeArchived],
+    ['manufacturer_id', filters.manufacturerId], ['material_id', filters.materialId], ['status', filters.status], ['needs_drying', filters.needsDrying], ['min_weight_g', filters.minWeightG], ['max_weight_g', filters.maxWeightG], ['min_remaining_percent', filters.minRemainingPercent], ['max_remaining_percent', filters.maxRemainingPercent], ['include_archived', filters.includeArchived],
   ]
   for (const [name, value] of entries) if (value !== undefined) params.set(name, String(value))
   return params

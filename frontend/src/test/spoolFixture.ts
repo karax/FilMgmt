@@ -11,7 +11,6 @@ export function makeSpool(overrides: Partial<Spool> = {}): Spool {
     code: `FIL-${String(id).padStart(4, '0')}`,
     manufacturer_id: manufacturerId,
     material_id: materialId,
-    location_id: null,
     manufacturer: {
       id: manufacturerId,
       name: 'eSUN',
@@ -32,7 +31,6 @@ export function makeSpool(overrides: Partial<Spool> = {}): Spool {
       created_at: '2026-08-01T12:00:00Z',
       updated_at: '2026-08-01T12:00:00Z',
     },
-    location: null,
     display_name: null,
     product_name: null,
     color_name: 'Black',
@@ -42,6 +40,7 @@ export function makeSpool(overrides: Partial<Spool> = {}): Spool {
     current_filament_weight_g: '800.000',
     empty_spool_weight_g: null,
     purchase_price: null,
+    store_name: null,
     currency: 'EUR',
     purchase_date: null,
     opened_at: null,

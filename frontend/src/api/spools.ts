@@ -7,7 +7,6 @@ export function getSpools(filters: SpoolFilters = {}, signal?: AbortSignal): Pro
     search: filters.search,
     manufacturer_id: filters.manufacturerId,
     material_id: filters.materialId,
-    location_id: filters.locationId,
     status: filters.status,
     needs_drying: filters.needsDrying,
     min_weight_g: filters.minWeightG,

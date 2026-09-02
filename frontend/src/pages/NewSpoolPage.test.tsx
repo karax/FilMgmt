@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { createMemoryRouter, RouterProvider } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import i18n from '../i18n'
 import { makeSpool } from '../test/spoolFixture'
 import type { Material } from '../types/spool'
 import { NewSpoolPage } from './NewSpoolPage'
@@ -47,14 +48,6 @@ const plaMaterial: Material = {
   default_bed_temp_min: 45,
   default_bed_temp_max: 60,
 }
-const location = {
-  id: 3,
-  name: 'Rack A / Slot 3',
-  description: null,
-  created_at: '2026-08-01T12:00:00Z',
-  updated_at: '2026-08-01T12:00:00Z',
-}
-
 function response(data: unknown, status = 200): Response {
   return {
     ok: status >= 200 && status < 300,
@@ -66,19 +59,16 @@ function response(data: unknown, status = 200): Response {
 function mockCatalogs({
   manufacturers = [manufacturer],
   materials = [material],
-  locations = [location],
   post = response(makeSpool({ code: 'FIL-0042' }), 201),
 }: {
   manufacturers?: typeof manufacturer[]
   materials?: Material[]
-  locations?: typeof location[]
   post?: Response
 } = {}) {
   vi.mocked(fetch).mockImplementation((input, init) => {
     const url = String(input)
     if (url.endsWith('/manufacturers')) return Promise.resolve(response(manufacturers))
     if (url.endsWith('/materials')) return Promise.resolve(response(materials))
-    if (url.endsWith('/locations')) return Promise.resolve(response(locations))
     if (url.endsWith('/spools') && init?.method === 'POST') return Promise.resolve(post)
     throw new Error(`Unexpected request: ${url}`)
   })
@@ -114,12 +104,11 @@ describe('NewSpoolPage', () => {
     expect(screen.queryByLabelText('Manufacturer')).not.toBeInTheDocument()
   })
 
-  it('loads manufacturer, material, and location options from the API', async () => {
+  it('loads manufacturer and material options from the API', async () => {
     mockCatalogs()
     renderPage()
     expect(await screen.findByRole('option', { name: 'eSUN' })).toBeVisible()
     expect(screen.getByRole('option', { name: 'PLA+' })).toBeVisible()
-    expect(screen.getByRole('option', { name: 'Rack A / Slot 3' })).toBeVisible()
   })
 
   it('applies selected material defaults while keeping print-setting inputs editable', async () => {
@@ -200,21 +189,101 @@ describe('NewSpoolPage', () => {
     expect(vi.mocked(fetch).mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(0)
   }, 10_000)
 
+  it('rejects filament weights above 2,000 g and preserves the entered values', async () => {
+    mockCatalogs()
+    const { user } = renderPage()
+    await screen.findByLabelText('Manufacturer')
+    await fillRequired(user)
+    const initialWeight = screen.getByRole('spinbutton', { name: /Initial Filament Weight/ })
+    const currentWeight = screen.getByRole('spinbutton', { name: /Current Filament Weight/ })
+    await user.clear(initialWeight)
+    await user.type(initialWeight, '2500')
+    await user.clear(currentWeight)
+    await user.type(currentWeight, '2000.01')
+    await user.click(screen.getByRole('button', { name: 'Create Spool' }))
+
+    expect(screen.getAllByText('Maximum filament weight per spool is 2,000 g.')).toHaveLength(2)
+    expect(initialWeight).toHaveValue(2500)
+    expect(currentWeight).toHaveValue(2000.01)
+    expect(initialWeight).toHaveAttribute('max', '2000')
+    expect(currentWeight).toHaveAttribute('max', '2000')
+    expect(vi.mocked(fetch).mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(0)
+  })
+
+  it('accepts the exact weight and price limits', async () => {
+    mockCatalogs()
+    const { user } = renderPage()
+    await screen.findByLabelText('Manufacturer')
+    await fillRequired(user)
+    const initialWeight = screen.getByRole('spinbutton', { name: /Initial Filament Weight/ })
+    const currentWeight = screen.getByRole('spinbutton', { name: /Current Filament Weight/ })
+    const purchasePrice = screen.getByRole('spinbutton', { name: /Purchase Price/ })
+    await user.clear(initialWeight)
+    await user.type(initialWeight, '2000')
+    await user.clear(currentWeight)
+    await user.type(currentWeight, '2000')
+    await user.type(purchasePrice, '100')
+    await user.click(screen.getByRole('button', { name: 'Create Spool' }))
+
+    await waitFor(() => expect(screen.getByText('Inventory destination')).toBeVisible())
+    const postCall = vi.mocked(fetch).mock.calls.find(([, init]) => init?.method === 'POST')
+    const payload = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>
+    expect(payload).toMatchObject({
+      initial_filament_weight_g: 2000,
+      current_filament_weight_g: 2000,
+      purchase_price: 100,
+      store_name: null,
+    })
+    expect(purchasePrice).toHaveAttribute('max', '100')
+  })
+
+  it('posts the automatically generated display name', async () => {
+    mockCatalogs()
+    const { user } = renderPage()
+    await screen.findByLabelText('Manufacturer')
+    await fillRequired(user)
+    expect(screen.getByRole('textbox', { name: /Spool Name/ })).toHaveValue('eSUN Black')
+
+    await user.click(screen.getByRole('button', { name: 'Create Spool' }))
+
+    await waitFor(() => expect(screen.getByText('Inventory destination')).toBeVisible())
+    const postCall = vi.mocked(fetch).mock.calls.find(([, init]) => init?.method === 'POST')
+    const payload = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>
+    expect(payload.display_name).toBe('eSUN Black')
+  })
+
+  it('rejects a price above 100 without sending or truncating it', async () => {
+    mockCatalogs()
+    const { user } = renderPage()
+    await screen.findByLabelText('Manufacturer')
+    await fillRequired(user)
+    const purchasePrice = screen.getByRole('spinbutton', { name: /Purchase Price/ })
+    await user.type(purchasePrice, '150')
+    await user.click(screen.getByRole('button', { name: 'Create Spool' }))
+
+    expect(screen.getByText('Maximum allowed price is €100.')).toBeVisible()
+    expect(purchasePrice).toHaveValue(150)
+    expect(vi.mocked(fetch).mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(0)
+  })
+
   it('posts only writable fields, invalidates spools, and redirects after success', async () => {
     mockCatalogs()
     const { queryClient, user } = renderPage()
     await screen.findByLabelText('Manufacturer')
     await fillRequired(user)
-    await user.selectOptions(screen.getByRole('combobox', { name: /Location/ }), '3')
-    await user.type(screen.getByRole('textbox', { name: /Spool Name/ }), 'PLA Preto Principal')
+    const displayName = screen.getByRole('textbox', { name: /Spool Name/ })
+    await user.clear(displayName)
+    await user.type(displayName, 'PLA Preto Principal')
     await user.type(screen.getByRole('textbox', { name: /Product Name/ }), 'PLA+ HS')
+    await user.type(screen.getByRole('textbox', { name: /Store Name/ }), '  Filament World  ')
     await user.click(screen.getByRole('button', { name: 'Create Spool' }))
 
     await waitFor(() => expect(screen.getByText('Inventory destination')).toBeVisible())
     const postCall = vi.mocked(fetch).mock.calls.find(([, init]) => init?.method === 'POST')
     expect(postCall).toBeDefined()
     const payload = JSON.parse(String(postCall?.[1]?.body)) as Record<string, unknown>
-    expect(payload).toMatchObject({ manufacturer_id: 1, material_id: 2, location_id: 3, display_name: 'PLA Preto Principal', product_name: 'PLA+ HS', color_name: 'Black', status: 'SEALED' })
+    expect(payload).toMatchObject({ manufacturer_id: 1, material_id: 2, store_name: 'Filament World', display_name: 'PLA Preto Principal', product_name: 'PLA+ HS', color_name: 'Black', status: 'SEALED' })
+    expect(payload).not.toHaveProperty('location_id')
     expect(payload).not.toHaveProperty('code')
     expect(payload).not.toHaveProperty('remaining_percent')
     expect(queryClient.isFetching({ queryKey: ['spools'] })).toBe(0)
@@ -232,21 +301,23 @@ describe('NewSpoolPage', () => {
     resolvePost?.(response({ detail: [
       { loc: ['body', 'initial_filament_weight_g'], msg: 'Input should be greater than 0' },
       { loc: ['body', 'color_hex'], msg: 'String should match pattern' },
+      { loc: ['body', 'purchase_price'], msg: 'Value error, Purchase price cannot exceed 100.' },
     ] }, 422))
     expect(await screen.findByText('Some fields need to be corrected. Review the highlighted fields.')).toBeVisible()
     const initialWeight = screen.getByRole('spinbutton', { name: /Initial Filament Weight/ })
     expect(initialWeight).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByText('Input should be greater than 0')).toBeVisible()
     expect(screen.getByLabelText('Color Hex')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByRole('spinbutton', { name: /Purchase Price/ })).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByText('Maximum allowed price is €100.')).toBeVisible()
     await waitFor(() => expect(initialWeight).toHaveFocus())
     expect(screen.getByRole('textbox', { name: /Color Name/ })).toHaveValue('Black')
   })
 
-  it('keeps the form usable without locations but blocks empty manufacturers', async () => {
-    mockCatalogs({ manufacturers: [], locations: [] })
+  it('blocks submission when manufacturers are unavailable', async () => {
+    mockCatalogs({ manufacturers: [] })
     renderPage()
     expect(await screen.findByText('No manufacturers available. Create a manufacturer first.')).toBeVisible()
-    expect(screen.getByRole('option', { name: 'No location' })).toBeVisible()
     expect(screen.getByRole('button', { name: 'Create Spool' })).toBeDisabled()
   })
 
@@ -256,5 +327,22 @@ describe('NewSpoolPage', () => {
     await screen.findByLabelText('Manufacturer')
     await user.click(screen.getByRole('button', { name: 'Cancel' }))
     expect(await screen.findByText('Inventory destination')).toBeVisible()
+  })
+
+  it('shows maximum errors in pt-BR', async () => {
+    await i18n.changeLanguage('pt-BR')
+    mockCatalogs()
+    const { user } = renderPage()
+    await screen.findByLabelText('Fabricante')
+    const initialWeight = screen.getByRole('spinbutton', { name: /Peso Inicial do Filamento/ })
+    const purchasePrice = screen.getByRole('spinbutton', { name: /Preço de Compra/ })
+    await user.clear(initialWeight)
+    await user.type(initialWeight, '2500')
+    await user.type(purchasePrice, '150')
+    await user.click(screen.getByRole('button', { name: 'Criar Spool' }))
+
+    expect(screen.getByText('O peso máximo de filamento por spool é 2.000 g.')).toBeVisible()
+    expect(screen.getByText('O preço máximo permitido é €100.')).toBeVisible()
+    expect(screen.getByRole('textbox', { name: /Nome da Loja/ })).toBeVisible()
   })
 })

@@ -1,8 +1,8 @@
 import type { LucideIcon } from 'lucide-react'
 import {
   ChartNoAxesCombined,
+  FileCode2,
   LayoutDashboard,
-  Lightbulb,
   PackageOpen,
   Printer,
   Settings2,
@@ -15,10 +15,10 @@ export interface NavigationItem {
 }
 
 export const navigationItems: readonly NavigationItem[] = [
-  { labelKey: 'navigation.dashboard', path: '/', icon: LayoutDashboard },
+  { labelKey: 'navigation.dashboard', path: '/dashboard', icon: LayoutDashboard },
   { labelKey: 'navigation.inventory', path: '/inventory', icon: PackageOpen },
   { labelKey: 'navigation.prints', path: '/prints', icon: Printer },
-  { labelKey: 'navigation.advisor', path: '/advisor', icon: Lightbulb },
+  { labelKey: 'navigation.gcode', path: '/gcode', icon: FileCode2 },
   {
     labelKey: 'navigation.analytics',
     path: '/analytics',
@@ -29,6 +29,8 @@ export const navigationItems: readonly NavigationItem[] = [
 
 export function getPageTitleKey(pathname: string): string {
   if (pathname === '/inventory/new') return 'spool.new'
+  if (pathname === '/scan') return 'scan.pageTitle'
+  if (pathname.startsWith('/qr/spool/')) return 'qr.spool.pageTitle'
   if (pathname === '/prints/new') return 'prints.actions.new'
   if (pathname.startsWith('/prints/') && pathname.endsWith('/edit')) return 'prints.actions.edit'
   if (pathname.endsWith('/edit')) return 'spool.edit'

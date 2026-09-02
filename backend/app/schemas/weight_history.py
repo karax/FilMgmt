@@ -1,8 +1,9 @@
 from decimal import Decimal
 from typing import Annotated
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.models.spool import MAX_SPOOL_FILAMENT_WEIGHT_G
 from app.models.weight_history import WeightSource
 from app.schemas.common import UtcDatetime
 
@@ -24,6 +25,13 @@ class WeightHistoryBase(BaseModel):
 
 class WeightHistoryCreate(WeightHistoryBase):
     """Payload for a future spool-scoped weight recording operation."""
+
+    @field_validator("weight_g")
+    @classmethod
+    def filament_weight_cannot_exceed_limit(cls, value: Decimal) -> Decimal:
+        if value > MAX_SPOOL_FILAMENT_WEIGHT_G:
+            raise ValueError("Filament weight cannot exceed 2000 g.")
+        return value
 
 
 class WeightHistoryRead(WeightHistoryBase):

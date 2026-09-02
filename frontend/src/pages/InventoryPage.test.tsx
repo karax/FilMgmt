@@ -44,14 +44,14 @@ describe('InventoryPage', () => {
     vi.unstubAllGlobals()
   })
 
-  it('shows grid skeletons without rendering an empty state while loading', () => {
+  it('shows table skeletons without rendering an empty state while loading by default', () => {
     vi.mocked(fetch).mockReturnValue(new Promise(() => undefined))
 
     renderInventory()
 
     expect(screen.getByRole('status', { name: 'Loading inventory' })).toBeVisible()
     expect(screen.queryByText('Your filament inventory is empty.')).not.toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Grid view' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Table view' })).toHaveAttribute(
       'aria-pressed',
       'true',
     )
@@ -82,28 +82,21 @@ describe('InventoryPage', () => {
     expect(screen.getByText('0 spools')).toBeVisible()
   })
 
-  it('renders all essential spool information in grid view', async () => {
-    const location = {
-      id: 1,
-      name: 'Rack A / Slot 3',
-      description: null,
-      created_at: '2026-08-01T12:00:00Z',
-      updated_at: '2026-08-01T12:00:00Z',
-    }
+  it('renders all essential spool information in grid view when selected', async () => {
     vi.mocked(fetch).mockResolvedValue(
       responseWith([
         makeSpool({
           code: 'FIL-0001',
           current_filament_weight_g: '800.000',
           remaining_percent: 80,
-          location_id: 1,
-          location,
         }),
       ]),
     )
 
-    renderInventory()
+    const { user } = renderInventory()
 
+    await screen.findByRole('link', { name: 'FIL-0001' })
+    await user.click(screen.getByRole('button', { name: 'Grid view' }))
     const cardHeading = await screen.findByRole('heading', { name: 'FIL-0001' })
     const card = cardHeading.closest('article')
     if (!card) throw new Error('Spool card not found')
@@ -111,7 +104,6 @@ describe('InventoryPage', () => {
     for (const text of ['eSUN', 'PLA', 'Black', '800 g', '80.0%', 'Open']) {
       expect(within(card).getByText(text)).toBeVisible()
     }
-    expect(within(card).getByText('Rack A / Slot 3')).toBeVisible()
     expect(within(card).getByLabelText('Color: Black')).toBeVisible()
     expect(screen.getByRole('link', { name: 'View spool FIL-0001' })).toHaveAttribute(
       'href',
@@ -119,14 +111,16 @@ describe('InventoryPage', () => {
     )
   })
 
-  it('handles missing color and location without breaking the grid', async () => {
+  it('handles a missing color swatch without breaking the grid', async () => {
     vi.mocked(fetch).mockResolvedValue(
-      responseWith([makeSpool({ color_hex: null, location: null })]),
+      responseWith([makeSpool({ color_hex: null })]),
     )
 
-    renderInventory()
+    const { user } = renderInventory()
 
-    expect(await screen.findByText('Unassigned')).toBeVisible()
+    await screen.findByRole('link', { name: 'FIL-0001' })
+    await user.click(screen.getByRole('button', { name: 'Grid view' }))
+    await screen.findByRole('heading', { name: 'FIL-0001' })
     expect(screen.getByLabelText('Color: Black')).toBeVisible()
     expect(screen.getByText('Black')).toBeVisible()
   })
@@ -147,12 +141,11 @@ describe('InventoryPage', () => {
 
   it('renders a semantic table with essential columns', async () => {
     vi.mocked(fetch).mockResolvedValue(
-      responseWith([makeSpool({ color_hex: null, location: null })]),
+      responseWith([makeSpool({ color_hex: null })]),
     )
-    const { user } = renderInventory()
+    renderInventory()
 
-    await screen.findByRole('heading', { name: 'FIL-0001' })
-    await user.click(screen.getByRole('button', { name: 'Table view' }))
+    await screen.findByRole('link', { name: 'FIL-0001' })
 
     const table = screen.getByRole('table', { name: 'Spool inventory' })
     expect(table).toBeVisible()
@@ -164,30 +157,39 @@ describe('InventoryPage', () => {
       'Remaining',
       'Weight',
       'Status',
-      'Location',
     ]) {
       expect(within(table).getByRole('columnheader', { name: column })).toBeInTheDocument()
     }
     expect(within(table).getByText('FIL-0001')).toBeVisible()
     expect(within(table).getByText('80.0%')).toBeVisible()
-    expect(within(table).getByText('—')).toBeVisible()
     expect(within(table).getByRole('link', { name: 'FIL-0001' })).toHaveAttribute(
       'href',
       '/spools/FIL-0001',
     )
   })
 
-  it('switches grid to table and back without fetching again', async () => {
+  it('switches table to grid and back without fetching again', async () => {
     vi.mocked(fetch).mockResolvedValue(responseWith([makeSpool()]))
     const { user } = renderInventory()
 
-    await screen.findByRole('heading', { name: 'FIL-0001' })
+    await user.click(screen.getByRole('button', { name: 'Grid view' }))
+    expect(screen.getByRole('list', { name: 'Spools in grid view' })).toBeVisible()
     await user.click(screen.getByRole('button', { name: 'Table view' }))
     expect(screen.getByRole('table', { name: 'Spool inventory' })).toBeVisible()
-    await user.click(screen.getByRole('button', { name: 'Grid view' }))
-
-    expect(screen.getByRole('list', { name: 'Spools in grid view' })).toBeVisible()
     expect(fetch).toHaveBeenCalledTimes(1)
+  })
+
+  it('respects a persisted grid preference', async () => {
+    window.localStorage.setItem(INVENTORY_VIEW_STORAGE_KEY, 'grid')
+    vi.mocked(fetch).mockResolvedValue(responseWith([makeSpool()]))
+
+    renderInventory()
+
+    expect(await screen.findByRole('list', { name: 'Spools in grid view' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Grid view' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
   })
 
   it('persists table view and restores it after remounting', async () => {
@@ -195,7 +197,7 @@ describe('InventoryPage', () => {
     const queryClient = createTestQueryClient()
     const firstRender = renderInventory(queryClient)
 
-    await screen.findByRole('heading', { name: 'FIL-0001' })
+    await screen.findByRole('link', { name: 'FIL-0001' })
     await firstRender.user.click(screen.getByRole('button', { name: 'Table view' }))
     expect(window.localStorage.getItem(INVENTORY_VIEW_STORAGE_KEY)).toBe('table')
     firstRender.unmount()

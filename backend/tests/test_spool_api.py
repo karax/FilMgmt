@@ -17,7 +17,7 @@ from app.db.session import (
     get_db,
 )
 from app.main import app
-from app.models import Location, Manufacturer, Material, Spool, WeightHistory
+from app.models import Manufacturer, Material, Spool, WeightHistory
 
 
 @dataclass(frozen=True)
@@ -27,7 +27,6 @@ class ApiEnvironment:
     engine: Engine
     manufacturer_id: int
     material_id: int
-    location_id: int
 
 
 @pytest.fixture
@@ -42,12 +41,10 @@ def api_environment(tmp_path: Path) -> Iterator[ApiEnvironment]:
     with session_factory() as session:
         manufacturer = Manufacturer(name="eSUN")
         material = Material(name="PLA+", category="PLA")
-        location = Location(name="Rack A / Slot 3")
-        session.add_all([manufacturer, material, location])
+        session.add_all([manufacturer, material])
         session.commit()
         manufacturer_id = manufacturer.id
         material_id = material.id
-        location_id = location.id
 
     def override_get_db() -> Iterator[Session]:
         with session_factory() as session:
@@ -62,7 +59,6 @@ def api_environment(tmp_path: Path) -> Iterator[ApiEnvironment]:
                 engine=engine,
                 manufacturer_id=manufacturer_id,
                 material_id=material_id,
-                location_id=location_id,
             )
     finally:
         app.dependency_overrides.clear()
@@ -77,7 +73,6 @@ def valid_spool_payload(
     payload: dict[str, object] = {
         "manufacturer_id": environment.manufacturer_id,
         "material_id": environment.material_id,
-        "location_id": environment.location_id,
         "product_name": "PLA+ HS",
         "color_name": "Black",
         "color_hex": "#000000",
@@ -113,13 +108,15 @@ def test_list_spools_is_empty(api_environment: ApiEnvironment) -> None:
     assert response.json() == []
 
 
-def test_spool_openapi_exposes_display_name(api_environment: ApiEnvironment) -> None:
+def test_spool_openapi_exposes_optional_names(api_environment: ApiEnvironment) -> None:
     response = api_environment.client.get("/openapi.json")
 
     assert response.status_code == 200
     schemas = response.json()["components"]["schemas"]
     for schema_name in ("SpoolCreate", "SpoolUpdate", "SpoolRead"):
         assert "display_name" in schemas[schema_name]["properties"]
+        assert "store_name" in schemas[schema_name]["properties"]
+        assert "location_id" not in schemas[schema_name]["properties"]
 
 
 def test_create_basic_spool_with_automatic_code(
@@ -137,7 +134,6 @@ def test_create_basic_spool_with_automatic_code(
     assert re.fullmatch(r"FIL-[0-9]{4,}", body["code"])
     assert body["manufacturer_id"] == api_environment.manufacturer_id
     assert body["material_id"] == api_environment.material_id
-    assert body["location_id"] == api_environment.location_id
     assert body["remaining_percent"] == 80.0
 
 
@@ -214,27 +210,6 @@ def test_create_rejects_unknown_material(api_environment: ApiEnvironment) -> Non
     assert response.json() == {"detail": "Material not found."}
 
 
-def test_create_rejects_unknown_location(api_environment: ApiEnvironment) -> None:
-    response = api_environment.client.post(
-        "/api/spools",
-        json=valid_spool_payload(api_environment, location_id=999_999),
-    )
-
-    assert response.status_code == 404
-    assert response.json() == {"detail": "Location not found."}
-
-
-def test_create_allows_null_location(api_environment: ApiEnvironment) -> None:
-    response = api_environment.client.post(
-        "/api/spools",
-        json=valid_spool_payload(api_environment, location_id=None),
-    )
-
-    assert response.status_code == 201
-    assert response.json()["location_id"] is None
-    assert response.json()["location"] is None
-
-
 def test_create_rejects_current_weight_above_initial(
     api_environment: ApiEnvironment,
 ) -> None:
@@ -248,6 +223,101 @@ def test_create_rejects_current_weight_above_initial(
     )
 
     assert response.status_code == 422
+
+
+def test_create_accepts_maximum_filament_weights(
+    api_environment: ApiEnvironment,
+) -> None:
+    response = api_environment.client.post(
+        "/api/spools",
+        json=valid_spool_payload(
+            api_environment,
+            initial_filament_weight_g=2000,
+            current_filament_weight_g=2000,
+        ),
+    )
+
+    assert response.status_code == 201
+    assert Decimal(response.json()["initial_filament_weight_g"]) == 2000
+    assert Decimal(response.json()["current_filament_weight_g"]) == 2000
+
+
+@pytest.mark.parametrize("initial_weight", [2000.01, 2500])
+def test_create_rejects_initial_filament_weight_above_limit(
+    api_environment: ApiEnvironment,
+    initial_weight: float,
+) -> None:
+    response = api_environment.client.post(
+        "/api/spools",
+        json=valid_spool_payload(
+            api_environment,
+            initial_filament_weight_g=initial_weight,
+        ),
+    )
+
+    assert response.status_code == 422
+    issue = response.json()["detail"][0]
+    assert issue["loc"] == ["body", "initial_filament_weight_g"]
+    assert "Filament weight cannot exceed 2000 g." in issue["msg"]
+
+
+def test_create_rejects_current_filament_weight_above_limit(
+    api_environment: ApiEnvironment,
+) -> None:
+    response = api_environment.client.post(
+        "/api/spools",
+        json=valid_spool_payload(
+            api_environment,
+            initial_filament_weight_g=2000,
+            current_filament_weight_g=2000.01,
+        ),
+    )
+
+    assert response.status_code == 422
+    issue = response.json()["detail"][0]
+    assert issue["loc"] == ["body", "current_filament_weight_g"]
+    assert "Filament weight cannot exceed 2000 g." in issue["msg"]
+
+
+@pytest.mark.parametrize("purchase_price", [None, 0, 100])
+def test_create_accepts_purchase_price_at_or_below_limit(
+    api_environment: ApiEnvironment,
+    purchase_price: float | None,
+) -> None:
+    response = api_environment.client.post(
+        "/api/spools",
+        json=valid_spool_payload(
+            api_environment,
+            purchase_price=purchase_price,
+        ),
+    )
+
+    assert response.status_code == 201
+    actual = response.json()["purchase_price"]
+    if purchase_price is None:
+        assert actual is None
+    else:
+        assert Decimal(actual) == Decimal(str(purchase_price))
+
+
+@pytest.mark.parametrize("purchase_price", [-1, 100.01, 150])
+def test_create_rejects_purchase_price_outside_range(
+    api_environment: ApiEnvironment,
+    purchase_price: float,
+) -> None:
+    response = api_environment.client.post(
+        "/api/spools",
+        json=valid_spool_payload(
+            api_environment,
+            purchase_price=purchase_price,
+        ),
+    )
+
+    assert response.status_code == 422
+    issue = response.json()["detail"][0]
+    assert issue["loc"] == ["body", "purchase_price"]
+    if purchase_price > 100:
+        assert "Purchase price cannot exceed 100." in issue["msg"]
 
 
 def test_create_rejects_invalid_color(api_environment: ApiEnvironment) -> None:
@@ -270,8 +340,23 @@ def test_response_serializes_all_relationships(
     body = response.json()
     assert body["manufacturer"]["name"] == "eSUN"
     assert body["material"]["name"] == "PLA+"
-    assert body["location"]["name"] == "Rack A / Slot 3"
     assert body["remaining_percent"] == 80.0
+
+
+def test_existing_price_above_new_write_limit_remains_readable(
+    api_environment: ApiEnvironment,
+) -> None:
+    spool = create_spool(api_environment)
+    with api_environment.session_factory() as session:
+        persisted = session.get(Spool, spool["id"])
+        assert persisted is not None
+        persisted.purchase_price = Decimal("1000000")
+        session.commit()
+
+    response = api_environment.client.get(f"/api/spools/{spool['code']}")
+
+    assert response.status_code == 200
+    assert Decimal(response.json()["purchase_price"]) == Decimal("1000000")
 
 
 def test_get_spool_by_code_is_case_insensitive(
@@ -320,6 +405,42 @@ def test_create_normalizes_optional_display_name(api_environment: ApiEnvironment
     assert unnamed["display_name"] is None
 
 
+def test_create_and_read_optional_store_name(
+    api_environment: ApiEnvironment,
+) -> None:
+    purchased = create_spool(api_environment, store_name="  Filament World  ")
+    unspecified = create_spool(api_environment)
+
+    response = api_environment.client.get(
+        f"/api/spools/{purchased['code']}"
+    )
+
+    assert purchased["store_name"] == "Filament World"
+    assert unspecified["store_name"] is None
+    assert response.status_code == 200
+    assert response.json()["store_name"] == "Filament World"
+
+
+def test_patch_updates_and_clears_store_name(
+    api_environment: ApiEnvironment,
+) -> None:
+    spool = create_spool(api_environment)
+
+    updated = api_environment.client.patch(
+        f"/api/spools/{spool['code']}",
+        json={"store_name": "  Local Filaments  "},
+    )
+    cleared = api_environment.client.patch(
+        f"/api/spools/{spool['code']}",
+        json={"store_name": "   "},
+    )
+
+    assert updated.status_code == 200
+    assert updated.json()["store_name"] == "Local Filaments"
+    assert cleared.status_code == 200
+    assert cleared.json()["store_name"] is None
+
+
 def test_display_names_can_repeat_and_be_updated_or_cleared(
     api_environment: ApiEnvironment,
 ) -> None:
@@ -357,48 +478,11 @@ def test_patch_updates_spool_without_exposing_read_only_fields(
     assert response.json()["current_filament_weight_g"] == spool["current_filament_weight_g"]
 
 
-def test_partial_update_changes_only_location(
-    api_environment: ApiEnvironment,
-) -> None:
-    spool = create_spool(api_environment)
-    with api_environment.session_factory() as session:
-        new_location = Location(name="Dry Box")
-        session.add(new_location)
-        session.commit()
-        new_location_id = new_location.id
-
-    response = api_environment.client.put(
-        f"/api/spools/{spool['code']}",
-        json={"location_id": new_location_id},
-    )
-
-    assert response.status_code == 200
-    body = response.json()
-    assert body["location_id"] == new_location_id
-    assert body["location"]["name"] == "Dry Box"
-    assert body["color_name"] == spool["color_name"]
-    assert body["product_name"] == spool["product_name"]
-
-
-def test_partial_update_can_clear_location(api_environment: ApiEnvironment) -> None:
-    spool = create_spool(api_environment)
-
-    response = api_environment.client.put(
-        f"/api/spools/{spool['code']}",
-        json={"location_id": None},
-    )
-
-    assert response.status_code == 200
-    assert response.json()["location_id"] is None
-    assert response.json()["location"] is None
-
-
 @pytest.mark.parametrize(
     ("field", "detail"),
     [
         ("manufacturer_id", "Manufacturer not found."),
         ("material_id", "Material not found."),
-        ("location_id", "Location not found."),
     ],
 )
 def test_update_rejects_unknown_catalog_reference(
@@ -439,6 +523,70 @@ def test_update_rejects_initial_weight_below_persisted_current(
     assert Decimal(persisted.json()["current_filament_weight_g"]) == Decimal(
         "800.000"
     )
+
+
+def test_patch_accepts_consistent_initial_weight_below_limit(
+    api_environment: ApiEnvironment,
+) -> None:
+    spool = create_spool(
+        api_environment,
+        initial_filament_weight_g=2000,
+        current_filament_weight_g=1000,
+    )
+
+    response = api_environment.client.patch(
+        f"/api/spools/{spool['code']}",
+        json={"initial_filament_weight_g": 1999},
+    )
+
+    assert response.status_code == 200
+    assert Decimal(response.json()["initial_filament_weight_g"]) == 1999
+
+
+def test_patch_rejects_initial_weight_above_limit(
+    api_environment: ApiEnvironment,
+) -> None:
+    spool = create_spool(api_environment)
+
+    response = api_environment.client.patch(
+        f"/api/spools/{spool['code']}",
+        json={"initial_filament_weight_g": 2001},
+    )
+
+    assert response.status_code == 422
+    issue = response.json()["detail"][0]
+    assert issue["loc"] == ["body", "initial_filament_weight_g"]
+    assert "Filament weight cannot exceed 2000 g." in issue["msg"]
+
+
+def test_patch_accepts_purchase_price_below_limit(
+    api_environment: ApiEnvironment,
+) -> None:
+    spool = create_spool(api_environment)
+
+    response = api_environment.client.patch(
+        f"/api/spools/{spool['code']}",
+        json={"purchase_price": 99.99},
+    )
+
+    assert response.status_code == 200
+    assert Decimal(response.json()["purchase_price"]) == Decimal("99.99")
+
+
+def test_patch_rejects_purchase_price_above_limit(
+    api_environment: ApiEnvironment,
+) -> None:
+    spool = create_spool(api_environment)
+
+    response = api_environment.client.patch(
+        f"/api/spools/{spool['code']}",
+        json={"purchase_price": 101},
+    )
+
+    assert response.status_code == 422
+    issue = response.json()["detail"][0]
+    assert issue["loc"] == ["body", "purchase_price"]
+    assert "Purchase price cannot exceed 100." in issue["msg"]
 
 
 def test_update_initial_weight_recalculates_managed_status(
@@ -753,7 +901,6 @@ class FilterDataset:
     spools: dict[str, dict[str, object]]
     manufacturer_ids: dict[str, int]
     material_ids: dict[str, int]
-    location_ids: dict[str, int]
 
 
 @pytest.fixture
@@ -763,9 +910,7 @@ def filter_dataset(api_environment: ApiEnvironment) -> FilterDataset:
         polymaker = Manufacturer(name="Polymaker")
         petg = Material(name="PETG", category="PETG")
         tpu = Material(name="TPU", category="TPU")
-        dry_box = Location(name="Dry Box")
-        rack_b = Location(name="Rack B")
-        session.add_all([sunlu, polymaker, petg, tpu, dry_box, rack_b])
+        session.add_all([sunlu, polymaker, petg, tpu])
         session.commit()
         manufacturer_ids = {
             "esun": api_environment.manufacturer_id,
@@ -777,18 +922,12 @@ def filter_dataset(api_environment: ApiEnvironment) -> FilterDataset:
             "petg": petg.id,
             "tpu": tpu.id,
         }
-        location_ids = {
-            "rack_a": api_environment.location_id,
-            "dry_box": dry_box.id,
-            "rack_b": rack_b.id,
-        }
 
     spools = {
         "esun_pla": create_spool(
             api_environment,
             manufacturer_id=manufacturer_ids["esun"],
             material_id=material_ids["pla"],
-            location_id=location_ids["rack_a"],
             color_name="Black",
             initial_filament_weight_g=1000,
             current_filament_weight_g=800,
@@ -799,7 +938,6 @@ def filter_dataset(api_environment: ApiEnvironment) -> FilterDataset:
             api_environment,
             manufacturer_id=manufacturer_ids["sunlu"],
             material_id=material_ids["pla"],
-            location_id=location_ids["dry_box"],
             color_name="Orange",
             initial_filament_weight_g=1000,
             current_filament_weight_g=150,
@@ -810,7 +948,6 @@ def filter_dataset(api_environment: ApiEnvironment) -> FilterDataset:
             api_environment,
             manufacturer_id=manufacturer_ids["polymaker"],
             material_id=material_ids["petg"],
-            location_id=location_ids["rack_b"],
             color_name="White",
             initial_filament_weight_g=1000,
             current_filament_weight_g=1000,
@@ -821,7 +958,6 @@ def filter_dataset(api_environment: ApiEnvironment) -> FilterDataset:
             api_environment,
             manufacturer_id=manufacturer_ids["esun"],
             material_id=material_ids["tpu"],
-            location_id=location_ids["dry_box"],
             color_name="Blue",
             initial_filament_weight_g=500,
             current_filament_weight_g=300,
@@ -833,7 +969,6 @@ def filter_dataset(api_environment: ApiEnvironment) -> FilterDataset:
         spools=spools,
         manufacturer_ids=manufacturer_ids,
         material_ids=material_ids,
-        location_ids=location_ids,
     )
 
 
@@ -893,22 +1028,6 @@ def test_filter_by_material_id(
         filter_dataset,
         "esun_pla",
         "sunlu_pla",
-    )
-
-
-def test_filter_by_location_id(
-    api_environment: ApiEnvironment,
-    filter_dataset: FilterDataset,
-) -> None:
-    response = api_environment.client.get(
-        "/api/spools",
-        params={"location_id": filter_dataset.location_ids["dry_box"]},
-    )
-
-    assert response_codes(response) == expected_codes(
-        filter_dataset,
-        "sunlu_pla",
-        "esun_tpu",
     )
 
 
@@ -1219,7 +1338,6 @@ def test_filtered_response_keeps_relationships_loaded(
     body = response.json()[0]
     assert body["manufacturer"]["name"] == "Polymaker"
     assert body["material"]["name"] == "PETG"
-    assert body["location"]["name"] == "Rack B"
 
 
 def test_remaining_percent_filter_is_executed_in_single_sql_query(
@@ -1274,9 +1392,7 @@ def search_dataset(api_environment: ApiEnvironment) -> SearchDataset:
         sunlu = Manufacturer(name="SUNLU")
         petg = Material(name="PETG", category="PETG")
         tpu = Material(name="TPU", category="TPU")
-        dry_box = Location(name="Dry Box")
-        rack_b = Location(name="Rack B")
-        session.add_all([polymaker, sunlu, petg, tpu, dry_box, rack_b])
+        session.add_all([polymaker, sunlu, petg, tpu])
         session.commit()
         manufacturer_ids = {
             "esun": api_environment.manufacturer_id,
@@ -1294,7 +1410,6 @@ def search_dataset(api_environment: ApiEnvironment) -> SearchDataset:
             api_environment,
             manufacturer_id=manufacturer_ids["esun"],
             material_id=material_ids["pla"],
-            location_id=api_environment.location_id,
             product_name="PLA+ High Speed",
             color_name="Black",
             initial_filament_weight_g=1000,
@@ -1306,7 +1421,6 @@ def search_dataset(api_environment: ApiEnvironment) -> SearchDataset:
             api_environment,
             manufacturer_id=manufacturer_ids["polymaker"],
             material_id=material_ids["petg"],
-            location_id=dry_box.id,
             product_name="PolyLite PETG",
             color_name="Orange",
             initial_filament_weight_g=1000,
@@ -1318,7 +1432,6 @@ def search_dataset(api_environment: ApiEnvironment) -> SearchDataset:
             api_environment,
             manufacturer_id=manufacturer_ids["sunlu"],
             material_id=material_ids["tpu"],
-            location_id=rack_b.id,
             product_name="Flexible TPU",
             color_name="Galaxy Black",
             initial_filament_weight_g=500,
@@ -1489,21 +1602,6 @@ def test_search_by_material_name(
     )
 
     assert response_codes(response) == expected_codes(search_dataset, "sunlu_tpu")
-
-
-def test_search_by_location_name(
-    api_environment: ApiEnvironment,
-    search_dataset: SearchDataset,
-) -> None:
-    response = api_environment.client.get(
-        "/api/spools",
-        params={"search": "dry box"},
-    )
-
-    assert response_codes(response) == expected_codes(
-        search_dataset,
-        "polymaker_petg",
-    )
 
 
 def test_search_strips_surrounding_whitespace(
@@ -1686,7 +1784,6 @@ def test_search_response_keeps_relationships_serialized(
     body = response.json()[0]
     assert body["manufacturer"]["name"] == "Polymaker"
     assert body["material"]["name"] == "PETG"
-    assert body["location"]["name"] == "Dry Box"
 
 
 def test_search_escapes_like_wildcards(

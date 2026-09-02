@@ -4,6 +4,10 @@ Aplicação self-hosted e local-first para gerenciamento de filamentos de
 impressoras 3D. O projeto possui API FastAPI com persistência SQLite, CRUD de
 catálogos e spools, e um frontend React para acompanhar o inventário.
 
+## Documentation
+
+- [Manual do usuário](docs/user-guide/README.md)
+
 ## Estado atual
 
 - Dashboard operacional em `/`, com resumo de estoque, materiais e spools que
@@ -167,7 +171,7 @@ não são liberadas por padrão.
 | --- | --- |
 | `/` | Dashboard com totais, materiais e spools críticos. |
 | `/inventory` | Inventário de spools em Grid ou Table. |
-| `/prints`, `/advisor`, `/analytics`, `/settings` | Estrutura visual preparada para módulos futuros. |
+| `/prints`, `/analytics`, `/settings` | Módulos disponíveis na aplicação. |
 
 O frontend usa TanStack Query para `GET /api/spools`. A preferência Grid/Table
 é local ao dispositivo e fica em `localStorage` na chave `fcc-inventory-view`.

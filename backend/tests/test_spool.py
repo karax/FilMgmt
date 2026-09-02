@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.db.base import Base
 from app.db.session import create_database_engine, create_session_factory
-from app.models import Location, Manufacturer, Material, Spool, SpoolStatus
+from app.models import Manufacturer, Material, Spool, SpoolStatus
 from app.schemas import SpoolCreate, SpoolRead, SpoolUpdate
 from app.services import add_spool_with_generated_code
 
@@ -33,25 +33,23 @@ def db_session() -> Iterator[Session]:
 @pytest.fixture
 def catalog_records(
     db_session: Session,
-) -> tuple[Manufacturer, Material, Location]:
+) -> tuple[Manufacturer, Material]:
     manufacturer = Manufacturer(name="eSUN")
     material = Material(name="PLA+", category="PLA")
-    location = Location(name="Rack A / Slot 1")
-    db_session.add_all([manufacturer, material, location])
+    db_session.add_all([manufacturer, material])
     db_session.commit()
-    return manufacturer, material, location
+    return manufacturer, material
 
 
 def create_spool(
     db_session: Session,
-    catalog_records: tuple[Manufacturer, Material, Location],
+    catalog_records: tuple[Manufacturer, Material],
     **overrides: object,
 ) -> Spool:
-    manufacturer, material, location = catalog_records
+    manufacturer, material = catalog_records
     values: dict[str, object] = {
         "manufacturer_id": manufacturer.id,
         "material_id": material.id,
-        "location_id": location.id,
         "product_name": "PLA+ HS",
         "color_name": "Black",
         "color_hex": "#000000",
@@ -68,9 +66,9 @@ def create_spool(
 
 def test_spool_can_be_created_with_relationships(
     db_session: Session,
-    catalog_records: tuple[Manufacturer, Material, Location],
+    catalog_records: tuple[Manufacturer, Material],
 ) -> None:
-    manufacturer, material, location = catalog_records
+    manufacturer, material = catalog_records
     spool = create_spool(db_session, catalog_records)
     db_session.commit()
     db_session.refresh(spool)
@@ -78,7 +76,6 @@ def test_spool_can_be_created_with_relationships(
     assert spool.id is not None
     assert spool.manufacturer == manufacturer
     assert spool.material == material
-    assert spool.location == location
     assert spool.current_filament_weight_g == Decimal("1000.000")
     assert spool.status is SpoolStatus.SEALED
     assert spool.created_at is not None
@@ -88,7 +85,7 @@ def test_spool_can_be_created_with_relationships(
 
 def test_spool_codes_are_generated_from_unique_ids(
     db_session: Session,
-    catalog_records: tuple[Manufacturer, Material, Location],
+    catalog_records: tuple[Manufacturer, Material],
 ) -> None:
     first = create_spool(db_session, catalog_records)
     second = create_spool(db_session, catalog_records, color_name="Orange")
@@ -101,7 +98,7 @@ def test_spool_codes_are_generated_from_unique_ids(
 
 def test_archived_spool_code_is_not_reused(
     db_session: Session,
-    catalog_records: tuple[Manufacturer, Material, Location],
+    catalog_records: tuple[Manufacturer, Material],
 ) -> None:
     archived = create_spool(db_session, catalog_records)
     archived.archived_at = datetime.now(UTC)
@@ -116,7 +113,7 @@ def test_archived_spool_code_is_not_reused(
 
 def test_physically_deleted_spool_id_is_not_reused_on_sqlite(
     db_session: Session,
-    catalog_records: tuple[Manufacturer, Material, Location],
+    catalog_records: tuple[Manufacturer, Material],
 ) -> None:
     deleted = create_spool(db_session, catalog_records)
     db_session.commit()
@@ -133,7 +130,7 @@ def test_physically_deleted_spool_id_is_not_reused_on_sqlite(
 
 def test_spool_code_is_unique_in_database(
     db_session: Session,
-    catalog_records: tuple[Manufacturer, Material, Location],
+    catalog_records: tuple[Manufacturer, Material],
 ) -> None:
     first = create_spool(db_session, catalog_records)
     db_session.commit()
@@ -300,6 +297,25 @@ def test_currency_is_normalized_to_uppercase() -> None:
     assert payload.currency == "EUR"
 
 
+def test_store_name_is_optional_and_trimmed() -> None:
+    named = SpoolCreate(
+        manufacturer_id=1,
+        material_id=1,
+        color_name="Black",
+        initial_filament_weight_g=1000,
+        store_name="  Filament World  ",
+    )
+    unnamed = SpoolCreate(
+        manufacturer_id=1,
+        material_id=1,
+        color_name="Black",
+        initial_filament_weight_g=1000,
+    )
+
+    assert named.store_name == "Filament World"
+    assert unnamed.store_name is None
+
+
 def test_inverted_temperature_range_is_rejected() -> None:
     with pytest.raises(ValidationError):
         SpoolCreate(
@@ -312,21 +328,9 @@ def test_inverted_temperature_range_is_rejected() -> None:
         )
 
 
-def test_location_is_optional(
-    db_session: Session,
-    catalog_records: tuple[Manufacturer, Material, Location],
-) -> None:
-    spool = create_spool(db_session, catalog_records, location_id=None)
-    db_session.commit()
-    db_session.refresh(spool)
-
-    assert spool.location_id is None
-    assert spool.location is None
-
-
 def test_invalid_foreign_key_is_rejected_by_sqlite(
     db_session: Session,
-    catalog_records: tuple[Manufacturer, Material, Location],
+    catalog_records: tuple[Manufacturer, Material],
 ) -> None:
     with pytest.raises(IntegrityError):
         create_spool(db_session, catalog_records, manufacturer_id=999_999)
@@ -336,7 +340,7 @@ def test_invalid_foreign_key_is_rejected_by_sqlite(
 
 def test_spool_orm_object_can_be_converted_to_read_schema(
     db_session: Session,
-    catalog_records: tuple[Manufacturer, Material, Location],
+    catalog_records: tuple[Manufacturer, Material],
 ) -> None:
     spool = create_spool(
         db_session,
@@ -355,8 +359,6 @@ def test_spool_orm_object_can_be_converted_to_read_schema(
     assert result.remaining_percent == 74.2
     assert result.manufacturer.name == "eSUN"
     assert result.material.name == "PLA+"
-    assert result.location is not None
-    assert result.location.name == "Rack A / Slot 1"
     assert result.created_at.tzinfo is UTC
     assert result.updated_at.tzinfo is UTC
     assert result.model_dump(mode="json")["status"] == "OPEN"

@@ -41,3 +41,14 @@ def update_inventory_status(spool: Spool) -> SpoolStatus:
     """Apply the centrally determined status without committing the session."""
     spool.status = determine_inventory_status(spool)
     return spool.status
+
+
+def release_spool_from_use(spool: Spool) -> SpoolStatus:
+    """Remove transient print usage and recalculate the inventory status."""
+    if spool.status is SpoolStatus.IN_USE:
+        spool.status = (
+            SpoolStatus.NEEDS_DRYING
+            if spool.needs_drying
+            else SpoolStatus.OPEN
+        )
+    return update_inventory_status(spool)

@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.db.base import Base
 from app.db.session import create_database_engine, create_session_factory
 from app.models import (
-    Location,
     Manufacturer,
     Material,
     Spool,
@@ -43,14 +42,12 @@ def db_session() -> Iterator[Session]:
 def spool(db_session: Session) -> Spool:
     manufacturer = Manufacturer(name="eSUN")
     material = Material(name="PLA+", category="PLA")
-    location = Location(name="Rack A")
-    db_session.add_all([manufacturer, material, location])
+    db_session.add_all([manufacturer, material])
     db_session.flush()
 
     payload = SpoolCreate(
         manufacturer_id=manufacturer.id,
         material_id=material.id,
-        location_id=location.id,
         color_name="Black",
         initial_filament_weight_g=1000,
         current_filament_weight_g=742,

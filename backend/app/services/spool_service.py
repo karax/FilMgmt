@@ -3,7 +3,6 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, joinedload
 
 from app.models import (
-    Location,
     Manufacturer,
     Material,
     Spool,
@@ -35,10 +34,6 @@ class SpoolManufacturerNotFoundError(Exception):
 
 class SpoolMaterialNotFoundError(Exception):
     """Raised when a referenced material does not exist."""
-
-
-class SpoolLocationNotFoundError(Exception):
-    """Raised when a referenced location does not exist."""
 
 
 class SpoolMustBeArchivedError(Exception):
@@ -89,8 +84,6 @@ class SpoolService:
             conditions.append(Spool.manufacturer_id == filters.manufacturer_id)
         if filters.material_id is not None:
             conditions.append(Spool.material_id == filters.material_id)
-        if filters.location_id is not None:
-            conditions.append(Spool.location_id == filters.location_id)
         if filters.status is not None:
             conditions.append(Spool.status == filters.status)
         if filters.needs_drying is not None:
@@ -129,9 +122,6 @@ class SpoolService:
                     Spool.material.has(
                         Material.name.ilike(search_pattern, escape="\\")
                     ),
-                    Spool.location.has(
-                        Location.name.ilike(search_pattern, escape="\\")
-                    ),
                 )
             )
 
@@ -154,7 +144,6 @@ class SpoolService:
         self._validate_all_references(
             payload.manufacturer_id,
             payload.material_id,
-            payload.location_id,
         )
         spool = Spool(**payload.model_dump())
         update_inventory_status(spool)
@@ -281,27 +270,21 @@ class SpoolService:
         return select(Spool).options(
             joinedload(Spool.manufacturer),
             joinedload(Spool.material),
-            joinedload(Spool.location),
         ).execution_options(populate_existing=True)
 
     def _validate_all_references(
         self,
         manufacturer_id: int,
         material_id: int,
-        location_id: int | None,
     ) -> None:
         self._validate_manufacturer(manufacturer_id)
         self._validate_material(material_id)
-        if location_id is not None:
-            self._validate_location(location_id)
 
     def _validate_changed_references(self, changes: dict[str, object]) -> None:
         if "manufacturer_id" in changes:
             self._validate_manufacturer(changes["manufacturer_id"])
         if "material_id" in changes:
             self._validate_material(changes["material_id"])
-        if "location_id" in changes and changes["location_id"] is not None:
-            self._validate_location(changes["location_id"])
 
     def _validate_manufacturer(self, manufacturer_id: object) -> None:
         if self.db.get(Manufacturer, manufacturer_id) is None:
@@ -310,7 +293,3 @@ class SpoolService:
     def _validate_material(self, material_id: object) -> None:
         if self.db.get(Material, material_id) is None:
             raise SpoolMaterialNotFoundError
-
-    def _validate_location(self, location_id: object) -> None:
-        if self.db.get(Location, location_id) is None:
-            raise SpoolLocationNotFoundError

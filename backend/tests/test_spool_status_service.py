@@ -8,6 +8,7 @@ from app.services.spool_status_service import (
     LOW_SPOOL_PERCENT,
     LOW_SPOOL_WEIGHT_G,
     determine_inventory_status,
+    release_spool_from_use,
     update_inventory_status,
 )
 
@@ -107,4 +108,28 @@ def test_managed_statuses_are_recalculated_after_correction(
     spool = spool_with_inventory(current=current, status=previous)
 
     assert update_inventory_status(spool) is expected
+    assert spool.status is expected
+
+
+@pytest.mark.parametrize(
+    ("current", "needs_drying", "expected"),
+    [
+        (700, False, SpoolStatus.OPEN),
+        (200, False, SpoolStatus.LOW),
+        (0, False, SpoolStatus.EMPTY),
+        (700, True, SpoolStatus.NEEDS_DRYING),
+    ],
+)
+def test_release_spool_from_use_recalculates_transient_status(
+    current: int,
+    needs_drying: bool,
+    expected: SpoolStatus,
+) -> None:
+    spool = spool_with_inventory(
+        current=current,
+        status=SpoolStatus.IN_USE,
+        needs_drying=needs_drying,
+    )
+
+    assert release_spool_from_use(spool) is expected
     assert spool.status is expected

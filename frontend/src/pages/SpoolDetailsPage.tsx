@@ -6,6 +6,7 @@ import { ApiError } from '../api/client'
 import { SpoolDetailsHeader } from '../components/spool/SpoolDetailsHeader'
 import { InfoRow, SpoolInfoSection } from '../components/spool/SpoolInfoSection'
 import { SpoolPrintSettings } from '../components/spool/SpoolPrintSettings'
+import { SpoolQrCard } from '../components/spool/SpoolQrCard'
 import { SpoolWeightPanel } from '../components/spool/SpoolWeightPanel'
 import { useSpool } from '../hooks/useSpool'
 import { useArchiveSpool, useDeleteSpool } from '../hooks/useSpoolMutations'
@@ -46,6 +47,7 @@ export function SpoolDetailsPage() {
       </section>
       <div className="mt-8 grid items-start gap-5 lg:grid-cols-2">
         <SpoolWeightPanel spool={spool} />
+        <SpoolPrintSettings spool={spool} />
         <SpoolInfoSection title="Basic Information">
           <InfoRow label="Manufacturer">
             {spool.manufacturer.website ? <a className="text-accent underline underline-offset-4" href={spool.manufacturer.website} rel="noopener noreferrer" target="_blank">{spool.manufacturer.name}</a> : spool.manufacturer.name}
@@ -54,12 +56,12 @@ export function SpoolDetailsPage() {
           <InfoRow label="Color">{spool.color_name}</InfoRow>
           <InfoRow label="Status">{spool.status}</InfoRow>
         </SpoolInfoSection>
-        <SpoolInfoSection title="Storage"><InfoRow label="Location">{spool.location?.name ?? 'Unassigned'}</InfoRow></SpoolInfoSection>
+        <SpoolQrCard code={spool.code} displayName={spool.display_name} />
         <SpoolInfoSection title="Purchase">
+          <InfoRow label="Store name">{spool.store_name ?? '—'}</InfoRow>
           <InfoRow label="Purchase price">{spool.purchase_price == null ? '—' : formatCurrency(spool.purchase_price, spool.currency)}</InfoRow>
           <InfoRow label="Purchase date">{dateOrDash(spool.purchase_date)}</InfoRow>
         </SpoolInfoSection>
-        <SpoolPrintSettings spool={spool} />
         <SpoolInfoSection title="Dates">
           <InfoRow label="Opened at">{dateOrDash(spool.opened_at)}</InfoRow>
           <InfoRow label="Last used at">{dateOrDash(spool.last_used_at)}</InfoRow>

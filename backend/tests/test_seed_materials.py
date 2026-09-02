@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.db.base import Base
 from app.db.session import create_database_engine, create_session_factory
-from app.models import Location, Manufacturer, Material, Spool
+from app.models import Manufacturer, Material, Spool
 from app.scripts.seed_materials import (
     MATERIAL_SEED,
     MaterialSeedDefinition,
@@ -95,12 +95,11 @@ def test_seed_preserves_custom_values_and_only_fills_null_defaults(db_session: S
 def test_seed_preserves_existing_spool_relations(db_session: Session) -> None:
     material = Material(name="PLA", category="PLA")
     manufacturer = Manufacturer(name="eSUN")
-    location = Location(name="Rack A")
-    db_session.add_all([material, manufacturer, location])
+    db_session.add_all([material, manufacturer])
     db_session.flush()
     spool = Spool(
         code="FIL-0001", manufacturer_id=manufacturer.id, material_id=material.id,
-        location_id=location.id, color_name="Black",
+        color_name="Black",
         initial_filament_weight_g=Decimal("1000"), current_filament_weight_g=Decimal("1000"),
     )
     db_session.add(spool)

@@ -17,7 +17,6 @@ from app.db.session import (
 )
 from app.main import app
 from app.models import (
-    Location,
     Manufacturer,
     Material,
     Spool,
@@ -34,7 +33,6 @@ class WeightApiEnvironment:
     engine: Engine
     manufacturer_id: int
     material_id: int
-    location_id: int
 
 
 @pytest.fixture
@@ -49,12 +47,10 @@ def weight_api_environment(tmp_path: Path) -> Iterator[WeightApiEnvironment]:
     with session_factory() as session:
         manufacturer = Manufacturer(name="eSUN")
         material = Material(name="PLA+", category="PLA")
-        location = Location(name="Dry Box")
-        session.add_all([manufacturer, material, location])
+        session.add_all([manufacturer, material])
         session.commit()
         manufacturer_id = manufacturer.id
         material_id = material.id
-        location_id = location.id
 
     def override_get_db() -> Iterator[Session]:
         with session_factory() as session:
@@ -69,7 +65,6 @@ def weight_api_environment(tmp_path: Path) -> Iterator[WeightApiEnvironment]:
                 engine=engine,
                 manufacturer_id=manufacturer_id,
                 material_id=material_id,
-                location_id=location_id,
             )
     finally:
         app.dependency_overrides.clear()
@@ -88,7 +83,6 @@ def create_spool(
         json={
             "manufacturer_id": environment.manufacturer_id,
             "material_id": environment.material_id,
-            "location_id": environment.location_id,
             "color_name": "Black",
             "initial_filament_weight_g": initial_weight,
             "current_filament_weight_g": current_weight,
@@ -247,6 +241,49 @@ def test_weight_above_initial_is_rejected_without_changes(
     assert response.json() == {
         "detail": "Weight cannot exceed the spool's initial filament weight."
     }
+    assert get_persisted_spool(
+        weight_api_environment,
+        spool["code"],
+    ).current_filament_weight_g == Decimal("1000.000")
+    assert get_history(weight_api_environment, spool["id"]) == []
+
+
+def test_maximum_weight_is_allowed_when_not_above_initial(
+    weight_api_environment: WeightApiEnvironment,
+) -> None:
+    spool = create_spool(
+        weight_api_environment,
+        initial_weight=2000,
+        current_weight=1000,
+    )
+
+    response = weight_api_environment.client.post(
+        f"/api/spools/{spool['code']}/weight",
+        json={"weight_g": 2000, "source": "CORRECTION"},
+    )
+
+    assert response.status_code == 200
+    assert Decimal(response.json()["current_filament_weight_g"]) == 2000
+
+
+def test_weight_above_domain_limit_is_rejected_without_changes(
+    weight_api_environment: WeightApiEnvironment,
+) -> None:
+    spool = create_spool(
+        weight_api_environment,
+        initial_weight=2000,
+        current_weight=1000,
+    )
+
+    response = weight_api_environment.client.post(
+        f"/api/spools/{spool['code']}/weight",
+        json={"weight_g": 2000.01, "source": "CORRECTION"},
+    )
+
+    assert response.status_code == 422
+    issue = response.json()["detail"][0]
+    assert issue["loc"] == ["body", "weight_g"]
+    assert "Filament weight cannot exceed 2000 g." in issue["msg"]
     assert get_persisted_spool(
         weight_api_environment,
         spool["code"],

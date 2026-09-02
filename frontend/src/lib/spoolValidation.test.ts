@@ -9,9 +9,10 @@ describe('mapSpoolApiValidationErrors', () => {
       detail: [
         { loc: ['body', 'nozzle_temp_min'], msg: 'Invalid temperature' },
         { loc: ['body', 'color_hex'], msg: 'Invalid color' },
+        { loc: ['body', 'store_name'], msg: 'Invalid store name' },
       ],
     }))
-    expect(result?.fieldErrors).toEqual({ nozzleTempMin: 'Invalid temperature', colorHex: 'Invalid color' })
+    expect(result?.fieldErrors).toEqual({ nozzleTempMin: 'Invalid temperature', colorHex: 'Invalid color', storeName: 'Invalid store name' })
   })
 
   it('maps an API-shaped error after a hot-module update', () => {

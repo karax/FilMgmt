@@ -11,9 +11,12 @@ from pydantic import (
     model_validator,
 )
 
-from app.models.spool import SpoolStatus
+from app.models.spool import (
+    MAX_SPOOL_FILAMENT_WEIGHT_G,
+    MAX_SPOOL_PURCHASE_PRICE,
+    SpoolStatus,
+)
 from app.schemas.common import UtcDatetime
-from app.schemas.location import LocationRead
 from app.schemas.manufacturer import ManufacturerRead
 from app.schemas.material import MaterialRead, validate_temperature_range
 
@@ -25,6 +28,10 @@ SpoolProductName = Annotated[
 SpoolDisplayName = Annotated[
     str,
     StringConstraints(strip_whitespace=True, min_length=1, max_length=150),
+]
+SpoolStoreName = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, min_length=1, max_length=200),
 ]
 SpoolColorName = Annotated[
     str,
@@ -72,7 +79,7 @@ SpoolSearch = Annotated[
     Field(
         description=(
             "Search spools by code, product name, color, manufacturer, "
-            "material, or location."
+            "or material."
         )
     ),
 ]
@@ -89,6 +96,20 @@ def validate_weight_range(
         and current_weight > initial_weight
     ):
         raise ValueError("current filament weight cannot exceed initial weight")
+
+
+def validate_filament_weight_limit(value: Decimal | None) -> Decimal | None:
+    """Reject write-time filament weights above the domain maximum."""
+    if value is not None and value > MAX_SPOOL_FILAMENT_WEIGHT_G:
+        raise ValueError("Filament weight cannot exceed 2000 g.")
+    return value
+
+
+def validate_purchase_price_limit(value: Decimal | None) -> Decimal | None:
+    """Reject write-time purchase prices above the numeric domain maximum."""
+    if value is not None and value > MAX_SPOOL_PURCHASE_PRICE:
+        raise ValueError("Purchase price cannot exceed 100.")
+    return value
 
 
 def validate_filter_range(
@@ -108,7 +129,6 @@ class SpoolFilterParams(BaseModel):
 
     manufacturer_id: SpoolId | None = None
     material_id: SpoolId | None = None
-    location_id: SpoolId | None = None
     status: SpoolStatus | None = None
     needs_drying: bool | None = None
     min_weight_g: SpoolWeight | None = None
@@ -145,7 +165,6 @@ class SpoolBase(BaseModel):
 
     manufacturer_id: SpoolId
     material_id: SpoolId
-    location_id: SpoolId | None = None
     display_name: SpoolDisplayName | None = None
     product_name: SpoolProductName | None = None
     color_name: SpoolColorName
@@ -155,6 +174,7 @@ class SpoolBase(BaseModel):
     current_filament_weight_g: SpoolWeight
     empty_spool_weight_g: SpoolWeight | None = None
     purchase_price: SpoolPrice | None = None
+    store_name: SpoolStoreName | None = None
     currency: SpoolCurrency = "EUR"
     purchase_date: date | None = None
     nozzle_temp_min: SpoolTemperature | None = None
@@ -166,9 +186,9 @@ class SpoolBase(BaseModel):
     last_dried_at: UtcDatetime | None = None
     notes: str | None = None
 
-    @field_validator("display_name", mode="before")
+    @field_validator("display_name", "store_name", mode="before")
     @classmethod
-    def normalize_display_name(cls, value: object) -> object:
+    def normalize_optional_names(cls, value: object) -> object:
         if isinstance(value, str) and not value.strip():
             return None
         return value
@@ -197,6 +217,25 @@ class SpoolCreate(SpoolBase):
 
     current_filament_weight_g: SpoolWeight | None = None
 
+    @field_validator(
+        "initial_filament_weight_g",
+        "current_filament_weight_g",
+    )
+    @classmethod
+    def filament_weight_cannot_exceed_limit(
+        cls,
+        value: Decimal | None,
+    ) -> Decimal | None:
+        return validate_filament_weight_limit(value)
+
+    @field_validator("purchase_price")
+    @classmethod
+    def purchase_price_cannot_exceed_limit(
+        cls,
+        value: Decimal | None,
+    ) -> Decimal | None:
+        return validate_purchase_price_limit(value)
+
     @model_validator(mode="after")
     def default_and_validate_current_weight(self) -> Self:
         if self.current_filament_weight_g is None:
@@ -221,7 +260,6 @@ class SpoolUpdate(BaseModel):
 
     manufacturer_id: SpoolId | None = None
     material_id: SpoolId | None = None
-    location_id: SpoolId | None = None
     display_name: SpoolDisplayName | None = None
     product_name: SpoolProductName | None = None
     color_name: SpoolColorName | None = None
@@ -230,6 +268,7 @@ class SpoolUpdate(BaseModel):
     initial_filament_weight_g: SpoolInitialWeight | None = None
     empty_spool_weight_g: SpoolWeight | None = None
     purchase_price: SpoolPrice | None = None
+    store_name: SpoolStoreName | None = None
     currency: SpoolCurrency | None = None
     purchase_date: date | None = None
     opened_at: UtcDatetime | None = None
@@ -242,12 +281,28 @@ class SpoolUpdate(BaseModel):
     last_dried_at: UtcDatetime | None = None
     notes: str | None = None
 
-    @field_validator("display_name", mode="before")
+    @field_validator("display_name", "store_name", mode="before")
     @classmethod
-    def normalize_display_name(cls, value: object) -> object:
+    def normalize_optional_names(cls, value: object) -> object:
         if isinstance(value, str) and not value.strip():
             return None
         return value
+
+    @field_validator("initial_filament_weight_g")
+    @classmethod
+    def filament_weight_cannot_exceed_limit(
+        cls,
+        value: Decimal | None,
+    ) -> Decimal | None:
+        return validate_filament_weight_limit(value)
+
+    @field_validator("purchase_price")
+    @classmethod
+    def purchase_price_cannot_exceed_limit(
+        cls,
+        value: Decimal | None,
+    ) -> Decimal | None:
+        return validate_purchase_price_limit(value)
 
     @field_validator(
         "manufacturer_id",
@@ -288,7 +343,6 @@ class SpoolRead(SpoolBase):
     code: str
     manufacturer: ManufacturerRead
     material: MaterialRead
-    location: LocationRead | None
     created_at: UtcDatetime
     updated_at: UtcDatetime
     archived_at: UtcDatetime | None

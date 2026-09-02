@@ -1,4 +1,3 @@
-from app.services.location_service import LocationService
 from app.services.manufacturer_service import ManufacturerService
 from app.services.material_service import MaterialService
 from app.services.spool_code_service import (
@@ -14,7 +13,6 @@ from app.services.spool_status_service import (
 )
 
 __all__ = [
-    "LocationService",
     "ManufacturerService",
     "MaterialService",
     "LOW_SPOOL_PERCENT",

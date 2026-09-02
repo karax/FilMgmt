@@ -15,7 +15,6 @@ import {
   type InventoryView,
 } from '../components/inventory/InventoryToolbar'
 import { useSpools } from '../hooks/useSpools'
-import { useLocations } from '../hooks/useLocations'
 import { useManufacturers } from '../hooks/useManufacturers'
 import { useMaterials } from '../hooks/useMaterials'
 import { useDebouncedValue } from '../hooks/useDebouncedValue'
@@ -26,11 +25,10 @@ export const INVENTORY_VIEW_STORAGE_KEY = 'fcc-inventory-view'
 
 function getInitialView(): InventoryView {
   try {
-    return window.localStorage.getItem(INVENTORY_VIEW_STORAGE_KEY) === 'table'
-      ? 'table'
-      : 'grid'
+    const savedView = window.localStorage.getItem(INVENTORY_VIEW_STORAGE_KEY)
+    return savedView === 'grid' || savedView === 'table' ? savedView : 'table'
   } catch {
-    return 'grid'
+    return 'table'
   }
 }
 
@@ -44,7 +42,6 @@ export function InventoryPage() {
   const debouncedSearch = useDebouncedValue(searchInput)
   const { data: manufacturers = [] } = useManufacturers(filtersOpen || filters.manufacturerId !== undefined)
   const { data: materials = [] } = useMaterials(filtersOpen || filters.materialId !== undefined)
-  const { data: locations = [] } = useLocations(filtersOpen || filters.locationId !== undefined)
   const { data: spools, error, isFetching, isPending, refetch } = useSpools(filters)
   const hasFilters = activeFilterCount(filters) > 0
   const structuredFilterCount = activeFilterCount({ ...filters, search: undefined })
@@ -64,7 +61,6 @@ export function InventoryPage() {
     search: filters.search ? `${t('inventory.search')}: “${filters.search}”` : undefined,
     manufacturerId: manufacturers.find((item) => item.id === filters.manufacturerId)?.name ?? (filters.manufacturerId == null ? undefined : `${t('inventory.manufacturer')} ${filters.manufacturerId}`),
     materialId: materials.find((item) => item.id === filters.materialId)?.name ?? (filters.materialId == null ? undefined : `${t('inventory.material')} ${filters.materialId}`),
-    locationId: locations.find((item) => item.id === filters.locationId)?.name ?? (filters.locationId == null ? undefined : `${t('inventory.location')} ${filters.locationId}`),
     status: filters.status ? t(`status.${filters.status}`) : undefined, needsDrying: filters.needsDrying === true ? t('filters.needsDrying') : t('filters.doesNotNeedDrying'),
     minWeightG: filters.minWeightG == null ? undefined : `${t('filters.minWeight')} ${filters.minWeightG} g`, maxWeightG: filters.maxWeightG == null ? undefined : `${t('filters.maxWeight')} ${filters.maxWeightG} g`,
     minRemainingPercent: filters.minRemainingPercent == null ? undefined : `${t('filters.minRemaining')} ${filters.minRemainingPercent}%`, maxRemainingPercent: filters.maxRemainingPercent == null ? undefined : `${t('filters.maxRemaining')} ${filters.maxRemainingPercent}%`, includeArchived: t('filters.includeArchived'),

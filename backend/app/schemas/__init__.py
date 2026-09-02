@@ -1,9 +1,3 @@
-from app.schemas.location import (
-    LocationBase,
-    LocationCreate,
-    LocationRead,
-    LocationUpdate,
-)
 from app.schemas.manufacturer import (
     ManufacturerBase,
     ManufacturerCreate,
@@ -31,10 +25,6 @@ from app.schemas.weight_history import (
 )
 
 __all__ = [
-    "LocationBase",
-    "LocationCreate",
-    "LocationRead",
-    "LocationUpdate",
     "ManufacturerBase",
     "ManufacturerCreate",
     "ManufacturerRead",

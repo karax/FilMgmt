@@ -1,5 +1,6 @@
-import { Grid2X2, Plus, SlidersHorizontal, TableProperties } from 'lucide-react'
+import { Grid2X2, Plus, ScanLine, SlidersHorizontal, TableProperties } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 export type InventoryView = 'grid' | 'table'
 
@@ -53,6 +54,7 @@ export function InventoryToolbar({
 
       <div className="mt-4 flex flex-wrap items-center gap-3 sm:mt-0">
         <button aria-expanded={filtersOpen} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-line bg-surface px-3.5 text-sm font-bold text-ink transition-colors hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" onClick={onFiltersToggle} type="button"><SlidersHorizontal aria-hidden="true" className="size-4" />{t('inventory.filters')}{activeFilterCount ? ` (${activeFilterCount})` : ''}</button>
+        <Link className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line bg-surface px-3.5 text-sm font-bold text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" to="/scan"><ScanLine aria-hidden="true" className="size-4" />{t('inventory.scanQr')}</Link>
         <a className="inline-flex min-h-10 items-center gap-2 rounded-md bg-accent px-3.5 text-sm font-bold text-sidebar transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href="/inventory/new"><Plus aria-hidden="true" className="size-4" />{t('inventory.add')}</a>
         <div
           aria-label="Inventory view"

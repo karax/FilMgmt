@@ -24,7 +24,6 @@ export function InventoryTable({ spools }: InventoryTableProps) {
             <ColumnHeader>{t('inventory.remaining')}</ColumnHeader>
             <ColumnHeader className="hidden sm:table-cell">{t('inventory.weight')}</ColumnHeader>
             <ColumnHeader>{t('inventory.status')}</ColumnHeader>
-            <ColumnHeader className="hidden xl:table-cell">{t('inventory.location')}</ColumnHeader>
           </tr>
         </thead>
         <tbody className="divide-y divide-line">
@@ -61,9 +60,6 @@ export function InventoryTable({ spools }: InventoryTableProps) {
               </Cell>
               <Cell>
                 <SpoolStatusBadge status={spool.status} />
-              </Cell>
-              <Cell className="hidden xl:table-cell">
-                {spool.location?.name ?? '—'}
               </Cell>
             </tr>
           ))}

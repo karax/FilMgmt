@@ -7,7 +7,7 @@ from app.models import PrintJob, PrintJobSpool, PrintJobStatus, PrintSpoolLock, 
 from app.models.timestamps import utc_now
 from app.schemas import PrintJobCreate, PrintJobFilterParams, PrintJobFinishRequest, PrintJobUpdate
 from app.services.print_cost_service import InvalidPrintCostDataError, calculate_print_material_cost
-from app.services.spool_status_service import update_inventory_status
+from app.services.spool_status_service import release_spool_from_use
 from app.services.spool_weight_service import apply_spool_weight_update
 
 class PrintJobNotFoundError(Exception): pass
@@ -85,7 +85,8 @@ class PrintJobService:
   links={x.spool_id:x for x in job.spool_links}; supplied={x.spool_id:x.actual_weight_g for x in payload.consumptions}
   if not set(supplied).issubset(links): raise PrintJobSpoolNotFoundError
   spools=self._spools(job.spool_links)
-  if any(self.db.get(PrintSpoolLock,sid) is None or self.db.get(PrintSpoolLock,sid).print_job_id != id for sid in links): raise PrintJobDataConflictError
+  locks={sid:self.db.get(PrintSpoolLock,sid) for sid in links}
+  if any(lock is None or lock.print_job_id != id for lock in locks.values()): raise PrintJobDataConflictError
   if any(weight > spools[sid].current_filament_weight_g for sid,weight in supplied.items()): raise PrintJobConsumptionExceedsWeightError
   now=utc_now()
   started_at = job.started_at if job.started_at.tzinfo else job.started_at.replace(tzinfo=timezone.utc)
@@ -98,9 +99,9 @@ class PrintJobService:
     if weight is not None:
      link.actual_weight_g=weight; cost=calculate_print_material_cost(spool.purchase_price,spool.initial_filament_weight_g,weight,spool.currency); link.filament_cost_per_g=cost.filament_cost_per_g; link.material_cost=cost.material_cost; link.material_cost_currency=cost.currency
      if weight > 0: apply_spool_weight_update(self.db,spool,spool.current_filament_weight_g-weight,WeightSource.PRINT,f'Print job #{job.id}: {job.name}')
-     else: spool.status=SpoolStatus.OPEN; update_inventory_status(spool)
-    else: spool.status=SpoolStatus.OPEN; update_inventory_status(spool)
-    spool.last_used_at=now; self.db.delete(self.db.get(PrintSpoolLock,sid))
+    spool.last_used_at=now
+    self.db.delete(locks[sid])
+    release_spool_from_use(spool)
    job.status=PrintJobStatus.SUCCESS; job.finished_at=now; job.actual_time_minutes=int((now-started_at).total_seconds()//60); self.db.commit()
   except InvalidPrintCostDataError as e: self.db.rollback(); raise PrintJobInvalidCostDataError from e
   except SQLAlchemyError as e: self.db.rollback(); raise PrintJobDataConflictError from e

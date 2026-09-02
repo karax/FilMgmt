@@ -27,6 +27,10 @@ if TYPE_CHECKING:
     from app.models.weight_history import WeightHistory
 
 
+MAX_SPOOL_FILAMENT_WEIGHT_G = Decimal("2000")
+MAX_SPOOL_PURCHASE_PRICE = Decimal("100")
+
+
 class SpoolStatus(StrEnum):
     """Lifecycle states currently supported for a physical spool."""
 
@@ -116,12 +120,6 @@ class Spool(Base):
         nullable=False,
         index=True,
     )
-    location_id: Mapped[int | None] = mapped_column(
-        ForeignKey("locations.id", ondelete="RESTRICT"),
-        nullable=True,
-        index=True,
-    )
-
     display_name: Mapped[str | None] = mapped_column(String(150), nullable=True)
     product_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     color_name: Mapped[str] = mapped_column(String(100), nullable=False)
@@ -150,6 +148,7 @@ class Spool(Base):
         Numeric(12, 2),
         nullable=True,
     )
+    store_name: Mapped[str | None] = mapped_column(String(200), nullable=True)
     currency: Mapped[str] = mapped_column(
         String(3),
         default="EUR",
@@ -217,7 +216,6 @@ class Spool(Base):
 
     manufacturer: Mapped["Manufacturer"] = relationship()
     material: Mapped["Material"] = relationship()
-    location: Mapped["Location | None"] = relationship()
     weight_history: Mapped[list["WeightHistory"]] = relationship(
         back_populates="spool",
         order_by="WeightHistory.created_at",

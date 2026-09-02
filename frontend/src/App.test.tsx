@@ -41,7 +41,7 @@ describe('application layout', () => {
       'Dashboard',
       'Inventory',
       'Prints',
-      'Advisor',
+      'G-code',
       'Analytics',
       'Settings',
     ]) {
@@ -49,13 +49,15 @@ describe('application layout', () => {
     }
   })
 
-  it('renders the functional dashboard at the root route', () => {
-    renderRoute('/')
+  it('redirects the root route to the existing inventory page', async () => {
+    const { router } = renderRoute('/')
 
-    expect(
-      screen.getByRole('heading', { level: 2, name: 'Dashboard' }),
-    ).toBeVisible()
-    expect(screen.getByRole('heading', { name: 'Total Spools' })).toBeVisible()
+    await waitFor(() => expect(router.state.location.pathname).toBe('/inventory'))
+    expect(screen.getByRole('heading', { level: 2, name: 'Inventory' })).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Inventory' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
   })
 
   it('renders the functional inventory at /inventory', () => {
@@ -70,6 +72,41 @@ describe('application layout', () => {
       'href',
       '/inventory/new',
     )
+    expect(screen.getByRole('link', { name: 'Scan QR' })).toHaveAttribute(
+      'href',
+      '/scan',
+    )
+  })
+
+  it('opens the scanner from the existing Inventory action', async () => {
+    const { router, user } = renderRoute('/inventory')
+
+    await user.click(screen.getByRole('link', { name: 'Scan QR' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/scan'))
+    expect(screen.getByRole('heading', { level: 2, name: 'Scan QR' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Start camera' })).toBeEnabled()
+  })
+
+  it('keeps the dashboard available at /dashboard', () => {
+    renderRoute('/dashboard')
+
+    expect(screen.getByRole('heading', { level: 2, name: 'Dashboard' })).toBeVisible()
+    expect(screen.getByRole('heading', { name: 'Total Spools' })).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Dashboard' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
+  })
+
+  it('opens the G-code upload page from primary navigation', async () => {
+    const { router, user } = renderRoute('/inventory')
+
+    await user.click(screen.getByRole('link', { name: 'G-code' }))
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/gcode'))
+    expect(screen.getByRole('heading', { level: 2, name: 'G-code Analysis' })).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Select file' })).toBeEnabled()
   })
 
   it('renders the new spool route inside the main layout', () => {
@@ -80,7 +117,6 @@ describe('application layout', () => {
   })
 
   it.each([
-    ['/advisor', 'Filament Advisor', 'Find the best spool for your next print.'],
     [
       '/analytics',
       'Analytics',
@@ -92,6 +128,25 @@ describe('application layout', () => {
 
     expect(screen.getByRole('heading', { level: 2, name: title })).toBeVisible()
     expect(screen.getByText(description)).toBeVisible()
+  })
+
+  it('registers only the supported application routes', () => {
+    expect(routes[0]?.children?.map((route) => route.path).filter(Boolean)).toEqual([
+      'inventory',
+      'inventory/new',
+      'scan',
+      'gcode',
+      'spools/:code/edit',
+      'spools/:code',
+      'qr/spool/:code',
+      'prints',
+      'prints/new',
+      'prints/:id/edit',
+      'prints/:id',
+      'analytics',
+      'dashboard',
+      'settings',
+    ])
   })
 
   it('marks the current navigation item as active', () => {
@@ -158,6 +213,12 @@ describe('mobile navigation', () => {
     )
     const drawer = screen.getByRole('dialog', { name: 'Mobile navigation' })
     expect(drawer).toBeVisible()
+    const mobileLinks = within(
+      within(drawer).getByRole('navigation', { name: 'Open navigation menu' }),
+    ).getAllByRole('link')
+    expect(
+      mobileLinks.map((link) => link.textContent),
+    ).toEqual(['Dashboard', 'Inventory', 'Prints', 'G-code', 'Analytics', 'Settings'])
 
     await user.click(
       within(drawer).getByRole('button', { name: 'Close navigation menu' }),
@@ -185,7 +246,7 @@ describe('mobile navigation', () => {
   })
 
   it('closes after mobile navigation and updates the page', async () => {
-    const { user } = renderRoute('/')
+    const { user } = renderRoute('/dashboard')
 
     await user.click(
       screen.getByRole('button', { name: 'Open navigation menu' }),
@@ -199,5 +260,9 @@ describe('mobile navigation', () => {
     expect(
       screen.getByRole('heading', { level: 2, name: 'Inventory' }),
     ).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Inventory' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    )
   })
 })

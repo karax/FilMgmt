@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { useLocations } from '../../hooks/useLocations'
 import { useManufacturers } from '../../hooks/useManufacturers'
 import { useMaterials } from '../../hooks/useMaterials'
 import { spoolStatuses } from '../../lib/spoolFilters'
@@ -15,7 +14,6 @@ export function InventoryFilters({ filters, onApply, onClear }: InventoryFilters
   const [validationError, setValidationError] = useState<string | null>(null)
   const { data: manufacturers = [] } = useManufacturers()
   const { data: materials = [] } = useMaterials()
-  const { data: locations = [] } = useLocations()
   useEffect(() => { setDraft(filters); setValidationError(null) }, [filters])
 
   const set = <K extends keyof SpoolFilters>(key: K, value: SpoolFilters[K]) => setDraft((current) => ({ ...current, [key]: value }))
@@ -32,7 +30,6 @@ export function InventoryFilters({ filters, onApply, onClear }: InventoryFilters
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       <FilterSelect id="manufacturer" label={t('inventory.manufacturer')} onChange={(value) => set('manufacturerId', value ? Number(value) : undefined)} value={draft.manufacturerId ?? ''}><option value="">{t('filters.allManufacturers')}</option>{manufacturers.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</FilterSelect>
       <FilterSelect id="material" label={t('inventory.material')} onChange={(value) => set('materialId', value ? Number(value) : undefined)} value={draft.materialId ?? ''}><option value="">{t('filters.allMaterials')}</option>{materials.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</FilterSelect>
-      <FilterSelect id="location" label={t('inventory.location')} onChange={(value) => set('locationId', value ? Number(value) : undefined)} value={draft.locationId ?? ''}><option value="">{t('filters.allLocations')}</option>{locations.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</FilterSelect>
       <FilterSelect id="status" label={t('inventory.status')} onChange={(value) => set('status', value ? value as SpoolStatus : undefined)} value={draft.status ?? ''}><option value="">{t('filters.allStatuses')}</option>{spoolStatuses.map((status) => <option key={status} value={status}>{t(`status.${status}`)}</option>)}</FilterSelect>
       <FilterSelect id="needs-drying" label={t('filters.needsDrying')} onChange={(value) => set('needsDrying', value === '' ? undefined : value === 'true')} value={draft.needsDrying === undefined ? '' : String(draft.needsDrying)}><option value="">{t('filters.any')}</option><option value="true">{t('filters.needsDrying')}</option><option value="false">{t('filters.doesNotNeedDrying')}</option></FilterSelect>
       <NumberInput id="min-weight" label={t('filters.minWeight')} max={undefined} onChange={(value) => number('minWeightG', value)} suffix="g" value={draft.minWeightG} />

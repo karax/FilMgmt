@@ -1,18 +1,21 @@
 import { isApiError } from '../api/client'
 
+export const MAX_SPOOL_FILAMENT_WEIGHT_G = 2000
+export const MAX_SPOOL_PURCHASE_PRICE = 100
+
 export type SpoolFormField =
-  | 'manufacturerId' | 'materialId' | 'locationId' | 'displayName'
+  | 'manufacturerId' | 'materialId' | 'displayName'
   | 'productName' | 'colorName' | 'colorHex' | 'diameter' | 'initialWeight'
-  | 'currentWeight' | 'emptySpoolWeight' | 'purchasePrice' | 'currency'
+  | 'currentWeight' | 'emptySpoolWeight' | 'purchasePrice' | 'storeName' | 'currency'
   | 'purchaseDate' | 'nozzleTempMin' | 'nozzleTempMax' | 'bedTempMin'
   | 'bedTempMax' | 'needsDrying' | 'lastDriedAt' | 'notes'
 
 const fields: Record<string, SpoolFormField> = {
   display_name: 'displayName', manufacturer_id: 'manufacturerId', material_id: 'materialId',
-  location_id: 'locationId', product_name: 'productName', color_name: 'colorName',
+  product_name: 'productName', color_name: 'colorName',
   color_hex: 'colorHex', diameter_mm: 'diameter', initial_filament_weight_g: 'initialWeight',
   current_filament_weight_g: 'currentWeight', empty_spool_weight_g: 'emptySpoolWeight',
-  purchase_price: 'purchasePrice', currency: 'currency', purchase_date: 'purchaseDate',
+  purchase_price: 'purchasePrice', store_name: 'storeName', currency: 'currency', purchase_date: 'purchaseDate',
   nozzle_temp_min: 'nozzleTempMin', nozzle_temp_max: 'nozzleTempMax',
   bed_temp_min: 'bedTempMin', bed_temp_max: 'bedTempMax', needs_drying: 'needsDrying',
   last_dried_at: 'lastDriedAt', notes: 'notes',

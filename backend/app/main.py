@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.health import router as health_router
-from app.api.locations import router as locations_router
+from app.api.gcode_uploads import router as gcode_uploads_router
 from app.api.manufacturers import router as manufacturers_router
 from app.api.materials import router as materials_router
 from app.api.prints import router as prints_router
@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 app.include_router(health_router, prefix="/api")
-app.include_router(locations_router, prefix="/api")
+app.include_router(gcode_uploads_router, prefix="/api")
 app.include_router(manufacturers_router, prefix="/api")
 app.include_router(materials_router, prefix="/api")
 app.include_router(prints_router, prefix="/api")

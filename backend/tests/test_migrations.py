@@ -5,7 +5,7 @@ from alembic import command
 from alembic.config import Config
 from sqlalchemy import create_engine, inspect, text
 
-ROOT=Path(__file__).resolve().parents[1]; CONFIG=ROOT/'alembic.ini'; PREVIOUS='e4f9a3b2c817'; HEAD='b33a1c9d2e71'
+ROOT=Path(__file__).resolve().parents[1]; CONFIG=ROOT/'alembic.ini'; PREVIOUS='e4f9a3b2c817'; HEAD='f2a8c7d190b4'
 def setup(tmp_path,monkeypatch):
  url=f"sqlite+pysqlite:///{tmp_path/'migration.db'}"; monkeypatch.setenv('DATABASE_URL',url); cfg=Config(str(CONFIG)); command.upgrade(cfg,PREVIOUS); return cfg,create_engine(url)
 
@@ -33,4 +33,14 @@ def test_unsafe_downgrade_aborts_without_data_loss(tmp_path,monkeypatch):
   c.execute(text("INSERT INTO print_jobs(id,name,status,created_at,updated_at) VALUES(1,'multi','PLANNED',CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)")); c.execute(text("INSERT INTO print_job_spools(print_job_id,spool_id,position,created_at,updated_at) VALUES(1,1,0,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP),(1,2,1,CURRENT_TIMESTAMP,CURRENT_TIMESTAMP)"))
  with pytest.raises(RuntimeError,match='multiple spools'): command.downgrade(cfg,PREVIOUS)
  with e.connect() as c: assert c.scalar(text('select count(*) from print_job_spools where print_job_id=1'))==2
+ e.dispose()
+
+def test_fresh_head_has_store_name_without_storage_schema(tmp_path, monkeypatch):
+ url=f"sqlite+pysqlite:///{tmp_path/'fresh.db'}"; monkeypatch.setenv('DATABASE_URL',url); cfg=Config(str(CONFIG))
+ command.upgrade(cfg,HEAD); e=create_engine(url); ins=inspect(e)
+ assert 'locations' not in ins.get_table_names()
+ spool_columns={column['name'] for column in ins.get_columns('spools')}
+ assert 'store_name' in spool_columns
+ assert 'location_id' not in spool_columns
+ command.check(cfg)
  e.dispose()
