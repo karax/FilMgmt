@@ -17,8 +17,8 @@ export function NewPrintJobPage() {
   return <section aria-labelledby="new-print-title" className="mx-auto max-w-3xl">
     <PageHeading eyebrow="Print Tracker / New" id="new-print-title" title={t('prints.create.title')} subtitle={t('prints.create.subtitle')} />
     {spools.isPending && <FormSkeleton />}
-    {spools.error && !spools.isPending && <LoadError onRetry={() => void spools.refetch()} />}
-    {!spools.isPending && !spools.error && <PrintJobForm isSubmitting={create.isPending} mode="create" onCancel={() => navigate('/prints')} onSubmit={submit} spools={spools.data ?? []} submitError={create.error} />}
+    {spools.error && !spools.data && !spools.isPending && <LoadError onRetry={() => void spools.refetch()} />}
+    {spools.data && <PrintJobForm isSubmitting={create.isPending} mode="create" onCancel={() => navigate('/prints')} onSubmit={submit} spools={spools.data} submitError={create.error} />}
   </section>
 }
 

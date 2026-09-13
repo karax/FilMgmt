@@ -1,6 +1,7 @@
 import { expect, test as base } from '@playwright/test'
 
 type Spool = { code: string }
+type CatalogItem = { id: number }
 
 function isLocalApiUrl(rawUrl: string) {
   try {
@@ -37,7 +38,7 @@ const test = base.extend({
   },
 })
 
-test('inventory loads at the home route and can show the table', async ({ page }) => {
+test('inventory loads at the home route and presents its current state', async ({ page }) => {
   const health = await page.request.get('/api/health')
   expect(health.ok()).toBe(true)
 
@@ -47,7 +48,11 @@ test('inventory loads at the home route and can show the table', async ({ page }
   await expect(page.locator('nav').first()).toBeVisible()
 
   await page.getByRole('button', { name: 'Table view' }).click()
-  await expect(page.getByRole('table', { name: 'Spool inventory' })).toBeVisible()
+  await expect(
+    page.getByRole('table', { name: 'Spool inventory' }).or(
+      page.getByRole('heading', { name: 'Your filament inventory is empty.' }),
+    ),
+  ).toBeVisible()
 })
 
 test('G-code analysis renders the accessible file selector', async ({ page }) => {
@@ -87,8 +92,34 @@ test('Settings downloads the complete user manual with the configured filename',
 test('an existing spool details page renders from a dynamically discovered code', async ({ page }) => {
   const response = await page.request.get('/api/spools')
   expect(response.ok()).toBe(true)
-  const spools = await response.json() as Spool[]
-  test.skip(spools.length === 0, 'No spool exists in the current local inventory.')
+  let spools = await response.json() as Spool[]
+
+  if (spools.length === 0) {
+    const [manufacturersResponse, materialsResponse] = await Promise.all([
+      page.request.get('/api/manufacturers'),
+      page.request.get('/api/materials'),
+    ])
+    expect(manufacturersResponse.ok()).toBe(true)
+    expect(materialsResponse.ok()).toBe(true)
+    const manufacturers = await manufacturersResponse.json() as CatalogItem[]
+    const materials = await materialsResponse.json() as CatalogItem[]
+    expect(manufacturers.length).toBeGreaterThan(0)
+    expect(materials.length).toBeGreaterThan(0)
+
+    const createResponse = await page.request.post('/api/spools', {
+      data: {
+        manufacturer_id: manufacturers[0].id,
+        material_id: materials[0].id,
+        display_name: 'Clean checkout smoke spool',
+        color_name: 'Validation black',
+        color_hex: '#000000',
+        diameter_mm: 1.75,
+        initial_filament_weight_g: 1000,
+      },
+    })
+    expect(createResponse.ok()).toBe(true)
+    spools = [await createResponse.json() as Spool]
+  }
 
   await page.goto(`/spools/${encodeURIComponent(spools[0].code)}`)
   await expect(page.locator('#spool-details-title')).toBeVisible()

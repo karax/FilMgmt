@@ -3,7 +3,7 @@ import type { PrintJobFinishPayload } from '../types/printJob'
 
 type FastApiIssue = { loc?: unknown; msg?: unknown }
 
-function responseDetail(error: unknown): unknown {
+export function responseDetail(error: unknown): unknown {
   if (!isApiError(error)) return null
   if (error.detail && typeof error.detail === 'object' && 'detail' in error.detail) {
     return (error.detail as { detail?: unknown }).detail

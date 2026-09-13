@@ -7,26 +7,27 @@ catálogos e spools, e um frontend React para acompanhar o inventário.
 ## Documentation
 
 - [Manual do usuário](docs/user-guide/README.md)
+- [Production Runbook](docs/operations/production-runbook.md)
 
 ## Estado atual
 
-- Dashboard operacional em `/`, com resumo de estoque, materiais e spools que
-  precisam de atenção.
+- `/` redireciona para o inventário; o Dashboard permanece disponível em
+  `/dashboard`.
 - Inventário operacional em `/inventory`, com Grid/Table, persistência da
-  preferência de visualização e estados loading, error e empty.
-- CRUD backend para Manufacturer, Material, Location e Spool.
+  preferência de visualização, busca, filtros e fluxo completo de Spool.
+- CRUD backend para Manufacturer, Material e Spool, além do Print Tracker,
+  análise de G-code e identificação de Spool por QR.
 - Registro atômico de peso em `POST /api/spools/{code}/weight`, incluindo
   histórico de peso e status derivado no backend.
 - Spools arquivados não são retornados pelo `GET /api/spools` padrão.
 
-Ainda não há filtros, busca, formulário de spool, detalhes de spool,
-autenticação ou integrações de hardware.
-
 ## Requisitos
 
 - Python 3.11 ou superior
-- Node.js 20.19 ou superior
-- npm 10 ou superior
+- Node.js 24.15 ou superior na linha 24.x
+- npm 11 ou superior
+- Shell compatível com POSIX em Linux ou macOS; os comandos abaixo foram
+  validados em Linux. O setup equivalente para Windows não está documentado.
 
 ## Backend
 
@@ -37,19 +38,26 @@ cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 alembic upgrade head
+python -m app.scripts.seed_manufacturers
+python -m app.scripts.seed_materials
 uvicorn app.main:app --reload
 ```
+
+As duas seeds são o bootstrap suportado do catálogo em um banco vazio e são
+necessárias antes de criar o primeiro Spool.
 
 A API estará disponível em `http://localhost:8000`. O health check poderá ser acessado em `http://localhost:8000/api/health` e a documentação interativa do FastAPI estará em `http://localhost:8000/docs`.
 
 Os principais recursos HTTP disponíveis são:
 
 - `GET /api/health`
-- CRUD em `/api/manufacturers`, `/api/materials` e `/api/locations`
+- CRUD em `/api/manufacturers` e `/api/materials`
 - CRUD em `/api/spools`, além de `POST /api/spools/{code}/weight` e
   `POST /api/spools/{code}/archive`
+- CRUD e ciclo start/finish em `/api/prints`
+- upload e análise em `/api/gcode/uploads`
 
 `GET /api/spools` retorna apenas spools ativos por padrão e aceita filtros
 estruturados já suportados pelo backend. O Dashboard e Inventory usam essa
@@ -67,8 +75,8 @@ Para instalar as dependências de desenvolvimento e executar os testes:
 ```bash
 cd backend
 source .venv/bin/activate
-pip install -r requirements-dev.txt
-pytest
+python -m pip install -r requirements-dev.txt
+python -m pytest
 ```
 
 Os testes de backend usam bancos isolados em memória ou em diretórios
@@ -148,30 +156,25 @@ Instale as dependências e inicie o servidor de desenvolvimento:
 
 ```bash
 cd frontend
-npm install
+npm ci
 npm run dev
 ```
 
-O Vite exibirá no terminal o endereço local da aplicação, normalmente `http://localhost:5173`.
-
-O frontend usa `VITE_API_BASE_URL` para localizar a API. Sem essa variável, o
-valor padrão é `http://localhost:8000`:
-
-```bash
-VITE_API_BASE_URL="http://localhost:8000" npm run dev
-```
-
-Para o desenvolvimento local, o backend aceita leituras CORS originadas pelo
-Vite em `localhost` ou `127.0.0.1`, nas portas `5173` e `4173`. Outras origens
-não são liberadas por padrão.
+O Vite exibirá no terminal o endereço local da aplicação, normalmente
+`http://localhost:5173`. O frontend usa URLs relativas em `/api`; durante o
+desenvolvimento, o Vite encaminha essas requisições para
+`http://127.0.0.1:8000`. Mantenha o backend em execução nesse endereço.
 
 ### Páginas disponíveis
 
 | Rota | Estado |
 | --- | --- |
-| `/` | Dashboard com totais, materiais e spools críticos. |
+| `/` | Redireciona para `/inventory`. |
 | `/inventory` | Inventário de spools em Grid ou Table. |
-| `/prints`, `/analytics`, `/settings` | Módulos disponíveis na aplicação. |
+| `/dashboard` | Totais, materiais e spools que precisam de atenção. |
+| `/prints` | Criação e acompanhamento de impressões. |
+| `/gcode`, `/scan`, `/settings` | G-code, scanner QR e configurações/manual. |
+| `/analytics` | Placeholder, ainda sem analytics operacional. |
 
 O frontend usa TanStack Query para `GET /api/spools`. A preferência Grid/Table
 é local ao dispositivo e fica em `localStorage` na chave `fcc-inventory-view`.
@@ -198,12 +201,13 @@ Não há script de lint configurado atualmente.
 
 ### Testes visuais
 
-Os testes visuais usam o Chromium controlado pelo Playwright. Após instalar as
-dependências do frontend, instale o navegador uma vez:
+Os testes visuais usam um Chromium do sistema controlado pelo Playwright. Com o
+backend e o frontend em execução, verifique o ambiente e siga as instruções de
+[testes headless](docs/headless-browser-testing.md):
 
 ```bash
 cd frontend
-npm run test:visual:install
+npm run browser:doctor
 ```
 
 Execute a suíte e compare a interface com as imagens de referência:
@@ -253,8 +257,11 @@ novas traduções, adicione as chaves correspondentes em
 
 ## Limitações atuais
 
-- Não há filtros ou busca no frontend do Inventory.
-- Não há criação, edição, arquivamento ou atualização de peso via interface.
-- Não há página de detalhes de spool.
-- Autenticação, MQTT, ESP32, sensores, QR/NFC, upload de G-code e PrintJobs
-  ainda não foram implementados.
+- Manufacturer e Material são administrados por seed/API; ainda não há UI
+  de catálogo.
+- Analytics ainda é um placeholder.
+- Não há autenticação, MQTT, ESP32, sensores ou NFC.
+- Produção é suportada apenas em LAN confiável ou Tailnet privada; exposição
+  direta à Internet não é suportada enquanto não houver autenticação. Consulte
+  o [Production Runbook](docs/operations/production-runbook.md) para serviços,
+  HTTPS, backup, restauração, atualização e recuperação.

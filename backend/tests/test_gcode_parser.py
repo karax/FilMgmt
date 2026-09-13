@@ -376,6 +376,27 @@ def test_first_parse_writes_small_atomic_cache_and_second_reuses_it(tmp_path: Pa
     assert upload_path.read_bytes() == contents
 
 
+def test_parse_skips_cache_when_total_storage_quota_is_full(tmp_path: Path) -> None:
+    _, metadata, upload_path = store_upload(tmp_path, b"G1 X1\n")
+    storage = upload_path.parent
+    used_bytes = sum(path.lstat().st_size for path in storage.iterdir())
+    quota_service = GCodeUploadService(
+        storage_directory=storage,
+        max_upload_bytes=1024,
+        max_total_bytes=used_bytes,
+        cleanup_enabled=False,
+    )
+    service = GCodeParseService(upload_service=quota_service)
+
+    result = service.parse_upload(metadata.upload_id)
+
+    cache_path = service.cache_path_for(upload_path)
+    assert result.command_counts == {"G1": 1}
+    assert not cache_path.exists()
+    assert not cache_path.with_suffix(".json.uploading").exists()
+    assert sum(path.lstat().st_size for path in storage.iterdir()) == used_bytes
+
+
 def test_incompatible_parser_version_forces_reparse(tmp_path: Path) -> None:
     upload_service, metadata, upload_path = store_upload(tmp_path, b"G1 X1\n")
     parser = CountingParser()

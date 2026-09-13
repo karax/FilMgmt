@@ -1,0 +1,21 @@
+[Unit]
+Description=Filament Command Center production web entrypoint
+After=network.target filament-command-center.service
+Wants=filament-command-center.service
+
+[Service]
+Type=notify
+EnvironmentFile=-%h/.config/filament-command-center/env
+ExecStart=/usr/bin/caddy run --config %h/.config/filament-command-center/Caddyfile
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=30s
+KillSignal=SIGTERM
+UMask=0077
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=default.target

@@ -32,6 +32,39 @@ def test_create_read_limits_positions_and_totals(env):
  assert c.post('/api/prints',json=payload([ids[0],ids[0]])).status_code==422
  assert c.post('/api/prints',json=payload([999999])).status_code==404
 
+@pytest.mark.parametrize('method', ['create', 'edit'])
+def test_save_errors_identify_missing_and_archived_spool(env, method):
+ c,F,ids=env
+ job=create(c,ids[:2])
+ def save(selected):
+  return c.post('/api/prints',json=payload(selected)) if method=='create' else c.patch(f"/api/prints/{job['id']}",json=payload(selected))
+ missing=save([ids[0],999999])
+ assert missing.status_code==404
+ assert missing.json()['detail']['code']=='spool_not_found'
+ assert missing.json()['detail']['spool_id']==999999
+ with F() as s: s.get(Spool,ids[1]).status=SpoolStatus.ARCHIVED; s.commit()
+ archived=save(ids[:2])
+ assert archived.status_code==409
+ assert archived.json()['detail']['code']=='spool_archived'
+ assert archived.json()['detail']['spool_id']==ids[1]
+ assert c.get(f"/api/prints/{job['id']}").json()['name']=='Multi'
+
+def test_edit_save_reports_print_state_and_missing_print(env):
+ c,_,ids=env; job=create(c,ids[:1])
+ missing=c.patch('/api/prints/999999',json={'name':'New'})
+ assert missing.status_code==404 and missing.json()['detail']['code']=='print_not_found'
+ assert c.post(f"/api/prints/{job['id']}/start").status_code==200
+ conflict=c.patch(f"/api/prints/{job['id']}",json={'name':'New'})
+ assert conflict.status_code==409 and conflict.json()['detail']['code']=='print_not_planned'
+
+@pytest.mark.parametrize('method', ['create', 'edit'])
+def test_save_nested_validation_path(env, method):
+ c,_,ids=env; job=create(c,ids[:2]); data=payload(ids[:2]); data['spools'][1]['estimated_weight_g']=-5
+ r=c.post('/api/prints',json=data) if method=='create' else c.patch(f"/api/prints/{job['id']}",json=data)
+ assert r.status_code==422
+ assert r.json()['detail'][0]['loc']==['body','spools',1,'estimated_weight_g']
+ assert r.json()['detail'][0]['type']=='greater_than'
+
 def test_incomplete_and_filter_and_patch(env):
  c,_,ids=env; a=create(c,ids[:2]); b=create(c,ids[1:3]);
  assert c.patch(f"/api/prints/{a['id']}",json={'spools':[{'spool_id':ids[0],'estimated_weight_g':80},{'spool_id':ids[1]}]}).json()['total_estimated_weight_g'] is None

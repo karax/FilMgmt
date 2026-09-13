@@ -14,11 +14,20 @@ export function getPrintJob(id: number, signal?: AbortSignal): Promise<PrintJob>
 }
 
 export function createPrintJob(payload: PrintJobPayload): Promise<PrintJob> {
-  return apiPost<PrintJob, PrintJobPayload>('/api/prints', payload)
+  return apiPost<PrintJob, PrintJobPayload>('/api/prints', payload).then(confirmSavedPrint)
 }
 
 export function updatePrintJob(id: number, payload: UpdatePrintJobPayload): Promise<PrintJob> {
-  return apiPatch<PrintJob, UpdatePrintJobPayload>(`/api/prints/${id}`, payload)
+  return apiPatch<PrintJob, UpdatePrintJobPayload>(`/api/prints/${id}`, payload).then(confirmSavedPrint)
+}
+
+function confirmSavedPrint(job: PrintJob): PrintJob {
+  if (!job || !Number.isInteger(job.id) || job.id <= 0 || typeof job.name !== 'string'
+    || job.status !== 'PLANNED' || !Array.isArray(job.spools) || !job.spools.length
+    || job.spools.some(row => !row || !Number.isInteger(row.spool_id))) {
+    throw new Error('Unexpected print save response.')
+  }
+  return job
 }
 
 export function startPrintJob(id: number): Promise<PrintJob> {

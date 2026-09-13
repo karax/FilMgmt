@@ -11,8 +11,10 @@ from app.services.spool_status_service import release_spool_from_use
 from app.services.spool_weight_service import apply_spool_weight_update
 
 class PrintJobNotFoundError(Exception): pass
-class PrintJobSpoolNotFoundError(Exception): pass
-class PrintJobArchivedSpoolError(Exception): pass
+class PrintJobSpoolNotFoundError(Exception):
+ def __init__(self, spool_id=None): self.spool_id = spool_id
+class PrintJobArchivedSpoolError(Exception):
+ def __init__(self, spool_id=None): self.spool_id = spool_id
 class PrintJobDataConflictError(Exception): pass
 class PrintJobNotPlannedError(Exception): pass
 class PrintJobStartArchivedSpoolError(Exception): pass
@@ -40,9 +42,9 @@ class PrintJobService:
   return item
  def _spools(self, entries):
   ids=[x.spool_id if hasattr(x, 'spool_id') else x['spool_id'] for x in entries]; found={x.id:x for x in self.db.scalars(select(Spool).where(Spool.id.in_(ids))).all()}
-  if len(found)!=len(ids): raise PrintJobSpoolNotFoundError
+  if len(found)!=len(ids): raise PrintJobSpoolNotFoundError(next((id for id in ids if id not in found), None))
   for s in found.values():
-   if s.status is SpoolStatus.ARCHIVED or s.archived_at is not None: raise PrintJobArchivedSpoolError
+   if s.status is SpoolStatus.ARCHIVED or s.archived_at is not None: raise PrintJobArchivedSpoolError(s.id)
   return found
  def _links(self, job, entries):
   return [PrintJobSpool(spool_id=x.spool_id if hasattr(x, 'spool_id') else x['spool_id'], position=i, estimated_weight_g=x.estimated_weight_g if hasattr(x, 'estimated_weight_g') else x.get('estimated_weight_g')) for i,x in enumerate(entries)]

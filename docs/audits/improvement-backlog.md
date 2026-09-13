@@ -2,43 +2,109 @@
 
 > Status: synthesized from the completed full-system audit on 2026-09-03.
 > Priority: P0 release blocker, P1 high, P2 medium, P3 low.
+> Challenge review: priorities and Wave 1 were revised on 2026-09-03 in
+> `docs/audits/p0-p1-closure.md`.
 
 ## P0 — Critical
 
-### REL-01 — Make the delivered source reproducible
+### REL-01 — Make the delivered source reproducible — RESOLVED (2026-09-07)
 
-- Track every intended runtime, migration, test, tooling and documentation file.
-- Explicitly review all 55 currently untracked paths; do not use broad cleanup.
-- Build a fresh checkout or git archive, create a new database, run all
-  migrations, backend/frontend tests, typecheck, build and Chromium smoke.
-- Acceptance: git status contains no accidentally omitted product files and the
-  clean-checkout gate passes without borrowing files from the current worktree.
+- Status: **COMPLETE** on 2026-09-07.
+- Original issue: required files were untracked. Remediation: commit `4370ec9`
+  added 107 individual paths; the earlier approximate count of 55 is not an
+  active defect.
+- Clean checkout passed fresh dependency installation, empty migration, 443
+  backend tests, 274 frontend tests, compile, typecheck, build, PDF generation,
+  first-use, Print reuse, G-code, QR and hidden-dependency gates. Committed
+  Chromium smoke passed 8/8 after first use but failed against empty user data.
+- A self-contained smoke correction passed 8/8 from empty data in a second new
+  clone. The minimal README setup correction also passed the documented clean
+  install path.
+- The validated README, self-contained smoke correction, and audit record are
+  preserved in the current release working tree. No application runtime
+  remediation remains. See `docs/audits/rel-01-clean-checkout-validation.md`.
 
 ## P1 — High
 
+### FUN-01 — Show Print Job save failures — RESOLVED (2026-09-09)
+
+- Create/Edit consume submitError using the existing ApiError/detail infrastructure
+  and a Print-specific normalizer; 422 nested paths map to stable spool row keys.
+- Persistent pt-BR/en field/form feedback covers validation, 400/404/409, network,
+  5xx and malformed responses. Unknown fields remain visible at form level.
+- Input and live estimated costs survive failure/refetch; corrections clear field
+  errors, focus moves to the first invalid field or alert, and loading blocks
+  duplicate submits. Retry retains the existing success navigation/invalidations.
+- Save error contracts provide codes/spool IDs. Conflict refresh is limited to
+  spool queries; planning with IN_USE/EMPTY, Start/Finish and locks are unchanged.
+- Acceptance passed: 39 new frontend integration tests, 28 existing targeted Print
+  tests, 11 targeted backend API tests; full frontend 313/313, backend 448/448,
+  typecheck, build, compileall and alembic check. Chromium doctor and two real-route
+  Create/Edit failure/retry scenarios passed at 390x844, with screenshots and no
+  horizontal overflow. No schema changes or migration.
+
+### STO-01 — Add a G-code storage lifecycle — RESOLVED (2026-09-09)
+
+- Configurable defaults: 30-day metadata-based retention, 2 GiB total quota,
+  one-hour stale-temp age, automatic pre-upload cleanup and the existing 100 MiB
+  per-file limit kept separate.
+- Cleanup treats UUID-named raw, metadata, parse cache and time cache as a logical
+  unit; removes safe orphans/stale known temps; ignores unknown entries; does not
+  evict recent data; and never follows metadata paths or symlinks.
+- Upload, parse and time operations use process-local active markers and shared
+  filesystem-operation locks. Upload quota is checked after cleanup, while
+  streaming and before atomic metadata finalization. Derived parse/time caches
+  are skipped when they cannot fit, so analysis still succeeds without taking
+  storage over quota. Partial files are removed.
+- HTTP 507 exposes `gcode_storage_quota_exceeded`; `/gcode` shows persistent
+  localized pt-BR/en feedback. Manual cleanup and `--dry-run` reuse the service.
+- Acceptance passed: 50 focused backend storage/upload tests, 103 parser/time/
+  weight/material regression tests, 36 focused G-code page tests, full backend
+  479/479 and frontend 315/315, compileall, Alembic check, typecheck and build.
+  Chromium doctor passed; interactive browser validation was unavailable because
+  this session had no connected controllable browser. No schema change/migration.
+
+### OPS-01 — Define supported production operations — RESOLVED (2026-09-12)
+
+- Added non-root user services for loopback Uvicorn, Caddy static/proxy serving,
+  and an optional verified daily-backup timer. The production Caddy route serves
+  only `frontend/dist`, proxies `/api` first, preserves SPA deep links and the
+  manual PDF, and leaves API 404 responses as JSON.
+- Added a production environment example plus quick/deep health, SQLite online
+  backup, manifest/checksum verification, guarded atomic restore, and explicit-
+  revision update commands. Dirty trees stop updates; rollback never assumes
+  Alembic downgrade is safe.
+- `docs/operations/production-runbook.md` now covers setup, services, journald,
+  LAN/Tailscale HTTPS/public-ingress boundaries, G-code policy, backup/restore,
+  update/rollback, power loss, disk maintenance, and disaster recovery. The root
+  README links to it.
+- Acceptance passed: 9 targeted operations test groups, backend 488/488,
+  frontend 315/315, compileall, Alembic drift check, TypeScript typecheck and
+  production build. Systemd and Caddy syntax validation passed. A temporary
+  restore drill preserved all current canonical record groups with
+  `integrity_check=ok` and zero foreign-key violations. Production-like Caddy
+  routing and Chromium smoke passed 8/8. No schema change or migration.
+
+## P2 — Medium
+
 ### SEC-01 — Establish the application trust boundary
 
-- Decide whether the supported mode is trusted single-user LAN or authenticated
-  multi-user/network service.
-- Protect all reads and mutations; require stronger authorization for catalog
-  mutation, archive/delete and uploads.
-- Make docs/OpenAPI exposure environment-controlled and document trusted hosts.
-- Acceptance: anonymous clients cannot access protected data or mutate state;
-  authorization tests cover destructive and upload endpoints.
-
-### FUN-01 — Show Print Job save failures
-
-- Consume submitError in PrintJobForm.
-- Map 409, 422 and network errors into localized form/field feedback.
-- Preserve values, focus the first invalid field and prevent duplicate submit.
-- Acceptance: create/edit component tests prove visible localized recovery for
-  all three failure classes.
+- Priority basis: P2 for a single operator behind a controlled LAN/Tailnet; P1
+  for an untrusted LAN/Tailnet or multi-user mode; P0 exposure gate before
+  public Internet ingress.
+- For the supported private mode, document and enforce the network boundary and
+  limit reachability. Tailscale membership is the current admission control.
+- Before broader exposure, protect reads and mutations, use stronger
+  authorization for catalog mutation/archive/delete/uploads, and control
+  docs/OpenAPI exposure.
+- Acceptance for authenticated mode: anonymous clients cannot access protected
+  data or mutate state; authorization tests cover destructive/upload endpoints.
 
 ### I18N-01 / A11Y-01 — Complete language behavior
 
 - Move all hard-coded user and accessible copy into both locale resources.
 - Translate raw statuses in Spool/Print summaries.
-- Set document.documentElement.lang at initialization and language changes.
+- Set `document.documentElement.lang` at initialization and language changes.
 - Add locale key-parity and core-route leakage tests.
 - Acceptance: pt-BR and English passes contain no unintended opposite-language
   copy and the DOM language matches the selected locale.
@@ -51,25 +117,6 @@
   actions in light mode.
 - Acceptance: measured pairs pass WCAG AA and visual snapshots are reviewed.
 
-### STO-01 — Add a G-code storage lifecycle
-
-- Configure upload TTL and a total storage quota in addition to per-file size.
-- Add safe cleanup for upload, metadata, parse and time sidecars.
-- Expose delete/recent-upload UX only if resumable analysis is desired.
-- Report disk-full/quota errors clearly and add scheduled/manual cleanup docs.
-- Acceptance: tests cover expiry, quota rejection, partial sidecars, concurrent
-  cleanup and no deletion outside the configured directory.
-
-### OPS-01 — Define supported production operations
-
-- Provide a non-reload API service, built frontend serving/reverse proxy and
-  environment reference.
-- Document HTTPS for remote QR camera access.
-- Document coordinated backup/restore for SQLite and upload storage.
-- Add upgrade/rollback steps and a system startup/health procedure.
-- Acceptance: a clean host can be installed, restarted, backed up and restored
-  by following only the runbook.
-
 ### UX-01 — Unblock clean-install catalog onboarding
 
 - Add Manufacturer/Material management in Settings, or a first-run wizard that
@@ -77,16 +124,6 @@
 - Replace “Create first” dead-end messages with direct actions.
 - Preserve referential-integrity warnings when editing/deleting catalog items.
 - Acceptance: a browser-only user can go from an empty DB to the first Spool.
-
-### DOC-01 — Rewrite the root README
-
-- Rebuild state/routes/API/limitations from current runtime.
-- Remove Location and implemented-feature claims that are no longer true.
-- Correct relative API behavior and the nonexistent visual install command.
-- Link the G-code, QR, browser and Print Tracker docs.
-- Acceptance: every documented command is executed in a clean-checkout gate.
-
-## P2 — Medium
 
 ### A11Y-03 / A11Y-04 — Standardize accessible dialogs and forms
 
@@ -209,33 +246,39 @@
 
 ## Wave 1 — Release, safety and core flows
 
-1. REL-01 source reproducibility.
-2. FUN-01 visible Print save failures.
-3. I18N-01/A11Y-01 language completion.
-4. STO-01 upload lifecycle.
-5. SEC-01 trust boundary.
-6. DOC-01 plus minimum OPS-01 release/runbook documentation.
+1. REL-01 clean-host verification gate — COMPLETE.
+2. FUN-01 visible Print save failures — COMPLETE.
+3. STO-01 bounded upload lifecycle — COMPLETE.
+4. OPS-01 private-Pi operations and trust-boundary runbook — COMPLETE.
+
+**WAVE 1 — COMPLETE (2026-09-12).**
 
 Exit gate:
 
 - clean checkout passes every current automated gate;
 - no silent core mutation failure;
-- intended language and HTML language agree;
 - uploads cannot grow without policy;
-- supported network exposure is explicitly protected/documented.
+- a clean Pi can be installed, started, upgraded, backed up and restored from
+  tracked documentation;
+- public ingress is disabled unless authentication/authorization is promoted to
+  a P0 prerequisite and implemented.
 
 ## Wave 2 — UX consistency and accessibility
 
-1. UX-01 catalog onboarding.
-2. A11Y-02 contrast.
-3. A11Y-03/A11Y-04 primitives.
-4. IA-01 Analytics decision.
-5. UX-02/UX-03 mobile and route recovery.
-6. FUN-02/FUN-03 state consistency.
+1. SEC-01 defense-in-depth authentication for the private deployment, or P0
+   before this wave if public ingress is selected.
+2. I18N-01/A11Y-01 language completion.
+3. UX-01 catalog onboarding.
+4. A11Y-02 contrast.
+5. A11Y-03/A11Y-04 primitives.
+6. IA-01 Analytics decision.
+7. UX-02/UX-03 mobile and route recovery.
+8. FUN-02/FUN-03 state consistency.
 
 Exit gate:
 
 - empty-DB first-use works in browser;
+- intended language and HTML language agree;
 - core routes pass keyboard and automated accessibility checks;
 - primary navigation contains only honest destinations;
 - 320/390 px product screenshots are reviewed in both themes/languages.

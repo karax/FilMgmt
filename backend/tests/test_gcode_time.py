@@ -265,6 +265,34 @@ def test_versioned_cache_is_reused_and_invalidated_atomically(tmp_path: Path) ->
     assert estimator.calls == 2
 
 
+def test_time_analysis_skips_sidecars_when_total_storage_quota_is_full(
+    tmp_path: Path,
+) -> None:
+    _, original_upload_service, metadata = make_service(tmp_path, b"G1 F600 X10\n")
+    upload_path = original_upload_service.resolve_upload(metadata.upload_id).path
+    storage = upload_path.parent
+    used_bytes = sum(path.lstat().st_size for path in storage.iterdir())
+    quota_service = GCodeUploadService(
+        storage_directory=storage,
+        max_upload_bytes=1024,
+        max_total_bytes=used_bytes,
+        cleanup_enabled=False,
+    )
+    parse_service = GCodeParseService(upload_service=quota_service)
+    service = GCodeTimeService(
+        parse_service=parse_service,
+        upload_service=quota_service,
+    )
+
+    result = service.estimate_upload(metadata.upload_id)
+
+    assert result.estimated_time_seconds == 1
+    assert not service.cache_path_for(upload_path).exists()
+    assert not parse_service.cache_path_for(upload_path).exists()
+    assert not list(storage.glob("*.uploading"))
+    assert sum(path.lstat().st_size for path in storage.iterdir()) == used_bytes
+
+
 def test_path_estimator_uses_readline_not_bulk_reads(tmp_path: Path, monkeypatch) -> None:
     path = tmp_path / "stream.gcode"
     path.write_bytes(b"G1 X10 F600\nG1 X20\n")

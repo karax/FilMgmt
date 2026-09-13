@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from dataclasses import dataclass, field
+import logging
 import math
 import os
 from pathlib import Path
@@ -9,6 +10,10 @@ from uuid import UUID
 
 from app.schemas.gcode_parse import GCodeParseResult, GCodeToolSummary
 from app.services.gcode_upload_service import GCodeUploadService
+from app.services.gcode_upload_activity import storage_lock
+
+
+logger = logging.getLogger(__name__)
 
 PARSER_VERSION = 1
 MAX_GCODE_LINE_BYTES = 64 * 1024
@@ -217,19 +222,20 @@ class GCodeParseService:
         self.parser = parser or GenericGCodeParser()
 
     def parse_upload(self, upload_id: str | UUID) -> GCodeParseResult:
-        resolved = self.upload_service.resolve_upload(upload_id)
-        cache_path = self.cache_path_for(resolved.path)
-        cached = self._read_cache(cache_path)
-        if cached is not None and self._cache_matches_upload(cached, resolved.metadata):
-            return cached
+        with self.upload_service.active_operation(upload_id):
+            resolved = self.upload_service.resolve_upload(upload_id)
+            cache_path = self.cache_path_for(resolved.path)
+            cached = self._read_cache(cache_path)
+            if cached is not None and self._cache_matches_upload(cached, resolved.metadata):
+                return cached
 
-        result = self.parser.parse_path(
-            resolved.path,
-            upload_id=resolved.metadata.upload_id,
-            filename=resolved.metadata.filename,
-        )
-        self._write_cache(cache_path, result)
-        return result
+            result = self.parser.parse_path(
+                resolved.path,
+                upload_id=resolved.metadata.upload_id,
+                filename=resolved.metadata.filename,
+            )
+            self._write_cache(cache_path, result)
+            return result
 
     @staticmethod
     def cache_path_for(upload_path: Path) -> Path:
@@ -249,7 +255,7 @@ class GCodeParseService:
 
     @staticmethod
     def _read_cache(path: Path) -> GCodeParseResult | None:
-        if not path.is_file():
+        if not path.is_file() or path.is_symlink():
             return None
         try:
             if path.stat().st_size > MAX_PARSE_CACHE_BYTES:
@@ -259,15 +265,20 @@ class GCodeParseService:
             return None
         return result if result.parser_version == PARSER_VERSION else None
 
-    @staticmethod
-    def _write_cache(path: Path, result: GCodeParseResult) -> None:
+    def _write_cache(self, path: Path, result: GCodeParseResult) -> None:
         temporary_path = path.with_suffix(".json.uploading")
+        contents = result.model_dump_json(indent=2)
         try:
-            with temporary_path.open("w", encoding="utf-8") as destination:
-                destination.write(result.model_dump_json(indent=2))
-                destination.flush()
-                os.fsync(destination.fileno())
-            os.replace(temporary_path, path)
+            with storage_lock(path.parent):
+                temporary_path.unlink(missing_ok=True)
+                if not self.upload_service.storage_bytes_fit(len(contents.encode("utf-8"))):
+                    logger.warning("Skipped G-code parse cache because storage quota is full")
+                    return
+                with temporary_path.open("x", encoding="utf-8") as destination:
+                    destination.write(contents)
+                    destination.flush()
+                    os.fsync(destination.fileno())
+                os.replace(temporary_path, path)
         except OSError as error:
             try:
                 temporary_path.unlink(missing_ok=True)

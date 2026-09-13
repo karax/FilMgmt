@@ -1,0 +1,23 @@
+{
+	admin off
+	auto_https off
+}
+:8080 {
+	encode zstd gzip
+
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy 127.0.0.1:8000
+	}
+
+	handle {
+		root * {$HOME}/.local/share/filament-command-center/app/frontend/dist
+		try_files {path} /index.html
+		file_server
+	}
+
+	log {
+		output stdout
+		format console
+	}
+}

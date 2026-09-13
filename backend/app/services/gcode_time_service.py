@@ -1,5 +1,6 @@
 from collections.abc import Iterable, Iterator
 from dataclasses import dataclass, field
+import logging
 import math
 import os
 from pathlib import Path
@@ -18,6 +19,10 @@ from app.services.gcode_parser import (
     parse_gcode_line,
 )
 from app.services.gcode_upload_service import GCodeUploadService
+from app.services.gcode_upload_activity import storage_lock
+
+
+logger = logging.getLogger(__name__)
 
 TIME_ESTIMATOR_VERSION = 1
 MAX_TIME_CACHE_BYTES = 64 * 1024
@@ -436,60 +441,61 @@ class GCodeTimeService:
         self.estimator = estimator or GCodeCommandTimeEstimator()
 
     def estimate_upload(self, upload_id: str | UUID) -> GCodeTimeResult:
-        resolved = self.upload_service.resolve_upload(upload_id)
-        cache_path = self.cache_path_for(resolved.path)
-        cached = self._read_cache(cache_path)
-        if cached is not None and self._cache_matches_upload(cached, resolved.metadata):
-            return cached.result
+        with self.upload_service.active_operation(upload_id):
+            resolved = self.upload_service.resolve_upload(upload_id)
+            cache_path = self.cache_path_for(resolved.path)
+            cached = self._read_cache(cache_path)
+            if cached is not None and self._cache_matches_upload(cached, resolved.metadata):
+                return cached.result
 
-        summary = self.parse_service.parse_upload(upload_id)
-        analysis = self.estimator.analyze_path(resolved.path, metadata=summary.metadata)
-        slicer, conflicting = _select_slicer_candidate(analysis.slicer_candidates)
-        if slicer is not None:
-            source = "slicer_metadata"
-            estimated = slicer.seconds
-            is_heuristic = False
-            is_complete = True
-            warnings = ["multiple_slicer_time_estimates"] if conflicting else []
-        elif analysis.estimated_time_seconds is not None:
-            source = "command_kinematics"
-            estimated = analysis.estimated_time_seconds
-            is_heuristic = True
-            is_complete = analysis.is_complete
-            warnings = analysis.warnings
-        else:
-            source = None
-            estimated = None
-            is_heuristic = False
-            is_complete = False
-            warnings = analysis.warnings
+            summary = self.parse_service.parse_upload(upload_id)
+            analysis = self.estimator.analyze_path(resolved.path, metadata=summary.metadata)
+            slicer, conflicting = _select_slicer_candidate(analysis.slicer_candidates)
+            if slicer is not None:
+                source = "slicer_metadata"
+                estimated = slicer.seconds
+                is_heuristic = False
+                is_complete = True
+                warnings = ["multiple_slicer_time_estimates"] if conflicting else []
+            elif analysis.estimated_time_seconds is not None:
+                source = "command_kinematics"
+                estimated = analysis.estimated_time_seconds
+                is_heuristic = True
+                is_complete = analysis.is_complete
+                warnings = analysis.warnings
+            else:
+                source = None
+                estimated = None
+                is_heuristic = False
+                is_complete = False
+                warnings = analysis.warnings
 
-        result = GCodeTimeResult(
-            time_estimator_version=TIME_ESTIMATOR_VERSION,
-            upload_id=summary.upload_id,
-            parser_version=summary.parser_version,
-            estimated_time_seconds=estimated,
-            source=source,
-            slicer_estimated_time_seconds=slicer.seconds if slicer is not None else None,
-            slicer_time_key=slicer.key if slicer is not None else None,
-            kinematic_estimated_time_seconds=analysis.estimated_time_seconds,
-            motion_time_seconds=analysis.motion_time_seconds,
-            dwell_time_seconds=analysis.dwell_time_seconds,
-            kinematic_is_complete=analysis.is_complete,
-            unestimated_motion_count=analysis.unestimated_motion_count,
-            is_heuristic=is_heuristic,
-            is_complete=is_complete,
-            warnings=warnings,
-        )
-        envelope = _TimeCacheEnvelope(
-            time_estimator_version=TIME_ESTIMATOR_VERSION,
-            upload_id=resolved.metadata.upload_id,
-            filename=resolved.metadata.filename,
-            source_size_bytes=resolved.metadata.size_bytes,
-            result=result,
-        )
-        self._write_cache(cache_path, envelope)
-        return result
+            result = GCodeTimeResult(
+                time_estimator_version=TIME_ESTIMATOR_VERSION,
+                upload_id=summary.upload_id,
+                parser_version=summary.parser_version,
+                estimated_time_seconds=estimated,
+                source=source,
+                slicer_estimated_time_seconds=slicer.seconds if slicer is not None else None,
+                slicer_time_key=slicer.key if slicer is not None else None,
+                kinematic_estimated_time_seconds=analysis.estimated_time_seconds,
+                motion_time_seconds=analysis.motion_time_seconds,
+                dwell_time_seconds=analysis.dwell_time_seconds,
+                kinematic_is_complete=analysis.is_complete,
+                unestimated_motion_count=analysis.unestimated_motion_count,
+                is_heuristic=is_heuristic,
+                is_complete=is_complete,
+                warnings=warnings,
+            )
+            envelope = _TimeCacheEnvelope(
+                time_estimator_version=TIME_ESTIMATOR_VERSION,
+                upload_id=resolved.metadata.upload_id,
+                filename=resolved.metadata.filename,
+                source_size_bytes=resolved.metadata.size_bytes,
+                result=result,
+            )
+            self._write_cache(cache_path, envelope)
+            return result
 
     @staticmethod
     def cache_path_for(upload_path: Path) -> Path:
@@ -507,7 +513,7 @@ class GCodeTimeService:
 
     @staticmethod
     def _read_cache(path: Path) -> _TimeCacheEnvelope | None:
-        if not path.is_file():
+        if not path.is_file() or path.is_symlink():
             return None
         try:
             if path.stat().st_size > MAX_TIME_CACHE_BYTES:
@@ -517,15 +523,20 @@ class GCodeTimeService:
             return None
         return envelope if envelope.time_estimator_version == TIME_ESTIMATOR_VERSION else None
 
-    @staticmethod
-    def _write_cache(path: Path, envelope: _TimeCacheEnvelope) -> None:
+    def _write_cache(self, path: Path, envelope: _TimeCacheEnvelope) -> None:
         temporary_path = path.with_suffix(".json.uploading")
+        contents = envelope.model_dump_json(indent=2)
         try:
-            with temporary_path.open("w", encoding="utf-8") as destination:
-                destination.write(envelope.model_dump_json(indent=2))
-                destination.flush()
-                os.fsync(destination.fileno())
-            os.replace(temporary_path, path)
+            with storage_lock(path.parent):
+                temporary_path.unlink(missing_ok=True)
+                if not self.upload_service.storage_bytes_fit(len(contents.encode("utf-8"))):
+                    logger.warning("Skipped G-code time cache because storage quota is full")
+                    return
+                with temporary_path.open("x", encoding="utf-8") as destination:
+                    destination.write(contents)
+                    destination.flush()
+                    os.fsync(destination.fileno())
+                os.replace(temporary_path, path)
         except OSError as error:
             try:
                 temporary_path.unlink(missing_ok=True)

@@ -21,6 +21,7 @@ from app.services.gcode_upload_service import (
     GCodeEmptyFileError,
     GCodeInvalidExtensionError,
     GCodeInvalidUploadIdError,
+    GCodeStorageQuotaExceededError,
     GCodeUploadNotFoundError,
     GCodeUploadService,
     GCodeUploadStorageError,
@@ -66,6 +67,14 @@ async def upload_gcode(
         raise HTTPException(
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail=str(error),
+        ) from error
+    except GCodeStorageQuotaExceededError as error:
+        raise HTTPException(
+            status_code=status.HTTP_507_INSUFFICIENT_STORAGE,
+            detail={
+                "code": "gcode_storage_quota_exceeded",
+                "message": str(error),
+            },
         ) from error
     except GCodeUploadStorageError as error:
         raise HTTPException(

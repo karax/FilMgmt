@@ -19,7 +19,7 @@ export function EditPrintJobPage() {
   const spools = useSpools({ includeArchived: true })
   const update = useUpdatePrintJob()
   if (job.isPending || spools.isPending) return <FormSkeleton />
-  if (!job.data || job.error || spools.error) {
+  if (!job.data || job.error || (!spools.data && spools.error)) {
     if (job.error && 'status' in job.error && job.error.status === 404) return <NotFound />
     return <LoadError onRetry={() => { void job.refetch(); void spools.refetch() }} />
   }

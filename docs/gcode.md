@@ -47,11 +47,37 @@ Material catalog. It is idempotent and creates no persistent record.
 
 ## Limits and storage
 
-The backend defaults to 100 MiB and reads each `UploadFile` in 1 MiB chunks.
-`GCODE_MAX_UPLOAD_BYTES` can override the server limit with a positive byte
-count. The optional frontend preflight limit uses the same default and can be
-matched at build time with `VITE_GCODE_MAX_UPLOAD_BYTES`; the backend remains
-authoritative.
+The per-file limit and the total storage quota are separate controls. The
+backend defaults to a 100 MiB per-file limit and reads each `UploadFile` in
+1 MiB chunks. `GCODE_MAX_UPLOAD_BYTES` can override the server limit with a
+positive byte count. The optional frontend preflight limit uses the same
+default and can be matched at build time with `VITE_GCODE_MAX_UPLOAD_BYTES`;
+the backend remains authoritative.
+
+The managed storage area defaults to a 2 GiB total quota. Usage is calculated
+from filesystem metadata (`lstat` sizes), without opening G-code content. Raw
+uploads, metadata, parse/time caches and temporary files count toward the
+quota. Unexpected regular files directly inside the configured storage root
+also count because they consume the same capacity, but cleanup never deletes
+them blindly. Database, logs, generated manuals and files outside this root do
+not count.
+
+Lifecycle configuration uses environment variables:
+
+| Variable | Default | Rule |
+| --- | ---: | --- |
+| `GCODE_MAX_UPLOAD_BYTES` | 100 MiB | Positive bytes; maximum for one file. |
+| `GCODE_UPLOAD_MAX_TOTAL_BYTES` | 2 GiB | Positive bytes; total storage quota. |
+| `GCODE_UPLOAD_RETENTION_DAYS` | 30 | Zero or greater; age from metadata `created_at`. |
+| `GCODE_UPLOAD_RETENTION_ENABLED` | `true` | Explicitly enables/disables expiry. |
+| `GCODE_UPLOAD_TEMP_STALE_SECONDS` | 3600 | Positive seconds before a known temp is stale. |
+| `GCODE_UPLOAD_CLEANUP_ENABLED` | `true` | Enables automatic cleanup before uploads. |
+
+Boolean values accept `true`/`false`, `1`/`0`, `yes`/`no`, and `on`/`off`
+case-insensitively. Invalid values fail configuration loading. Retention day
+zero means immediate eligibility at the deterministic `created_at <= cutoff`
+boundary; use `GCODE_UPLOAD_RETENTION_ENABLED=false` to disable expiry without
+ambiguity. There is no implicit negative or zero value for unlimited quota.
 
 Files live under `data/uploads/gcode/` by default. An administrator may set
 `GCODE_UPLOAD_DIRECTORY` to another controlled directory. Browser-provided
@@ -69,6 +95,70 @@ Data is first written as `<upload_id>.uploading`, size-checked while streaming,
 and atomically renamed only after the complete upload arrives. Metadata uses the
 same sidecar strategy. Empty, oversized, interrupted, or failed uploads are
 cleaned up. Upload data is ignored by Git.
+
+Before accepting a new upload, the service runs cleanup when
+`GCODE_UPLOAD_CLEANUP_ENABLED=true`, recalculates current usage, and then checks
+the declared size when available. Every streamed chunk is checked against both
+the per-file limit and current total usage; the small metadata sidecar is also
+checked before finalization. A failed size, quota, I/O, validation, or client
+upload leaves no committed unit or partial temp under normal filesystem
+operation. Real filesystem `ENOSPC`/quota errors and configured quota exhaustion
+return HTTP 507 with a stable contract:
+
+```json
+{
+  "detail": {
+    "code": "gcode_storage_quota_exceeded",
+    "message": "G-code storage has reached its configured limit."
+  }
+}
+```
+
+Parse and time caches also respect the total quota. Because they are derived
+data, an analysis still returns its result when there is no capacity for a new
+cache sidecar; the cache and its temporary file are simply not created.
+
+Automatic cleanup removes expired units, safe orphans and stale known temps. It
+never evicts a valid recent upload merely to admit a new one. If valid recent
+data still fills the quota, the new upload is rejected. An already over-quota
+directory is treated the same way: only policy-eligible data is removed.
+
+Expiry uses the canonical `created_at` in `<upload_id>.json`; cache mtime and
+filesystem access time never extend retention. A complete expired unit is
+deleted in cache/temp, metadata, then raw-file order. A failed stage is reported
+and leaves the remaining valid portion recoverable or identifiable on the next
+idempotent run. Metadata cannot supply deletion paths: every target is rebuilt
+from a validated UUID and a known suffix directly under the storage root.
+
+Cleanup recognizes only the suffixes shown above and their real temporary forms:
+`<upload_id>.uploading`, `<upload_id>.json.uploading`,
+`<upload_id>.parse.json.uploading`, and `<upload_id>.time.json.uploading`.
+Recent temps are preserved. Known stale temps and UUID-named raw, metadata or
+cache orphans are eligible; unknown names and directories are retained with a
+warning. Symlinks are never followed. A recognized unexpected symlink may be
+unlinked inside the root, while its external target remains untouched.
+
+Upload, parse and time-analysis operations register the UUID as active before
+resolving or reading it. Cleanup and activity registration share process-local
+locking, so cleanup either finishes before an analysis starts or skips that
+unit for the full operation. Nested parse calls are reference-counted. No
+distributed lock, scheduler, queue, or background loop is used.
+
+Cleanup runs automatically before a new upload only. It does not run at app
+startup. Administrators can run the same service manually from `backend/`, and
+can later schedule this command with cron or a systemd timer:
+
+```bash
+python -m app.scripts.cleanup_gcode_uploads --dry-run
+python -m app.scripts.cleanup_gcode_uploads
+```
+
+Dry-run reports uploads scanned, expired units, orphan/temp counts, reclaimable
+bytes, usage, quota and over-quota state without deleting anything. The manual
+command remains available when automatic cleanup is disabled;
+`GCODE_UPLOAD_RETENTION_ENABLED` still controls whether age-based expiry is in
+scope. Errors produce individual output and a non-zero exit code, while other
+safe units continue to be processed.
 
 The UUID is the safe hand-off between analysis tasks. Code must call
 `GCodeUploadService.resolve_upload(upload_id)` rather than accepting an

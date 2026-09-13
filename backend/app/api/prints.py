@@ -39,11 +39,11 @@ def create_print_job(payload: PrintJobCreate, db: DbSession) -> PrintJobRead:
     try:
         print_job = PrintJobService(db).create_print_job(payload)
     except PrintJobSpoolNotFoundError as error:
-        raise _not_found("Spool not found.") from error
+        raise _save_error(404, "spool_not_found", "The selected spool was not found.", error.spool_id) from error
     except PrintJobArchivedSpoolError as error:
-        raise _conflict("Archived spool cannot be used for a print job.") from error
+        raise _save_error(409, "spool_archived", "Select a spool that is not archived.", error.spool_id) from error
     except PrintJobDataConflictError as error:
-        raise _conflict("Print job operation conflicts with current data.") from error
+        raise _save_error(409, "print_data_conflict", "Review the print and selected spools, then try again.") from error
     return PrintJobRead.model_validate(print_job)
 
 
@@ -115,16 +115,23 @@ def update_print_job(print_job_id: int, payload: PrintJobUpdate, db: DbSession) 
     try:
         print_job = PrintJobService(db).update_print_job(print_job_id, payload)
     except PrintJobNotFoundError as error:
-        raise _not_found("Print job not found.") from error
+        raise _save_error(404, "print_not_found", "This print no longer exists. Return to the print list.") from error
     except PrintJobSpoolNotFoundError as error:
-        raise _not_found("Spool not found.") from error
+        raise _save_error(404, "spool_not_found", "The selected spool was not found.", error.spool_id) from error
     except PrintJobArchivedSpoolError as error:
-        raise _conflict("Archived spool cannot be used for a print job.") from error
+        raise _save_error(409, "spool_archived", "Select a spool that is not archived.", error.spool_id) from error
     except PrintJobNotPlannedError as error:
-        raise _conflict("Only planned print jobs can be edited.") from error
+        raise _save_error(409, "print_not_planned", "This print can no longer be edited. Return to the print list.") from error
     except PrintJobDataConflictError as error:
-        raise _conflict("Print job operation conflicts with current data.") from error
+        raise _save_error(409, "print_data_conflict", "Review the print and selected spools, then try again.") from error
     return PrintJobRead.model_validate(print_job)
+
+
+def _save_error(status_code: int, code: str, message: str, spool_id: int | None = None) -> HTTPException:
+    detail: dict[str, str | int] = {"code": code, "message": message}
+    if spool_id is not None:
+        detail["spool_id"] = spool_id
+    return HTTPException(status_code=status_code, detail=detail)
 
 
 def _not_found(detail: str) -> HTTPException:

@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { finishPrintJob, createPrintJob, startPrintJob, updatePrintJob } from '../api/prints'
 import { isApiError } from '../api/client'
+import { shouldRefreshPrintSpools } from '../lib/printSaveErrors'
 import type { PrintJobFinishPayload, PrintJobPayload, UpdatePrintJobPayload } from '../types/printJob'
 import { printJobQueryKey } from './usePrintJob'
 import { printJobsQueryKey } from './usePrintJobs'
@@ -37,14 +38,19 @@ function useInvalidatePrintLifecycle() {
 
 export function useCreatePrintJob() {
   const invalidate = useInvalidatePrints()
-  return useMutation({ mutationFn: createPrintJob, onSuccess: () => invalidate() })
+  const client = useQueryClient()
+  return useMutation({ mutationFn: createPrintJob, onSuccess: () => invalidate(),
+    onError: error => shouldRefreshPrintSpools(error) ? client.invalidateQueries({ queryKey: spoolsQueryKey }) : undefined,
+  })
 }
 
 export function useUpdatePrintJob() {
   const invalidate = useInvalidatePrints()
+  const client = useQueryClient()
   return useMutation({
     mutationFn: ({ id, payload }: UpdateInput) => updatePrintJob(id, payload),
     onSuccess: (printJob) => invalidate(printJob.id),
+    onError: error => shouldRefreshPrintSpools(error) ? client.invalidateQueries({ queryKey: spoolsQueryKey }) : undefined,
   })
 }
 

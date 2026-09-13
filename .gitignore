@@ -37,6 +37,7 @@ env/
 *.sqlite
 *.sqlite3
 /data/uploads/
+/backups/
 
 # ==========================================
 # Frontend / Node
@@ -76,3 +77,4 @@ SESSION_CONTEXT.txt
 *.tmp
 *.swp
 *.bak
+.remote-prompts/

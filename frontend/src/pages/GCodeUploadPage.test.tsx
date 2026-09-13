@@ -401,6 +401,48 @@ describe('G-code upload page', () => {
     )
   })
 
+  it('shows the structured storage quota error in English', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 507,
+      json: vi.fn().mockResolvedValue({
+        detail: {
+          code: 'gcode_storage_quota_exceeded',
+          message: 'G-code storage has reached its configured limit.',
+        },
+      }),
+    })
+    const { user } = renderPage()
+    await user.upload(fileInput(), new File(['G1'], 'quota.gcode'))
+    await user.click(screen.getByRole('button', { name: 'Upload G-code' }))
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('G-code storage has reached its configured limit.')
+    expect(alert).not.toHaveTextContent('Could not upload the file.')
+  })
+
+  it('shows the structured storage quota error in pt-BR', async () => {
+    await i18n.changeLanguage('pt-BR')
+    fetchMock.mockResolvedValueOnce({
+      ok: false,
+      status: 507,
+      json: vi.fn().mockResolvedValue({
+        detail: {
+          code: 'gcode_storage_quota_exceeded',
+          message: 'G-code storage has reached its configured limit.',
+        },
+      }),
+    })
+    const { user } = renderPage()
+    const input = screen.getByLabelText('Selecionar arquivo') as HTMLInputElement
+    await user.upload(input, new File(['G1'], 'quota.gcode'))
+    await user.click(screen.getByRole('button', { name: 'Enviar G-code' }))
+
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('O armazenamento de G-code atingiu o limite configurado.')
+    expect(alert).not.toHaveTextContent('Não foi possível enviar o arquivo.')
+  })
+
   it('allows selecting a new file after an upload error', async () => {
     fetchMock.mockResolvedValueOnce({
       ok: false,

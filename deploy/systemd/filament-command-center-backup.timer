@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily verified Filament Command Center SQLite backup
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+RandomizedDelaySec=30m
+Unit=filament-command-center-backup.service
+
+[Install]
+WantedBy=timers.target
+

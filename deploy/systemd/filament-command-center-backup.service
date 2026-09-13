@@ -1,0 +1,13 @@
+[Unit]
+Description=Verified Filament Command Center SQLite backup
+
+[Service]
+Type=oneshot
+WorkingDirectory=%h/.local/share/filament-command-center/app/backend
+EnvironmentFile=-%h/.config/filament-command-center/env
+ExecStart=%h/.local/share/filament-command-center/app/backend/.venv/bin/python -m app.scripts.backup_database
+UMask=0077
+Nice=10
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full

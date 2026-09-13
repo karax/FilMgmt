@@ -60,7 +60,9 @@ export function GCodeUploadPage() {
   }
 
   const uploadError = upload.error
-    ? isApiError(upload.error) && upload.error.status === 413
+    ? isStorageQuotaError(upload.error)
+      ? t('gcode.storageQuotaExceeded')
+      : isApiError(upload.error) && upload.error.status === 413
       ? t('gcode.tooLarge')
       : t('gcode.uploadFailed')
     : null
@@ -220,6 +222,19 @@ export function GCodeUploadPage() {
         </button>
       </div>
     </section>
+  )
+}
+
+function isStorageQuotaError(error: unknown): boolean {
+  if (!isApiError(error)) return false
+  const response = error.detail
+  if (!response || typeof response !== 'object') return false
+  const detail = 'detail' in response ? response.detail : response
+  return Boolean(
+    detail
+    && typeof detail === 'object'
+    && 'code' in detail
+    && detail.code === 'gcode_storage_quota_exceeded',
   )
 }
 
