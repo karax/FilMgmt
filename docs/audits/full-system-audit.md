@@ -161,10 +161,10 @@ Effort: S (hours), M (roughly 1–3 days), L (cross-cutting/multi-day).
 | ID | Priority | Area | Finding | Impact | Effort | Confidence |
 |---|---|---|---|---|---|---|
 | REL-01 | P0 gate — RESOLVED (2026-09-07) | Delivery | Original untracked-file omission was remediated and the clean-checkout path validated. | Product gates and empty-data smoke reproduce from the release working tree. | S | High |
-| SEC-01 | P1 | Security | No authentication/authorization protects archive, permanent delete, catalog mutation or 100 MiB upload; Swagger is always enabled. | Any reachable client can read or mutate the installation. | L | High |
+| SEC-01 | P3 in supported private mode; P0 exposure gate | Security | No authentication/authorization protects archive, permanent delete, catalog mutation or 100 MiB upload; Swagger is always enabled. | Trusted LAN/Tailnet access remains the supported boundary; public, untrusted or multi-user deployment requires promotion and remediation first. | L | High |
 | FUN-01 | P1 — RESOLVED (2026-09-09) | Core flow | PrintJobForm now consumes submitError and maps localized form/field errors, including nested spool rows. | Create/Edit preserve input, focus errors, prevent duplicate submits and support retry; conflict refresh retains the form. | S | High |
-| I18N-01 | P1 | i18n | Core Spool/Print UI is hard-coded English while pt-BR is default; raw OPEN-like statuses leak. | Default UI is visibly mixed-language. | M | High |
-| A11Y-01 | P1 | Accessibility | HTML is permanently lang=en; language changes do not update it. | Screen readers may pronounce Portuguese as English. | S | High |
+| I18N-01 | P1 — RESOLVED (2026-09-13) | i18n | Core Spool/Print and shared-shell copy now uses equivalent pt-BR/English resources; bounded statuses are localized. | Both supported languages render coherent core routes without fallback leakage in the tested matrix. | M | High |
+| A11Y-01 | P1 — RESOLVED (2026-09-13) | Accessibility | The HTML language now initializes from and follows the validated selected locale. | Assistive technology receives `pt-BR` or `en` consistently with visible copy. | S | High |
 | A11Y-02 | P1 | Accessibility | Light accent text is 2.74–3.00:1 and appears at 10–14 px. | Normal text fails WCAG AA; some focus indicators are also weak. | M | High |
 | STO-01 | P1 — RESOLVED (2026-09-09) | Reliability | G-code storage now has configurable 30-day retention, a 2 GiB total quota, safe unit/orphan/temp cleanup, pre-upload enforcement and a dry-run CLI. | Upload growth is bounded without evicting recent or active analyses; quota/disk-full failures return structured HTTP 507 feedback. | M | High |
 | OPS-01 | P1 — RESOLVED (2026-09-12) | Operations | Non-root systemd services, Caddy production serving, private access profiles, health, verified backup/restore, update/rollback and recovery tooling/runbook are implemented. | A private Pi can start at boot and be diagnosed, backed up, restored, updated and recovered without remembered development commands. | M | High |
@@ -185,7 +185,7 @@ Effort: S (hours), M (roughly 1–3 days), L (cross-cutting/multi-day).
 | DATA-01 | P2 | Data | API maxima/format rules are not all mirrored by DB checks. | Imports/future internal writers can create API-invalid rows. | S | High |
 | REL-04 | P2 | Database | SQLite uses rollback journal with no explicit WAL/busy policy. | Concurrent network writes face greater lock contention. | S | Medium |
 | TEST-01 | P2 | Quality | No CI, lint/format gate, coverage floor, dependency scan or accessibility gate. | Strong local tests are not enforced; defect classes remain unchecked. | M | High |
-| TEST-02 | P2 | E2E | Smoke checks presence/overflow, not primary mutations, real upload, language switch or keyboard dialogs. | Integration regressions can pass browser gates. | M | High |
+| TEST-02 | P2 | E2E | Smoke now covers the bilingual core-route matrix, persistence and translated mobile overflow, but not primary mutations, real upload or keyboard dialogs. | Important interaction regressions can still pass browser gates. | M | High |
 | ARCH-01 | P2 | Maintainability | GCodeUploadPage (681 lines), parser (657), SpoolForm (489) and compressed one-line Print modules concentrate concerns. | Review/localization/change cost is unnecessarily high. | L | High |
 | OBS-01 | P3 | Observability | No structured app logging, request IDs, metrics or disk/database health signal. | Field failures are difficult to diagnose. | M | High |
 | DEP-01 | P3 | Reproducibility | Core Python dependencies use broad ranges rather than a lock/constraints file. | Fresh environments can receive materially different versions. | S | High |
@@ -195,10 +195,10 @@ Effort: S (hours), M (roughly 1–3 days), L (cross-cutting/multi-day).
 
 1. Commit the validated README, self-contained smoke and audit closure; change REL-01 from
    conditionally ready to PASS.
-2. Define the trust boundary and add authentication/authorization before
-   network exposure.
+2. Preserve the trusted LAN/Tailnet boundary; promote authentication only before
+   public/untrusted exposure or use by multiple untrusted users.
 3. Surface Print Job mutation errors with 409/422/network regression tests.
-4. Complete pt-BR and synchronize the HTML language attribute.
+4. I18N-01/A11Y-01 completed: pt-BR/English resources, formatter behavior and the HTML language attribute are synchronized.
 5. STO-01 completed: upload retention, total quota, cleanup and storage reporting are implemented.
 6. Provide catalog management or an explicit first-run onboarding flow.
 7. Fix light-theme contrast and modal/form-error accessibility.
@@ -249,10 +249,10 @@ with explicit lock/weight semantics or be removed until they do.
 The visual system is coherent: restrained surfaces, consistent cards, clear
 badges, useful density and a strong industrial identity. Dark mode is mature.
 
-Screenshots also prove mixed-language inconsistency. Spool details/creation and
-Print creation combine Portuguese with “Edit Spool,” “Add Spool,” “Hours,”
-“Cancel,” raw statuses and English validation. These are product defects, not
-documentation defects.
+The earlier screenshots recorded mixed-language Spool and Print controls. The
+underlying interface labels, statuses and validation have now been localized;
+the Portuguese guide wording was aligned without recapturing otherwise accurate
+screenshots.
 
 ## Responsive / Mobile
 
@@ -271,25 +271,23 @@ semantics, labels, skip link, visible focus and reduced motion.
 
 Required:
 
-- synchronize document lang;
 - introduce a darker light-theme accent-text token;
 - use a modal primitive with focus trap, initial focus, inert background,
   Escape and restoration;
 - connect field errors with aria-describedby/aria-errormessage and announce
   submit failures;
-- localize accessible names such as Color, Remaining and loading labels;
+- continue broad accessibility review of names and descriptions beyond the
+  i18n-specific labels localized by I18N-01;
 - add automated keyboard/accessibility checks.
 
 ## UX Writing / i18n
 
-i18next covers newer QR/G-code and much of Print Tracker, but legacy Spool
-surfaces bypass it. Hard-coded text appears in NewSpoolPage, EditSpoolPage,
-SpoolDetailsPage, SpoolForm, PrintJobForm, ThemeToggle, SpoolProgressBar,
-SpoolColorIndicator and PagePlaceholder.
-
-Several required translation keys already exist. Wire them, add the missing
-keys and enforce key parity. Replace late Object.assign locale extensions with
-one typed structure per locale.
+i18next now covers the shared shell, Inventory, Spool, Print Tracker, QR,
+G-code and Settings surfaces in pt-BR and English. Locale resources have runtime
+recursive key-parity coverage, known API errors are mapped to localized copy,
+and display formatting follows the selected locale while stored currency codes
+remain authoritative. Entity/catalog data, FIL codes and raw G-code metadata
+remain intentionally untranslated.
 
 ## Frontend Architecture
 
@@ -390,16 +388,15 @@ Architectural debt:
 
 UX debt:
 
-- mixed-language flows and API-only catalog onboarding;
+- API-only catalog onboarding;
 - placeholder Analytics and missing 404;
 - mobile header/table behavior;
 - silent Print errors and no resumable G-code history.
 
 Accessibility debt:
 
-- incorrect language, insufficient accent contrast, modal focus defects,
-  unassociated errors, hard-coded English accessible names and no automated
-  gate.
+- insufficient accent contrast, modal focus defects, unassociated errors and no
+  automated accessibility gate.
 
 ## Product / Technical Risk Register
 

@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 interface SpoolColorIndicatorProps {
   colorHex: string | null
   colorName: string
@@ -9,9 +11,11 @@ export function SpoolColorIndicator({
   colorName,
   className = '',
 }: SpoolColorIndicatorProps) {
+  const { t } = useTranslation()
+
   return (
     <span
-      aria-label={`Color: ${colorName}`}
+      aria-label={t('spool.colorAria', { color: colorName })}
       className={`size-3.5 shrink-0 rounded-full border border-black/15 shadow-sm dark:border-white/20 ${
         colorHex ? '' : 'bg-line'
       } ${className}`}

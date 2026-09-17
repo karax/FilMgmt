@@ -136,7 +136,7 @@ O status pode mudar automaticamente por causa do peso ou do ciclo de uma impress
 
 ## Capítulo 4 — Cadastrar um Spool
 
-Abra **Inventário** e selecione **Adicionar Spool**. A página aparece como `New Spool` em partes da interface atual.
+Abra **Inventário** e selecione **Adicionar Spool**.
 
 1. Escolha o **Fabricante**.
 2. Escolha o **Material**.
@@ -224,13 +224,13 @@ Se uma impressão consumiu 80 g de um Spool com 700 g, o sistema passa a mostrar
 
 ### Editar
 
-Selecione `Edit Spool` nos detalhes. Você pode alterar nome, fabricante, Material, produto, cor, diâmetro, peso inicial, peso do Spool vazio, compra, temperaturas, sinalização de secagem e observações.
+Selecione **Editar Spool** nos detalhes. Você pode alterar nome, fabricante, Material, produto, cor, diâmetro, peso inicial, peso do Spool vazio, compra, temperaturas, sinalização de secagem e observações.
 
 O **Peso Atual do Filamento** não é editado nessa tela. O código `FIL-XXXX` também permanece o mesmo.
 
 ### Arquivar
 
-Selecione `Archive Spool` e confirme. O item sai do inventário ativo, mas pode ser encontrado com **Incluir arquivados**. Arquivar é a opção adequada quando você quer preservar o registro.
+Selecione **Arquivar Spool** e confirme. O item sai do inventário ativo, mas pode ser encontrado com **Incluir arquivados**. Arquivar é a opção adequada quando você quer preservar o registro.
 
 ![Confirmação de arquivamento do Spool FIL-0003](images/desktop/11-spool-archive-dialog.png)
 
@@ -259,14 +259,14 @@ Uma **impressão** é o registro de um trabalho que você pretende executar na i
 3. Preencha **Nome da Impressão**.
 4. Escolha o primeiro **Spool**.
 5. Se souber, informe **Peso Estimado** em gramas.
-6. Preencha `Hours`, `Minutes`, **Impressora** e **Observações** quando forem úteis.
+6. Preencha **Horas**, **Minutos**, **Impressora** e **Observações** quando forem úteis.
 7. Selecione **Criar Impressão**.
 
 O Peso Estimado é a quantidade que você espera consumir, não o peso atual do Spool. Uma estimativa do slicer é um bom ponto de partida.
 
 ### Usar vários Spools
 
-Selecione `+ Add Spool` para adicionar outra unidade. Cada bloco tem seu próprio Spool e Peso Estimado. Use `Remove` para retirar um bloco. O mesmo Spool não pode aparecer duas vezes na mesma impressão.
+Selecione **Adicionar Spool** para adicionar outra unidade. Cada bloco tem seu próprio Spool e Peso Estimado. Use **Remover** para retirar um bloco. O mesmo Spool não pode aparecer duas vezes na mesma impressão.
 
 Exemplo: uma miniatura pode usar 120 g de PLA preto no corpo e 80 g de PETG laranja nos detalhes. Isso não exige um tipo específico de alimentador; apenas registra que o trabalho usa mais de uma unidade.
 
@@ -607,7 +607,7 @@ Spools vazios, arquivados ou já em uso são bloqueados no início. Um Spool arq
 
 ### Posso usar dois Spools na mesma impressão?
 
-Sim. Use `+ Add Spool` e informe uma estimativa separada para cada unidade. O mesmo Spool não pode ser repetido no mesmo trabalho.
+Sim. Use **Adicionar Spool** e informe uma estimativa separada para cada unidade. O mesmo Spool não pode ser repetido no mesmo trabalho.
 
 ### O que coloco em Peso Estimado?
 
@@ -659,7 +659,7 @@ Sim, se o navegador permitir acesso à câmera. Em alguns casos é necessária c
 
 ### Posso mudar o nome do Spool?
 
-Sim. Abra os detalhes, selecione `Edit Spool` e altere **Nome do Spool**.
+Sim. Abra os detalhes, selecione **Editar Spool** e altere **Nome do Spool**.
 
 ### O QR deixa de funcionar se eu mudar o nome?
 

@@ -149,7 +149,7 @@ async function captureDesktop(context, scenario, gcodePath) {
   await captureLocator(page, page.locator('section[aria-labelledby="spool-qr-title"]'), desktop('10-spool-qr.png'))
 
   await go(page, `/spools/${scenario.low.code}`)
-  await page.getByRole('button', { name: 'Archive Spool' }).click()
+  await page.getByRole('button', { name: 'Arquivar Spool' }).click()
   await captureLocator(page, page.getByRole('dialog'), desktop('11-spool-archive-dialog.png'))
 
   await captureRoute(page, `/qr/spool/${scenario.black.code}`, desktop('12-qr-landing.png'))
@@ -162,7 +162,7 @@ async function captureDesktop(context, scenario, gcodePath) {
   await page.getByLabel('Nome da Impressão').fill('Dragon Miniature')
   await page.getByLabel('Spool').first().selectOption(String(scenario.black.id))
   await page.getByLabel('Peso Estimado').first().fill('120')
-  await page.getByRole('button', { name: '+ Add Spool' }).click()
+  await page.getByRole('button', { name: 'Adicionar Spool' }).click()
   await page.getByLabel('Spool').nth(1).selectOption(String(scenario.orange.id))
   await page.getByLabel('Peso Estimado').nth(1).fill('80')
   await page.getByText('Custo estimado da impressão').scrollIntoViewIfNeeded()
@@ -221,7 +221,7 @@ async function captureMobile(context, scenario, gcodePath) {
   await page.getByLabel('Nome da Impressão').fill('Dragon Miniature')
   await page.getByLabel('Spool').first().selectOption(String(scenario.black.id))
   await page.getByLabel('Peso Estimado').first().fill('120')
-  await page.getByRole('button', { name: '+ Add Spool' }).click()
+  await page.getByRole('button', { name: 'Adicionar Spool' }).click()
   await page.getByLabel('Spool').nth(1).selectOption(String(scenario.orange.id))
   await page.getByLabel('Peso Estimado').nth(1).fill('80')
   await page.getByText('Custo estimado da impressão').scrollIntoViewIfNeeded()

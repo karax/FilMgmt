@@ -6,7 +6,7 @@ export const en = {
   filters: { allManufacturers: 'All manufacturers', allMaterials: 'All materials', allStatuses: 'All statuses', any: 'Any', needsDrying: 'Needs drying', doesNotNeedDrying: 'Does not need drying', includeArchived: 'Include archived', minWeight: 'Minimum weight', maxWeight: 'Maximum weight', minRemaining: 'Minimum remaining', maxRemaining: 'Maximum remaining', invalidRange: 'Weight must be zero or greater and remaining percentage must be between 0 and 100.', invalidMinMax: 'Minimum values must not exceed maximum values.' },
   spool: { new: 'New Spool', create: 'Create Spool', creating: 'Creating…', edit: 'Edit Spool', save: 'Save Changes', saving: 'Saving…', updated: 'Spool updated successfully.', view: 'View spool {{code}}', name: 'Spool Name', nameHint: 'Optional name to help you identify this spool.', namePlaceholder: 'e.g. PLA Preto Principal', productName: 'Product Name', productHint: "Manufacturer's product name. Optional.", basic: 'Basic Information', materialColor: 'Material & Color', purchase: 'Purchase', notes: 'Notes', colorName: 'Color Name', colorHex: 'Color Hex', diameter: 'Filament Diameter', initialWeight: 'Initial Filament Weight', currentWeight: 'Current Filament Weight', emptyWeight: 'Empty Spool Weight', price: 'Purchase Price', storeName: 'Store Name', currency: 'Currency', purchaseDate: 'Purchase Date', needsDrying: 'Needs drying', lastDried: 'Last Dried At', printSettings: 'Print Settings', nozzleMin: 'Nozzle Temp Min', nozzleMax: 'Nozzle Temp Max', bedMin: 'Bed Temp Min', bedMax: 'Bed Temp Max', applyDefaults: 'Apply Material Defaults', selectMaterialDefaults: 'Select a material to apply its print-setting defaults.', defaultsFrom: 'Defaults from {{material}}', materialChanged: 'Material changed. Existing custom print settings were preserved.', validation: { maxFilamentWeight: 'Maximum filament weight per spool is 2,000 g.', maxPurchasePrice: 'Maximum allowed price is {{price}}.' }, back: 'Back to Inventory', current: 'Current weight', initial: 'Initial weight', empty: 'Empty spool weight', opened: 'Opened at', lastUsed: 'Last used at', lastDriedLabel: 'Last dried at', created: 'Created at', updatedAt: 'Updated at', archivedAt: 'Archived at', archive: 'Archive Spool', archived: 'This archived spool is retained as a historical record.', danger: 'Danger Zone', delete: 'Delete Spool', deletePermanently: 'Delete Permanently', archiveConfirmTitle: 'Archive {{code}}?', archiveConfirmDescription: 'This spool will be removed from active inventory, but its historical data will be preserved.', deleteConfirmTitle: 'Permanently delete {{code}}?', deleteConfirmDescription: 'This action cannot be undone. The spool will be permanently removed from the database.', typeCode: 'Type {{code}} to confirm', archiveSuccess: 'Spool archived successfully.', cannotArchiveInUse: 'This spool cannot be archived while a print is in progress.', notFound: 'Spool not found.', notFoundDescription: 'The spool may have been removed or the code is invalid.', unableLoad: 'Unable to load spool.', unableEdit: 'Unable to load spool for editing.', color: 'Color', status: 'Status', manufacturer: 'Manufacturer', material: 'Material', diameterLabel: 'Diameter', nozzleTemperature: 'Nozzle temperature', bedTemperature: 'Bed temperature' },
   status: { SEALED: 'Sealed', OPEN: 'Open', IN_USE: 'In use', LOW: 'Low', EMPTY: 'Empty', NEEDS_DRYING: 'Needs drying', ARCHIVED: 'Archived' },
-  settings: { title: 'Settings', description: 'Configure Filament Command Center.', language: 'Language', languageDescription: 'Choose the language used throughout the application.', portuguese: 'Portuguese (Brazil)', english: 'English', manual: { title: 'User manual', description: 'View the complete Filament Command Center user guide.', download: 'Download manual (PDF)' } },
+  settings: { title: 'Settings', description: 'Configure Filament Command Center.', language: 'Language', languageDescription: 'Choose the language used throughout the application.', portuguese: 'Portuguese (Brazil)', english: 'English', manual: { title: 'User manual', description: 'View the complete Filament Command Center user guide in Portuguese.', download: 'Download manual (PDF)' } },
   placeholders: { printsTitle: 'Print Jobs', printsDescription: 'Track planned and completed prints.', analyticsTitle: 'Analytics', analyticsDescription: 'Review filament usage and printing statistics.' },
   prints: { title: 'Print Jobs', description: 'Track planned, active, and completed prints.', loading: 'Loading print jobs', error: 'Unable to load print jobs.', retrying: 'Retrying…', emptyTitle: 'No print jobs recorded yet.', emptyDescription: 'Your planned and completed prints will appear here.', spoolFallback: 'Spool #{{id}}', sections: { printing: 'Printing', planned: 'Planned', success: 'Completed', other: 'Other' }, fields: { printer: 'Printer', estimatedWeight: 'Estimated', actualWeight: 'Actual', estimatedTime: 'Estimated time', actualTime: 'Actual time', cost: 'Material cost', started: 'Started', finished: 'Finished' }, status: { PLANNED: 'Planned', PRINTING: 'Printing', SUCCESS: 'Completed', FAILED: 'Failed', CANCELLED: 'Cancelled' }, actions: { new: 'New Print', edit: 'Edit', create: 'Create Print', save: 'Save Changes', cancel: 'Cancel', back: 'Back to Prints', dismiss: 'Dismiss message' }, create: { title: 'New Print', subtitle: 'Plan a print using a spool from your inventory.' }, edit: { title: 'Edit Print', subtitle: 'Update the planned print details.', notFound: 'Print job not found.' }, messages: { created: 'Planned print created successfully.', updated: 'Print updated successfully.', cannotEdit: 'This print can no longer be edited.' }, form: { name: 'Print Name', spool: 'Spool', selectSpool: 'Select a spool', estimatedWeight: 'Estimated Weight', weightHint: 'Estimated filament required for this print.', estimatedTime: 'Estimated Time', hours: 'Hours', minutes: 'Minutes', printer: 'Printer', notes: 'Notes', lowWarning: 'This spool is low on filament.', emptyWarning: 'This spool is marked as empty.', insufficientWeightWarning: 'The estimated weight is greater than the filament available on this spool.', loadError: 'Unable to load form data.', errors: { name: 'Enter a print name.', spool: 'Select a spool.', weight: 'Estimated weight must be greater than zero.', hours: 'Enter a valid number of hours.', minutes: 'Minutes must be between 0 and 59.', duration: 'Duration must be greater than zero.', spoolMissing: 'The selected spool was not found.', conflict: 'The print could not be saved because its data conflicts with the current state.', save: 'Unable to save the print. Please try again.' } } },
   errors: { loadForm: 'Unable to load form data.', checkConnection: 'Please check the backend connection and try again.', save: 'Unable to save spool. Please check the backend connection and try again.', reviewFields: 'Some fields need to be corrected. Review the highlighted fields.', validationFallback: 'Some values could not be saved. Review the form and try again.', extraForbidden: 'This field is not accepted by the server.', selectedMissing: 'A selected manufacturer or material no longer exists.', conflict: 'The spool could not be saved because the data conflicts with an existing record.' },
@@ -177,6 +177,42 @@ Object.assign(en, {
 Object.assign(en.inventory, { scanQr: 'Scan QR' })
 Object.assign(en.navigation, { gcode: 'G-code' })
 
+Object.assign(en.common, { working: 'Working…', home: 'Filament Command Center home', module: 'Module', operationsShell: 'Operations shell' })
+Object.assign(en, { theme: { preference: 'Theme preference', system: 'System', light: 'Light', dark: 'Dark' } })
+Object.assign(en.dashboard, { loading: 'Loading inventory dashboard' })
+Object.assign(en.inventory, {
+  module: 'Module / 02', viewGroup: 'Inventory view', gridAria: 'Spools in grid view', loading: 'Loading inventory',
+})
+Object.assign(en.spool, {
+  createEyebrow: 'Inventory / New Spool',
+  createDescription: 'Register a spool and keep your filament inventory up to date.',
+  editEyebrow: 'Inventory / {{code}} / Edit',
+  editDescription: 'Update descriptive, purchase, and print-setting details for {{code}}.',
+  actions: 'Spool actions', dates: 'Dates',
+  manufacturerEmpty: 'No manufacturers available. Create a manufacturer first.',
+  materialEmpty: 'No materials available. Create a material first.',
+  colorNamePlaceholder: 'Black', chooseColor: 'Choose color', colorAria: 'Color: {{color}}', remainingAria: '{{code}} remaining filament', initialStatus: 'Initial status',
+  archivedDeleteDescription: 'This archived spool can be permanently removed if it has no protected history.',
+  archiveDescription: 'Archive removes a spool from active inventory while preserving its history. Permanent deletion is available only after archival.',
+  deletedSuccess: '{{code}} was permanently deleted.',
+  deleteHistoryError: 'This spool cannot be deleted because it has associated history.',
+  actionError: 'Unable to complete this spool action. Please try again.',
+  loadingDetails: 'Loading spool details', loadingEditor: 'Loading spool editor', loadingForm: 'Loading spool form',
+  notesPlaceholder: 'Optional notes about this spool',
+  validation: {
+    ...en.spool.validation,
+    selectManufacturer: 'Select a manufacturer.', selectMaterial: 'Select a material.', colorRequired: 'Color name is required.',
+    positiveDiameter: 'Diameter must be greater than zero.', positiveInitialWeight: 'Initial weight must be greater than zero.',
+    currentWeightNegative: 'Current weight cannot be negative.', currentExceedsInitial: 'Current weight cannot exceed initial weight.',
+    purchasePriceNegative: 'Purchase price cannot be negative.', validTemperature: 'Enter a valid temperature.',
+    maximumAtLeastMinimum: 'Maximum must be at least the minimum.', validHexColor: 'Enter a hexadecimal color such as #000000.',
+    invalidValue: 'Check this value and try again.',
+  },
+})
+Object.assign(en.prints, {
+  eyebrow: 'Print Tracker', createEyebrow: 'Print Tracker / New', editEyebrow: 'Print Tracker / #{{id}} / Edit', loadingForm: 'Loading print form',
+})
+
 Object.assign(en.prints, {
   form: {
     ...en.prints.form,
@@ -197,6 +233,7 @@ Object.assign(en.prints, {
     tooLong: 'Use at most 200 characters.', positiveValue: 'Enter a value greater than zero.',
     decimalPlaces: 'Use at most 3 decimal places.', invalidSpool: 'Select a valid spool.',
     duplicateSpool: 'This spool is already selected. Choose another spool.',
+    spools: 'Spools', spoolNumber: 'Spool {{number}}', removeSpool: 'Remove', addSpool: 'Add Spool',
     estimatedCost: 'Estimated cost', estimatedPrintCost: 'Estimated print cost', costUnavailable: 'Cost unavailable',
     unavailableCostCount_one: '+ {{count}} spool with unavailable cost', unavailableCostCount_other: '+ {{count}} spools with unavailable cost',
   },

@@ -132,7 +132,7 @@ describe.each(['create', 'edit'] as const)('%s Print save', mode => {
     await waitFor(() => expect(spoolReads()).toBe(2))
     expect(screen.getAllByLabelText(/^Spool$/)[1]).toHaveAccessibleDescription('This spool is archived. Select another spool and try again.')
     expectPreserved()
-    if (!failRefresh) expect(screen.getByText(/ARCHIVED/)).toBeVisible()
+    if (!failRefresh) expect(screen.getByText(/Archived/)).toBeVisible()
   })
 
   it('blocks rapid repeated submits and disables fields while saving', async () => {

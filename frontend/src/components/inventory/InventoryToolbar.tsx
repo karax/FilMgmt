@@ -35,7 +35,7 @@ export function InventoryToolbar({
         <div className="mb-3 flex items-center gap-3">
           <span aria-hidden="true" className="h-px w-8 bg-accent" />
           <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-accent">
-            Module / 02
+            {t('inventory.module')}
           </p>
         </div>
         <h2
@@ -57,7 +57,7 @@ export function InventoryToolbar({
         <Link className="inline-flex min-h-11 items-center gap-2 rounded-md border border-line bg-surface px-3.5 text-sm font-bold text-ink transition-colors hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" to="/scan"><ScanLine aria-hidden="true" className="size-4" />{t('inventory.scanQr')}</Link>
         <a className="inline-flex min-h-10 items-center gap-2 rounded-md bg-accent px-3.5 text-sm font-bold text-sidebar transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" href="/inventory/new"><Plus aria-hidden="true" className="size-4" />{t('inventory.add')}</a>
         <div
-          aria-label="Inventory view"
+          aria-label={t('inventory.viewGroup')}
           className="inline-flex rounded-md border border-line bg-surface p-1 shadow-sm"
           role="group"
         >

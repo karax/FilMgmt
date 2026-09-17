@@ -14,7 +14,7 @@ export function Sidebar() {
       </nav>
       <div className="mx-4 mb-5 border-t border-white/8 pt-4">
         <p className="font-mono text-[0.65rem] uppercase tracking-[0.16em] text-sidebar-muted">
-          FCC / Operations shell
+          FCC / {t('common.operationsShell')}
         </p>
       </div>
     </aside>

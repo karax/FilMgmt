@@ -1,8 +1,11 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
+import i18n from '../i18n'
 import { makeSpool } from '../test/spoolFixture'
 import {
   calculateInventorySummary,
+  formatCurrency,
+  formatDate,
   formatWeight,
   formatPercent,
   groupSpoolsByMaterial,
@@ -10,6 +13,7 @@ import {
 } from './inventory'
 
 describe('inventory presentation calculations', () => {
+  beforeEach(async () => { await i18n.changeLanguage('en') })
   const pla = makeSpool().material
   const petg = {
     ...makeSpool().material,
@@ -97,5 +101,19 @@ describe('inventory presentation calculations', () => {
   it('formats remaining percentage with one decimal place', () => {
     expect(formatPercent(80)).toBe('80.0%')
     expect(formatPercent(74.24)).toBe('74.2%')
+  })
+
+  it('uses the display locale without changing the stored currency', async () => {
+    expect(formatCurrency(1234.5, 'EUR')).toMatch(/€.*1,234\.50/)
+    expect(formatWeight(1500)).toBe('1.50 kg')
+    expect(formatPercent(74.25)).toBe('74.3%')
+    expect(formatDate('2026-09-13T12:00:00Z')).toMatch(/Sep/)
+
+    await i18n.changeLanguage('pt-BR')
+    expect(formatCurrency(1234.5, 'EUR')).toMatch(/€.*1\.234,50/)
+    expect(formatWeight(1500)).toBe('1,50 kg')
+    expect(formatPercent(74.25)).toBe('74,3%')
+    expect(formatDate('2026-09-13T12:00:00Z')).toMatch(/set/i)
+    expect(formatCurrency(12.5, 'USD')).toContain('US$')
   })
 })

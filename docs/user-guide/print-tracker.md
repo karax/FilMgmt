@@ -47,10 +47,10 @@ O Print Tracker reúne, em um só lugar, o planejamento, o acompanhamento e o co
 Uma Print pode usar quantos Spools forem necessários. Cada bloco representa um Spool e possui seu próprio Peso Estimado.
 
 1. Preencha o primeiro Spool.
-2. Selecione **+ Add Spool**.
+2. Selecione **Adicionar Spool**.
 3. Escolha o próximo Spool e informe o peso correspondente.
 4. Repita enquanto precisar de mais materiais.
-5. Use **Remove** para retirar um Spool que não fará mais parte da Print.
+5. Use **Remover** para retirar um Spool que não fará mais parte da Print.
 
 ![Formulário com Bambu Lab Black e Polymaker Orange, custos individuais e total estimado](images/print-tracker/03-multi-spool-cost.png)
 
@@ -233,4 +233,3 @@ Deixe o campo daquele Spool vazio. A Print pode ser finalizada mesmo assim. O Sp
 ### Finalizei a impressão. Posso usar o Spool novamente?
 
 Sim. Ao finalizar, todos os Spools da Print são liberados. Eles voltam a poder ser usados, desde que o status normal do inventário permita — por exemplo, um Spool vazio continuará indisponível.
-

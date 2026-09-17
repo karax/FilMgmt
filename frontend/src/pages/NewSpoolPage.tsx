@@ -1,5 +1,6 @@
 import { AlertCircle, RefreshCw } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import { SpoolForm } from '../components/spool/SpoolForm'
 import { useCreateSpool } from '../hooks/useCreateSpool'
@@ -8,6 +9,7 @@ import { useMaterials } from '../hooks/useMaterials'
 import type { CreateSpoolPayload } from '../types/spool'
 
 export function NewSpoolPage() {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const manufacturers = useManufacturers()
   const materials = useMaterials()
@@ -38,14 +40,14 @@ export function NewSpoolPage() {
         <div className="mb-3 flex items-center gap-3">
           <span aria-hidden="true" className="h-px w-8 bg-accent" />
           <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-accent">
-            Inventory / New spool
+            {t('spool.createEyebrow')}
           </p>
         </div>
         <h2 className="text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl" id="new-spool-title">
-          New Spool
+          {t('spool.new')}
         </h2>
         <p className="mt-2 text-sm leading-6 text-ink-muted sm:text-base">
-          Register a spool and keep your filament inventory up to date.
+          {t('spool.createDescription')}
         </p>
       </div>
 
@@ -54,9 +56,9 @@ export function NewSpoolPage() {
       {catalogError && !isLoading && (
         <div className="rounded-lg border border-red-500/30 bg-surface px-5 py-10 text-center shadow-sm" role="alert">
           <AlertCircle aria-hidden="true" className="mx-auto size-6 text-red-600 dark:text-red-400" />
-          <h3 className="mt-4 text-lg font-semibold text-ink">Unable to load form data.</h3>
-          <p className="mt-2 text-sm text-ink-muted">Please check the backend connection and try again.</p>
-          <button className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" onClick={retryCatalogs} type="button"><RefreshCw aria-hidden="true" className="size-4" />Retry</button>
+          <h3 className="mt-4 text-lg font-semibold text-ink">{t('errors.loadForm')}</h3>
+          <p className="mt-2 text-sm text-ink-muted">{t('errors.checkConnection')}</p>
+          <button className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent" onClick={retryCatalogs} type="button"><RefreshCw aria-hidden="true" className="size-4" />{t('common.retry')}</button>
         </div>
       )}
 
@@ -75,8 +77,9 @@ export function NewSpoolPage() {
 }
 
 function FormSkeleton() {
+  const { t } = useTranslation()
   return (
-    <div aria-label="Loading spool form" className="space-y-8" role="status">
+    <div aria-label={t('spool.loadingForm')} className="space-y-8" role="status">
       {[2, 2, 3, 2].map((fields, section) => (
         <div key={section}>
           <div className="h-5 w-36 animate-pulse rounded bg-surface-raised" />

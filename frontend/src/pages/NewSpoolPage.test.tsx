@@ -306,7 +306,7 @@ describe('NewSpoolPage', () => {
     expect(await screen.findByText('Some fields need to be corrected. Review the highlighted fields.')).toBeVisible()
     const initialWeight = screen.getByRole('spinbutton', { name: /Initial Filament Weight/ })
     expect(initialWeight).toHaveAttribute('aria-invalid', 'true')
-    expect(screen.getByText('Input should be greater than 0')).toBeVisible()
+    expect(screen.getAllByText('Check this value and try again.')[0]).toBeVisible()
     expect(screen.getByLabelText('Color Hex')).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByRole('spinbutton', { name: /Purchase Price/ })).toHaveAttribute('aria-invalid', 'true')
     expect(screen.getByText('Maximum allowed price is €100.')).toBeVisible()

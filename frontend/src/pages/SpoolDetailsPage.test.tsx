@@ -105,6 +105,8 @@ describe('SpoolDetailsPage', () => {
     expect(await screen.findByText('Identifique este spool usando o QR Code.')).toBeVisible()
     expect(screen.getByRole('button', { name: 'Baixar QR' })).toBeEnabled()
     expect(screen.getByRole('img', { name: 'QR Code do spool FIL-0007' })).toBeVisible()
+    expect(screen.getByText('Restante')).toBeVisible()
+    expect(screen.getByLabelText('Cor: Black')).toBeVisible()
   })
 
   it('handles nullable fields without breaking the layout', async () => {
@@ -132,7 +134,7 @@ describe('SpoolDetailsPage', () => {
   it('identifies archived spools as historical records', async () => {
     vi.mocked(fetch).mockResolvedValue(response(makeSpool({ status: 'ARCHIVED', archived_at: '2026-08-20T00:00:00Z' })))
     renderPage()
-    expect((await screen.findAllByText('ARCHIVED'))[0]).toBeVisible()
+    expect((await screen.findAllByText('Archived'))[0]).toBeVisible()
     expect(screen.getByText('This archived spool is retained as a historical record.')).toBeVisible()
   })
 

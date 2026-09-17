@@ -269,6 +269,7 @@ describe('SpoolQrLandingPage', () => {
     }
     expect(screen.getByRole('link', { name: 'Ver detalhes completos' })).toBeVisible()
     expect(screen.getByRole('link', { name: 'Voltar ao Inventário' })).toBeVisible()
+    expect(screen.getByLabelText('Cor: Preto')).toBeVisible()
   })
 
   it('renders the landing actions and labels in English', async () => {

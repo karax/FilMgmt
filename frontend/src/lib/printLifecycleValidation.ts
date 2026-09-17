@@ -19,6 +19,7 @@ export function apiDetailMessage(error: unknown): string | null {
 export function mapFinishValidationErrors(
   error: unknown,
   payload: PrintJobFinishPayload,
+  validationMessage = 'Invalid consumption.',
 ): Map<number, string> {
   if (!isApiError(error) || error.status !== 422) return new Map()
   const detail = responseDetail(error)
@@ -32,10 +33,7 @@ export function mapFinishValidationErrors(
     if (consumptionsIndex < 0 || typeof index !== 'number') continue
     const consumption = payload.consumptions[index]
     if (!consumption) continue
-    errors.set(
-      consumption.spool_id,
-      typeof issue.msg === 'string' ? issue.msg : 'Invalid consumption.',
-    )
+    errors.set(consumption.spool_id, validationMessage)
   }
   return errors
 }

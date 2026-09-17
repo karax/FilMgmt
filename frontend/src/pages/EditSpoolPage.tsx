@@ -1,5 +1,6 @@
 import { AlertCircle, RefreshCw } from 'lucide-react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 import { SpoolForm } from '../components/spool/SpoolForm'
 import { useManufacturers } from '../hooks/useManufacturers'
@@ -36,6 +37,7 @@ function editablePayload(payload: CreateSpoolPayload): UpdateSpoolPayload {
 }
 
 export function EditSpoolPage() {
+  const { t } = useTranslation()
   const { code } = useParams()
   const navigate = useNavigate()
   const spoolQuery = useSpool(code)
@@ -48,22 +50,22 @@ export function EditSpoolPage() {
 
   if (spoolQuery.isPending || catalogLoading) return <EditSkeleton />
   if (!code || !spoolQuery.data || loadError) {
-    return <section className="rounded-lg border border-red-500/30 bg-surface px-5 py-12 text-center" role="alert"><AlertCircle aria-hidden="true" className="mx-auto size-6 text-red-600 dark:text-red-400" /><h1 className="mt-4 text-xl font-semibold text-ink">Unable to load spool for editing.</h1><button className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar" onClick={() => { void spoolQuery.refetch(); void manufacturers.refetch(); void materials.refetch() }} type="button"><RefreshCw className="size-4" />Retry</button></section>
+    return <section className="rounded-lg border border-red-500/30 bg-surface px-5 py-12 text-center" role="alert"><AlertCircle aria-hidden="true" className="mx-auto size-6 text-red-600 dark:text-red-400" /><h1 className="mt-4 text-xl font-semibold text-ink">{t('spool.unableEdit')}</h1><button className="mt-6 inline-flex items-center gap-2 rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar" onClick={() => { void spoolQuery.refetch(); void manufacturers.refetch(); void materials.refetch() }} type="button"><RefreshCw aria-hidden="true" className="size-4" />{t('common.retry')}</button></section>
   }
 
   const spool = spoolQuery.data
   return (
     <section aria-labelledby="edit-spool-title" className="mx-auto max-w-4xl">
-      <div className="mb-7 border-b border-line pb-5"><p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-accent">Inventory / {spool.code} / Edit</p><h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl" id="edit-spool-title">Edit Spool</h1><p className="mt-2 text-sm text-ink-muted">Update descriptive, purchase, and print-setting details for {spool.code}.</p></div>
+      <div className="mb-7 border-b border-line pb-5"><p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-accent">{t('spool.editEyebrow', { code: spool.code })}</p><h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl" id="edit-spool-title">{t('spool.edit')}</h1><p className="mt-2 text-sm text-ink-muted">{t('spool.editDescription', { code: spool.code })}</p></div>
       <SpoolForm
         initialValues={formValues(spool)} isSubmitting={update.isPending}
         manufacturers={manufacturers.data ?? []} materials={materials.data ?? []} mode="edit"
         onCancel={() => navigate(`/spools/${encodeURIComponent(spool.code)}`)}
-        onSubmit={(payload) => update.mutate({ code: spool.code, payload: editablePayload(payload) }, { onSuccess: () => navigate(`/spools/${encodeURIComponent(spool.code)}`, { replace: true, state: { feedback: 'Spool updated successfully.' } }) })}
+        onSubmit={(payload) => update.mutate({ code: spool.code, payload: editablePayload(payload) }, { onSuccess: () => navigate(`/spools/${encodeURIComponent(spool.code)}`, { replace: true, state: { feedback: t('spool.updated') } }) })}
         submitError={update.error}
       />
     </section>
   )
 }
 
-function EditSkeleton() { return <div aria-label="Loading spool editor" className="space-y-6" role="status"><div className="h-10 w-52 animate-pulse rounded bg-surface-raised" />{Array.from({ length: 4 }, (_, index) => <div className="h-44 animate-pulse rounded-lg bg-surface-raised" key={index} />)}</div> }
+function EditSkeleton() { const { t } = useTranslation(); return <div aria-label={t('spool.loadingEditor')} className="space-y-6" role="status"><div className="h-10 w-52 animate-pulse rounded bg-surface-raised" />{Array.from({ length: 4 }, (_, index) => <div className="h-44 animate-pulse rounded-lg bg-surface-raised" key={index} />)}</div> }

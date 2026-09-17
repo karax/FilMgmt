@@ -818,7 +818,7 @@ describe('G-code upload page', () => {
     expect(result).toHaveTextContent('PLA')
     expect(result).toHaveTextContent('Experimental')
     expect(result).toHaveTextContent('Alta')
-    expect(result).toHaveTextContent('Metadata do slicer')
+    expect(result).toHaveTextContent('Metadados do slicer')
     expect(screen.getByRole('heading', { name: 'Peso estimado' })).toBeVisible()
     expect(screen.getByRole('heading', { name: 'Tempo estimado' })).toBeVisible()
   })

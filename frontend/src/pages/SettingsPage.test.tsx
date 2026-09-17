@@ -26,7 +26,7 @@ describe('SettingsPage user manual', () => {
     render(<SettingsPage />)
 
     expect(screen.getByRole('heading', { name: 'User manual' })).toBeVisible()
-    expect(screen.getByText('View the complete Filament Command Center user guide.')).toBeVisible()
+    expect(screen.getByText('View the complete Filament Command Center user guide in Portuguese.')).toBeVisible()
     expect(screen.getByRole('link', { name: 'Download manual (PDF)' })).toBeVisible()
   })
 

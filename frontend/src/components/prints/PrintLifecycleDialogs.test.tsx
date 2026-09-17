@@ -163,7 +163,7 @@ describe('FinishPrintDialog', () => {
     await user.type(inputs[0], '1')
     await user.type(inputs[1], '2')
     await user.click(screen.getByRole('button', { name: 'Finalizar Impressão' }))
-    expect(await screen.findByText('Server rejected second consumption')).toBeVisible()
+    expect(await screen.findByText('Informe um consumo válido, igual ou maior que zero.')).toBeVisible()
     expect(inputs[0]).toHaveAttribute('aria-invalid', 'false')
     expect(inputs[1]).toHaveAttribute('aria-invalid', 'true')
   })

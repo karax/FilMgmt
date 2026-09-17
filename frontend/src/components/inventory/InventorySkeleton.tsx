@@ -1,19 +1,21 @@
 import type { InventoryView } from './InventoryToolbar'
+import { useTranslation } from 'react-i18next'
 
 interface InventorySkeletonProps {
   view: InventoryView
 }
 
 export function InventorySkeleton({ view }: InventorySkeletonProps) {
+  const { t } = useTranslation()
   if (view === 'table') {
     return (
       <div
         aria-busy="true"
-        aria-label="Loading inventory"
+        aria-label={t('inventory.loading')}
         className="overflow-hidden rounded-lg border border-line bg-surface"
         role="status"
       >
-        <span className="sr-only">Loading inventory…</span>
+        <span className="sr-only">{t('inventory.loading')}</span>
         <div aria-hidden="true" className="h-11 animate-pulse border-b border-line bg-surface-raised" />
         {Array.from({ length: 6 }, (_, index) => (
           <div
@@ -33,11 +35,11 @@ export function InventorySkeleton({ view }: InventorySkeletonProps) {
   return (
     <div
       aria-busy="true"
-      aria-label="Loading inventory"
+      aria-label={t('inventory.loading')}
       className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3"
       role="status"
     >
-      <span className="sr-only">Loading inventory…</span>
+      <span className="sr-only">{t('inventory.loading')}</span>
       {Array.from({ length: 6 }, (_, index) => (
         <div
           aria-hidden="true"

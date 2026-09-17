@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next'
+
 interface PagePlaceholderProps {
   title: string
   description: string
@@ -9,12 +11,14 @@ export function PagePlaceholder({
   description,
   moduleCode,
 }: PagePlaceholderProps) {
+  const { t } = useTranslation()
+
   return (
     <section aria-labelledby="content-title" className="max-w-4xl">
       <div className="mb-4 flex items-center gap-3">
         <span className="h-px w-8 bg-accent" aria-hidden="true" />
         <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-accent">
-          Module / {moduleCode}
+          {t('common.module')} / {moduleCode}
         </p>
       </div>
       <h2
@@ -29,7 +33,7 @@ export function PagePlaceholder({
       <div className="mt-10 min-h-64 rounded-lg border border-dashed border-line bg-surface/55 p-6 sm:min-h-72 sm:p-8">
         <div className="flex items-center gap-2 font-mono text-[0.65rem] uppercase tracking-[0.16em] text-ink-muted">
           <span className="size-1.5 rounded-full bg-accent" aria-hidden="true" />
-          Workspace ready
+          {t('common.operationsShell')}
         </div>
       </div>
     </section>

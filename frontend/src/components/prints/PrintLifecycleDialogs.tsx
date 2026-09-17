@@ -135,7 +135,7 @@ export function FinishPrintDialog(props: DialogBaseProps) {
   const [values, setValues] = useState<Record<number, string>>({})
   const [clientErrors, setClientErrors] = useState<Map<number, string>>(new Map())
   const [submittedPayload, setSubmittedPayload] = useState<PrintJobFinishPayload | null>(null)
-  const serverErrors = useMemo(() => submittedPayload ? mapFinishValidationErrors(mutation.error, submittedPayload) : new Map<number, string>(), [mutation.error, submittedPayload])
+  const serverErrors = useMemo(() => submittedPayload ? mapFinishValidationErrors(mutation.error, submittedPayload, t('prints.finish.invalidWeight')) : new Map<number, string>(), [mutation.error, submittedPayload, t])
   const parsedValues = props.entries.map(({ link }) => parseConsumption(values[link.spool_id] ?? ''))
   const hasEmpty = parsedValues.some((value) => value == null)
   const validSum = parsedValues.reduce<number>((sum, value) => sum + (value != null && Number.isFinite(value) ? value : 0), 0)

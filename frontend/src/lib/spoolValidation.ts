@@ -40,7 +40,7 @@ export function mapSpoolApiValidationErrors(
   const detail = error.detail && typeof error.detail === 'object' && 'detail' in error.detail
     ? (error.detail as { detail?: unknown }).detail
     : error.detail
-  if (!Array.isArray(detail)) return { fieldErrors: {}, formError: typeof detail === 'string' ? detail : null }
+  if (!Array.isArray(detail)) return { fieldErrors: {}, formError: null }
 
   const fieldErrors: Partial<Record<SpoolFormField, string>> = {}
   const rootMessages: string[] = []

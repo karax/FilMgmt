@@ -1,4 +1,5 @@
 import { formatPercent } from '../../lib/inventory'
+import { useTranslation } from 'react-i18next'
 
 interface SpoolProgressBarProps {
   remainingPercent: number
@@ -14,23 +15,25 @@ function clampPercent(percent: number): number {
 export function SpoolProgressBar({
   remainingPercent,
   label,
-  remainingLabel = 'Remaining',
+  remainingLabel,
   accessibleLabel,
 }: SpoolProgressBarProps) {
+  const { t } = useTranslation()
   const clampedPercent = clampPercent(remainingPercent)
+  const formattedPercent = formatPercent(clampedPercent)
 
   return (
     <div>
       <div className="flex items-end justify-between gap-4">
         <span className="font-mono text-xs font-semibold uppercase tracking-[0.1em] text-ink-muted">
-          {remainingLabel}
+          {remainingLabel ?? t('inventory.remaining')}
         </span>
         <span className="font-mono text-sm font-semibold text-ink">
-          {formatPercent(clampedPercent)}
+          {formattedPercent}
         </span>
       </div>
       <div
-        aria-label={accessibleLabel ?? `${label} remaining filament`}
+        aria-label={accessibleLabel ?? t('spool.remainingAria', { code: label })}
         aria-valuemax={100}
         aria-valuemin={0}
         aria-valuenow={clampedPercent}

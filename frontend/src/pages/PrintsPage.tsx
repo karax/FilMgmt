@@ -38,7 +38,7 @@ export function PrintsPage() {
     <section aria-labelledby="prints-title">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-5">
         <div>
-        <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-accent">Print Tracker</p>
+        <p className="font-mono text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-accent">{t('prints.eyebrow')}</p>
         <h1 className="mt-3 text-2xl font-semibold tracking-[-0.03em] text-ink sm:text-3xl" id="prints-title">{t('prints.title')}</h1>
         <p className="mt-2 text-sm text-ink-muted">{t('prints.description')}</p>
         </div>

@@ -108,7 +108,7 @@ Object.assign(ptBR, {
       mixed_extrusion_modes_detected: 'O arquivo contém extrusão linear e volumétrica.',
       mixed_units_detected: 'O arquivo alterna entre milímetros e polegadas.',
       malformed_lines_present: 'Algumas linhas malformadas foram ignoradas.',
-      metadata_truncated: 'Parte da metadata de comentários foi truncada.',
+      metadata_truncated: 'Parte dos metadados de comentários foi truncada.',
       encoding_replacement_detected: 'Alguns caracteres de texto inválidos foram substituídos.',
       oversized_line_ignored: 'Uma linha excepcionalmente longa foi ignorada.',
       command_counts_truncated: 'O resumo de comandos foi limitado a um tamanho seguro.',
@@ -148,7 +148,7 @@ Object.assign(ptBR, {
       confidenceLOW: 'Baixa',
       confidenceNONE: 'Nenhuma',
       source: 'Fonte',
-      sourceMetadata: 'Metadata do slicer',
+      sourceMetadata: 'Metadados do slicer',
       sourceTemperature: 'Temperaturas do G-code',
       candidates: 'Possíveis materiais',
       catalogMissing: 'O material informado pelo G-code não existe no catálogo.',
@@ -177,6 +177,42 @@ Object.assign(ptBR, {
 Object.assign(ptBR.inventory, { scanQr: 'Escanear QR' })
 Object.assign(ptBR.navigation, { gcode: 'G-code' })
 
+Object.assign(ptBR.common, { working: 'Processando…', home: 'Início do Filament Command Center', module: 'Módulo', operationsShell: 'Painel operacional' })
+Object.assign(ptBR, { theme: { preference: 'Preferência de tema', system: 'Sistema', light: 'Claro', dark: 'Escuro' } })
+Object.assign(ptBR.dashboard, { loading: 'Carregando painel do inventário' })
+Object.assign(ptBR.inventory, {
+  module: 'Módulo / 02', viewGroup: 'Visualização do inventário', gridAria: 'Spools na visualização em grade', loading: 'Carregando inventário',
+})
+Object.assign(ptBR.spool, {
+  createEyebrow: 'Inventário / Novo Spool',
+  createDescription: 'Cadastre um Spool e mantenha seu inventário de filamentos atualizado.',
+  editEyebrow: 'Inventário / {{code}} / Editar',
+  editDescription: 'Atualize os dados descritivos, de compra e de impressão de {{code}}.',
+  actions: 'Ações do Spool', dates: 'Datas',
+  manufacturerEmpty: 'Nenhum fabricante está disponível. Adicione primeiro um fabricante ao catálogo.',
+  materialEmpty: 'Nenhum material está disponível. Adicione primeiro um material ao catálogo.',
+  colorNamePlaceholder: 'Preto', chooseColor: 'Escolher cor', colorAria: 'Cor: {{color}}', remainingAria: '{{code}} com filamento restante', initialStatus: 'Status inicial',
+  archivedDeleteDescription: 'Este Spool arquivado pode ser excluído permanentemente se não tiver histórico protegido.',
+  archiveDescription: 'O arquivamento remove um Spool do inventário ativo e preserva seu histórico. A exclusão permanente fica disponível somente após o arquivamento.',
+  deletedSuccess: '{{code}} foi excluído permanentemente.',
+  deleteHistoryError: 'Este Spool não pode ser excluído porque possui histórico associado.',
+  actionError: 'Não foi possível concluir esta ação. Tente novamente.',
+  loadingDetails: 'Carregando detalhes do Spool', loadingEditor: 'Carregando editor do Spool', loadingForm: 'Carregando formulário do Spool',
+  notesPlaceholder: 'Observações opcionais sobre este Spool',
+  validation: {
+    ...ptBR.spool.validation,
+    selectManufacturer: 'Selecione um fabricante.', selectMaterial: 'Selecione um material.', colorRequired: 'Informe o nome da cor.',
+    positiveDiameter: 'O diâmetro deve ser maior que zero.', positiveInitialWeight: 'O peso inicial deve ser maior que zero.',
+    currentWeightNegative: 'O peso atual não pode ser negativo.', currentExceedsInitial: 'O peso atual não pode ser maior que o peso inicial.',
+    purchasePriceNegative: 'O preço de compra não pode ser negativo.', validTemperature: 'Informe uma temperatura válida.',
+    maximumAtLeastMinimum: 'O valor máximo deve ser maior ou igual ao mínimo.', validHexColor: 'Informe uma cor hexadecimal, como #000000.',
+    invalidValue: 'Confira este valor e tente novamente.',
+  },
+})
+Object.assign(ptBR.prints, {
+  eyebrow: 'Controle de impressões', createEyebrow: 'Controle de impressões / Nova', editEyebrow: 'Controle de impressões / #{{id}} / Editar', loadingForm: 'Carregando formulário de impressão',
+})
+
 Object.assign(ptBR.prints, {
   form: {
     ...ptBR.prints.form,
@@ -197,6 +233,7 @@ Object.assign(ptBR.prints, {
     tooLong: 'Use no máximo 200 caracteres.', positiveValue: 'Informe um valor maior que zero.',
     decimalPlaces: 'Use no máximo 3 casas decimais.', invalidSpool: 'Selecione um Spool válido.',
     duplicateSpool: 'Este Spool já está selecionado. Escolha outro Spool.',
+    spools: 'Spools', spoolNumber: 'Spool {{number}}', removeSpool: 'Remover', addSpool: 'Adicionar Spool',
     estimatedCost: 'Custo estimado', estimatedPrintCost: 'Custo estimado da impressão', costUnavailable: 'Custo indisponível',
     unavailableCostCount_one: '+ {{count}} spool com custo indisponível', unavailableCostCount_other: '+ {{count}} spools com custo indisponível',
   },

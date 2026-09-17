@@ -14,9 +14,10 @@ function SkeletonCard() {
 }
 
 export function DashboardSkeleton() {
+  const { t } = useTranslation()
   return (
-    <div aria-busy="true" aria-label="Loading inventory dashboard" role="status">
-      <span className="sr-only">Loading inventory dashboard…</span>
+    <div aria-busy="true" aria-label={t('dashboard.loading')} role="status">
+      <span className="sr-only">{t('dashboard.loading')}</span>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:gap-4 xl:grid-cols-5">
         {Array.from({ length: 5 }, (_, index) => (
           <SkeletonCard key={index} />
@@ -29,3 +30,4 @@ export function DashboardSkeleton() {
     </div>
   )
 }
+import { useTranslation } from 'react-i18next'

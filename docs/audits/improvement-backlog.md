@@ -100,14 +100,15 @@
 - Acceptance for authenticated mode: anonymous clients cannot access protected
   data or mutate state; authorization tests cover destructive/upload endpoints.
 
-### I18N-01 / A11Y-01 — Complete language behavior
+### I18N-01 / A11Y-01 — Complete language behavior — COMPLETE (2026-09-13)
 
-- Move all hard-coded user and accessible copy into both locale resources.
-- Translate raw statuses in Spool/Print summaries.
-- Set `document.documentElement.lang` at initialization and language changes.
-- Add locale key-parity and core-route leakage tests.
-- Acceptance: pt-BR and English passes contain no unintended opposite-language
-  copy and the DOM language matches the selected locale.
+- Shared-shell and core-route copy is present in both locale resources.
+- Bounded Spool/Print statuses render localized labels while stored values remain stable.
+- `document.documentElement.lang` follows validated initialization and language changes.
+- Recursive key parity, formatter semantics, language persistence and a bilingual
+  core-route/mobile browser matrix are covered.
+- Acceptance passed: the tested pt-BR and English routes contain no unintended
+  opposite-language copy and the DOM language matches the selected locale.
 
 ### A11Y-02 — Correct light-theme contrast
 
@@ -207,8 +208,8 @@
 - Add CI for clean install, migrations, 443+ backend tests, 274+ frontend tests,
   typecheck, build and Chromium smoke.
 - Add lint/format, coverage, dependency and automated accessibility checks.
-- Add E2E for first Spool, Print create/start/finish, archive confirmation,
-  language switch and real small G-code upload.
+- Add E2E for first Spool, Print create/start/finish, archive confirmation and
+  real small G-code upload; language switching and persistence are now covered.
 - Acceptance: required checks run on each change and publish useful failure
   artifacts.
 
@@ -265,15 +266,14 @@ Exit gate:
 
 ## Wave 2 — UX consistency and accessibility
 
-1. SEC-01 defense-in-depth authentication for the private deployment, or P0
-   before this wave if public ingress is selected.
-2. I18N-01/A11Y-01 language completion.
+1. I18N-01/A11Y-01 language completion — COMPLETE (2026-09-13).
+2. Accessibility: contrast, semantics and interaction primitives.
 3. UX-01 catalog onboarding.
-4. A11Y-02 contrast.
-5. A11Y-03/A11Y-04 primitives.
-6. IA-01 Analytics decision.
-7. UX-02/UX-03 mobile and route recovery.
-8. FUN-02/FUN-03 state consistency.
+4. Mobile UX and route recovery.
+5. Application states and feedback consistency.
+6. SEC-01 authentication as low-priority defensive hardening for the supported
+   single-user trusted LAN/Tailnet model. Promote it only for public exposure,
+   an untrusted network or multiple untrusted users.
 
 Exit gate:
 

@@ -1,10 +1,12 @@
 import { Disc3 } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 
 export function Brand() {
+  const { t } = useTranslation()
   return (
     <Link
-      aria-label="Filament Command Center home"
+      aria-label={t('common.home')}
       className="flex items-center gap-3 rounded-md text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
       to="/"
     >
