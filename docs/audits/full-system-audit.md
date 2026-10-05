@@ -168,12 +168,12 @@ Effort: S (hours), M (roughly 1–3 days), L (cross-cutting/multi-day).
 | A11Y-02 | P1 | Accessibility | Light accent text is 2.74–3.00:1 and appears at 10–14 px. | Normal text fails WCAG AA; some focus indicators are also weak. | M | High |
 | STO-01 | P1 — RESOLVED (2026-09-09) | Reliability | G-code storage now has configurable 30-day retention, a 2 GiB total quota, safe unit/orphan/temp cleanup, pre-upload enforcement and a dry-run CLI. | Upload growth is bounded without evicting recent or active analyses; quota/disk-full failures return structured HTTP 507 feedback. | M | High |
 | OPS-01 | P1 — RESOLVED (2026-09-12) | Operations | Non-root systemd services, Caddy production serving, private access profiles, health, verified backup/restore, update/rollback and recovery tooling/runbook are implemented. | A private Pi can start at boot and be diagnosed, backed up, restored, updated and recovered without remembered development commands. | M | High |
-| UX-01 | P1 | Onboarding | Catalog management is API-only; New Spool disables saving when catalogs are empty. | Clean installation cannot complete its primary UI flow without CLI/API knowledge. | L | High |
+| UX-01 | P1 — RESOLVED (2026-09-29) | Onboarding | Settings → Catalogs now manages Manufacturers and Materials; New Spool links to the actionable empty state. | A clean temporary database completed Manufacturer, Material and first-Spool setup entirely through Chromium. | L | High |
 | DOC-01 | P1 — CONSOLIDATED/RESOLVED WITH OPS-01 (2026-09-12) | Documentation | Runtime documentation and the canonical production runbook now match the supported topology and commands. | Operators have one tested operations source linked from README. | M | High |
 | A11Y-03 | P2 | Accessibility | Dialogs do not trap focus; Spool archive does not move/restore focus; Print dialogs do not restore trigger focus. | Keyboard users can reach obscured content or lose position. | M | High |
 | A11Y-04 | P2 | Accessibility | Form errors are not programmatically associated with controls. | Assistive technology cannot reliably discover field errors. | M | High |
-| IA-01 | P2 | IA | Analytics is a primary-nav peer but only renders “Workspace ready.” | A prominent dead end weakens trust. | S | High |
-| UX-02 | P2 | Mobile | Theme select truncates header titles; table-first Inventory scrolls horizontally to Status. | Context/data is hidden at 390 px despite no document overflow. | M | High |
+| IA-01 | P2 — RESOLVED (2026-09-29) | IA | Analytics placeholder is no longer exposed in primary desktop/mobile navigation; its future route/code remains preserved. | Primary navigation contains only current product destinations. | S | High |
+| UX-02 | P2 — RESOLVED FOR WAVE 2 SCOPE (2026-09-29) | Mobile | Inventory defaults to Grid below 640 px when no preference exists; long card content and Wave 2 forms/dialogs fit narrow viewports. | Chromium validation passed the primary matrix at 390×844 and critical flows at 320×844 without document overflow. | M | High |
 | UX-03 | P2 | Navigation | There is no catch-all/errorElement product 404. | Invalid/deep links fall into router-default behavior. | S | High |
 | FUN-02 | P2 | Inventory | Loading count renders the localized word “Retry.” | Misleading live-region feedback appears during load. | S | High |
 | FUN-03 | P2 | Lifecycle | FAILED/CANCELLED are modeled/rendered but no API/UI transition creates them. | Advertised domain states are unreachable. | M | High |
@@ -200,7 +200,7 @@ Effort: S (hours), M (roughly 1–3 days), L (cross-cutting/multi-day).
 3. Surface Print Job mutation errors with 409/422/network regression tests.
 4. I18N-01/A11Y-01 completed: pt-BR/English resources, formatter behavior and the HTML language attribute are synchronized.
 5. STO-01 completed: upload retention, total quota, cleanup and storage reporting are implemented.
-6. Provide catalog management or an explicit first-run onboarding flow.
+6. UX-01 completed: browser-only Catalog management and first-Spool onboarding are available.
 7. Fix light-theme contrast and modal/form-error accessibility.
 8. OPS-01 completed: production/HTTPS/backup/restore guidance and tooling are published.
 9. OPS-01 completed: README links the tested canonical operations runbook.
@@ -212,10 +212,9 @@ Inventory as root is defensible and the working modules have distinct jobs.
 Contextual QR access avoids main-menu overload. Search/filter URL state, active
 chips, retries, empty states and public code-based links are strong.
 
-Analytics is a misleading primary-nav dead end. Catalog management is the
-inverse problem: essential for first use but invisible. Missing branded 404,
-ephemeral G-code analysis and the loading-count defect are smaller continuity
-breaks.
+The Analytics placeholder and API-only catalog onboarding findings were closed
+in Wave 2. Missing branded 404, ephemeral G-code analysis and the loading-count
+defect remain smaller continuity breaks.
 
 ## Functional Flow Findings
 
@@ -254,15 +253,21 @@ underlying interface labels, statuses and validation have now been localized;
 the Portuguese guide wording was aligned without recapturing otherwise accurate
 screenshots.
 
+## Wave 2 product decisions (2026-09-29)
+
+Authentication / defensive public-network security: **DEFERRED** while the
+application remains local-first, single-user, trusted LAN/Tailnet. Full
+accessibility remediation (contrast, dialog focus and comprehensive keyboard
+work): **DEFERRED** to a later polish/accessibility phase. These findings are
+not resolved. Analytics is **NOT IMPLEMENTED** and Wave 3 is **NOT STARTED**.
+See [Wave 2 closure evidence](wave-2-product-ux-onboarding.md).
+
 ## Responsive / Mobile
 
-Shell, forms, uploader and scanner fit 390x844 without document overflow.
-Newer QR/G-code touch targets are generally 44–48 px.
-
-The header theme select visibly truncates titles such as “Nova Impress…”.
-Table is the mobile Inventory default and requires horizontal scrolling to
-reach Status. Prefer Grid below the mobile breakpoint or a purpose-built compact
-list.
+Shell, Catalogs, Inventory, Spool and Print forms/dialogs, QR scanner and G-code
+fit 390×844 without document overflow in real Chromium. Inventory defaults to
+Grid below 640 px when no preference exists. Critical Catalogs, New Spool, New
+Print and Finish Print flows also pass at 320×844.
 
 ## Accessibility
 

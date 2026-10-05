@@ -38,15 +38,15 @@ describe('application layout', () => {
       screen.getByRole('link', { name: 'Filament Command Center home' }),
     ).toBeInTheDocument()
     for (const label of [
-      'Dashboard',
       'Inventory',
+      'Dashboard',
       'Prints',
       'G-code',
-      'Analytics',
       'Settings',
     ]) {
       expect(screen.getByRole('link', { name: label })).toBeInTheDocument()
     }
+    expect(screen.queryByRole('link', { name: 'Analytics' })).not.toBeInTheDocument()
   })
 
   it('redirects the root route to the existing inventory page', async () => {
@@ -146,6 +146,7 @@ describe('application layout', () => {
       'analytics',
       'dashboard',
       'settings',
+      'settings/catalogs',
     ])
   })
 
@@ -218,7 +219,7 @@ describe('mobile navigation', () => {
     ).getAllByRole('link')
     expect(
       mobileLinks.map((link) => link.textContent),
-    ).toEqual(['Dashboard', 'Inventory', 'Prints', 'G-code', 'Analytics', 'Settings'])
+    ).toEqual(['Inventory', 'Dashboard', 'Prints', 'G-code', 'Settings'])
 
     await user.click(
       within(drawer).getByRole('button', { name: 'Close navigation menu' }),

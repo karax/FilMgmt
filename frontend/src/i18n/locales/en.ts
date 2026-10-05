@@ -213,6 +213,22 @@ Object.assign(en.prints, {
   eyebrow: 'Print Tracker', createEyebrow: 'Print Tracker / New', editEyebrow: 'Print Tracker / #{{id}} / Edit', loadingForm: 'Loading print form',
 })
 
+Object.assign(en.common, { edit: 'Edit', delete: 'Delete', loading: 'Loading…', save: 'Save', saving: 'Saving…' })
+Object.assign(en.spool, { openCatalogs: 'Open Catalogs' })
+Object.assign(en, {
+  catalogs: {
+    eyebrow: 'Settings / Catalogs', title: 'Catalogs', back: 'Back to Settings',
+    description: 'Manage the manufacturers and material types used when adding a Spool.',
+    settingsDescription: 'Manage manufacturers and materials used by your Spools.',
+    locationNote: 'There is no separate Location catalog. Store Name records where you bought the Spool; use Notes for storage details.',
+    deleteConfirm: 'Delete {{name}}? Only unused catalog entries can be deleted.',
+    manufacturers: { title: 'Manufacturers', description: 'Brands that produce your filament.', add: 'Add manufacturer', edit: 'Edit manufacturer', empty: 'No manufacturers yet.', emptyDescription: 'Add a manufacturer to start organizing your Spools.' },
+    materials: { title: 'Materials', description: 'Filament types and their useful print defaults.', add: 'Add material', edit: 'Edit material', empty: 'No materials yet.', emptyDescription: 'Add a material before creating your first Spool.' },
+    fields: { name: 'Name', website: 'Website (optional)', category: 'Category', density: 'Density (g/cm³)', densityHelp: 'Used by G-code analysis to estimate filament weight.', nozzle: 'Nozzle temperature (°C)', bed: 'Bed temperature (°C)', minimum: 'Minimum', maximum: 'Maximum', notes: 'Notes (optional)' },
+    errors: { load: 'Unable to load this catalog.', save: 'Unable to save this catalog entry. Try again.', validation: 'Review the entered values and temperature ranges.', inUseOrDuplicate: 'This name already exists, or this entry is used by a Spool and cannot be deleted.' },
+  },
+})
+
 Object.assign(en.prints, {
   form: {
     ...en.prints.form,
@@ -246,7 +262,7 @@ Object.assign(en.prints, {
     title: 'Start “{{name}}”?', description: 'Confirm the spools that will be used by this print.',
     spoolsUsed_one: 'This print will use {{count}} spool.', spoolsUsed_other: 'This print will use {{count}} spools.',
     available: 'Available Filament', estimated: 'Estimated Weight',
-    inUseNotice: 'Starting will mark all these spools as In Use.', confirm: 'Start Print', pending: 'Starting…',
+    inUseNotice: 'Starting will mark all these spools as In Use.', blockedReason: 'Resolve the unavailable Spool warnings above before starting this print.', confirm: 'Start Print', pending: 'Starting…',
     error: 'Unable to start the print.', networkError: 'Unable to start the print. Check your connection and try again.',
     warnings: {
       low: 'This spool is low on filament.', empty: 'This spool is empty.', archived: 'This spool is archived.',

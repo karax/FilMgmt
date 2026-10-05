@@ -92,6 +92,14 @@ export function apiPatch<TResponse, TPayload>(path: string, payload: TPayload): 
   })
 }
 
+export function apiPut<TResponse, TPayload>(path: string, payload: TPayload): Promise<TResponse> {
+  return request<TResponse>(path, {
+    method: 'PUT',
+    headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+}
+
 export function apiDelete(path: string): Promise<void> {
   return request<void>(path, { method: 'DELETE' })
 }

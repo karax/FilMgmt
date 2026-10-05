@@ -51,7 +51,7 @@ export function PrintsPage() {
 
       {error && !isPending && <div className="mt-7 rounded-lg border border-red-500/30 bg-surface px-5 py-10 text-center shadow-sm" role="alert"><AlertCircle aria-hidden="true" className="mx-auto size-6 text-red-600 dark:text-red-400" /><h2 className="mt-4 text-lg font-semibold text-ink">{t('prints.error')}</h2><button className="mt-6 rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar disabled:opacity-60" disabled={isFetching} onClick={() => void refetch()} type="button">{isFetching ? t('prints.retrying') : t('common.retry')}</button></div>}
 
-      {!isPending && !error && jobs?.length === 0 && <div className="mt-8 rounded-lg border border-dashed border-line bg-surface px-5 py-14 text-center shadow-sm"><Printer aria-hidden="true" className="mx-auto size-7 text-ink-muted" /><h2 className="mt-4 text-lg font-semibold text-ink">{t('prints.emptyTitle')}</h2><p className="mt-2 text-sm text-ink-muted">{t('prints.emptyDescription')}</p></div>}
+      {!isPending && !error && jobs?.length === 0 && <div className="mt-8 rounded-lg border border-dashed border-line bg-surface px-5 py-14 text-center shadow-sm"><Printer aria-hidden="true" className="mx-auto size-7 text-ink-muted" /><h2 className="mt-4 text-lg font-semibold text-ink">{t('prints.emptyTitle')}</h2><p className="mt-2 text-sm text-ink-muted">{t('prints.emptyDescription')}</p><div className="mt-5 flex justify-center"><PrintsNewLink label={t('prints.actions.new')} /></div></div>}
 
       {!isPending && !error && jobs && jobs.length > 0 && <>
         <PrintJobsSection title={t('prints.sections.printing')} jobs={jobsForStatus(jobs, 'PRINTING')} onFinish={openFinish} onStart={openStart} spools={spoolMap} />

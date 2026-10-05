@@ -109,8 +109,9 @@ export function StartPrintDialog(props: DialogBaseProps) {
   const mutation = useStartPrintJob()
   const blocked = props.entries.some(({ spool }) => !spool || spool.status === 'EMPTY' || spool.status === 'ARCHIVED' || spool.status === 'IN_USE' || Boolean(spool.archived_at))
   const spoolCodes = props.entries.flatMap(({ spool }) => spool ? [spool.code] : [])
+  const blockedReason = blocked ? t('prints.start.blockedReason') : null
 
-  const actions = <button className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" disabled={blocked || mutation.isPending} onClick={() => mutation.mutate({ id: props.printJob.id, spoolCodes }, { onSuccess: props.onSuccess })} type="button">{mutation.isPending ? t('prints.start.pending') : t('prints.start.confirm')}</button>
+  const actions = <div className="w-full sm:w-auto">{blockedReason && <p className="mb-2 max-w-sm text-sm text-amber-800 dark:text-amber-200" id="start-blocked-reason" role="status">{blockedReason}</p>}<button aria-describedby={blockedReason ? 'start-blocked-reason' : undefined} className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" disabled={blocked || mutation.isPending} onClick={() => mutation.mutate({ id: props.printJob.id, spoolCodes }, { onSuccess: props.onSuccess })} type="button">{mutation.isPending ? t('prints.start.pending') : t('prints.start.confirm')}</button></div>
 
   return (
     <DialogFrame actions={actions} cancelLabel={t('common.cancel')} description={t('prints.start.description', { count: props.entries.length })} onCancel={props.onCancel} pending={mutation.isPending} title={t('prints.start.title', { name: props.printJob.name })}>

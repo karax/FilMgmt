@@ -40,7 +40,36 @@ Essa diferença é importante: o material PLA pode aparecer em vários Spools. O
 
 Ao abrir `/`, o Filament Command Center leva você ao **Inventário**. O **Painel** é uma visão geral separada e pode ser aberto pelo menu.
 
-No computador, o menu fica na lateral esquerda. No celular, toque no botão de menu no canto superior esquerdo. O nome da página atual aparece no cabeçalho. No canto superior direito, **Theme preference** oferece `System`, `Light` e `Dark`; a escolha fica salva no dispositivo.
+No computador, o menu fica na lateral esquerda. No celular, toque no botão de menu no canto superior esquerdo. O nome da página atual aparece no cabeçalho. No canto superior direito, **Preferência de tema** oferece `Sistema`, `Claro` e `Escuro`; a escolha fica salva no dispositivo.
+
+### Preparar o primeiro uso
+
+Uma instalação sem dados pode ser preparada inteiramente pelo navegador:
+
+![Inventário vazio com a ação Adicionar Spool](images/wave2/empty-inventory-desktop.png)
+
+*Primeiro uso — O Inventário vazio indica a próxima ação.*
+
+1. Abra **Configurações → Catálogos**.
+2. Em **Fabricantes**, selecione **Adicionar fabricante** e informe a marca do filamento.
+3. Em **Materiais**, selecione **Adicionar material** e informe ao menos nome e categoria.
+4. Volte ao **Inventário**, selecione **Adicionar Spool** e use os itens que acabou de cadastrar.
+
+![Catálogos de Fabricantes e Materiais preenchidos](images/wave2/catalogs-desktop.png)
+
+*Catálogos — Os dados cadastrados ficam disponíveis no formulário de novo Spool.*
+
+Fabricantes representam as marcas que produzem os filamentos. Materiais representam tipos como PLA, PETG ou TPU e podem guardar densidade e temperaturas padrão. Esses cadastros são reutilizados em vários Spools; os nomes informados pelo usuário não são traduzidos quando o idioma muda.
+
+O local de armazenamento não possui um catálogo separado. **Nome da Loja** registra a loja onde o Spool foi comprado. Para referências de armazenamento, como “Prateleira A” ou “Dry Box”, use **Observações**.
+
+Se um fabricante ou material já estiver associado a um Spool, o produto preserva o histórico e recusa sua exclusão. Nesse caso, mantenha o item no catálogo e edite apenas quando a mudança continuar representando o mesmo dado.
+
+> 💡 **Densidade:** esse valor é usado pela análise de G-code para estimar o peso do filamento. Se não souber o valor correto, consulte a ficha técnica do fabricante ou deixe o campo em branco.
+
+![Catálogos em uma tela de 390 por 844 pixels](images/wave2/catalogs-mobile.png)
+
+*Catálogos no celular — Fabricantes e Materiais permanecem disponíveis em cartões empilhados.*
 
 ### Mapa do produto
 
@@ -51,7 +80,9 @@ No computador, o menu fica na lateral esquerda. No celular, toque no botão de m
 | Detalhes do Spool | Consultar uma unidade física. | Ver peso, percentual, compra, QR, editar, arquivar e excluir quando permitido. |
 | Impressões | Planejar e acompanhar trabalhos de impressão. | Criar, editar, iniciar, finalizar e comparar estimado com real. |
 | G-code | Analisar instruções preparadas para a impressora. | Enviar arquivo, analisar, detectar material e estimar peso/tempo. |
-| Configurações | Ajustar preferências gerais. | Alterar idioma e baixar este manual. |
+| Configurações | Ajustar preferências e dados reutilizáveis. | Gerenciar Catálogos, alterar idioma e baixar este manual. |
+
+Analytics não aparece no menu porque ainda não é uma funcionalidade disponível. O Painel continua mostrando os dados reais do inventário; o Inventário continua sendo a página inicial.
 
 ### Painel
 
@@ -81,7 +112,7 @@ Use **Tabela** quando quiser comparar rapidamente peso, percentual, fabricante e
 
 *Figura 3 — A Grade apresenta cada Spool como um cartão independente.*
 
-Em telas menores, a tabela mantém as colunas mais importantes e permite rolagem quando necessário.
+Em telas menores, a Grade é a visualização inicial para evitar uma tabela larga. A preferência escolhida continua salva no dispositivo.
 
 ![Inventário em uma tela de 390 por 844 pixels](images/mobile/01-inventory.png)
 
@@ -174,7 +205,7 @@ Exemplo: um produto novo de 1 kg normalmente usa 1.000 g nos dois campos. Se voc
 
 ### Compra, moeda e custo
 
-Informe **Nome da Loja**, **Preço de Compra**, **Moeda** e `Purchase Date` quando quiser manter o histórico de compra. As moedas oferecidas no formulário atual são EUR, USD e GBP.
+Informe **Nome da Loja**, **Preço de Compra**, **Moeda** e **Data da Compra** quando quiser manter o histórico de compra. As moedas oferecidas no formulário atual são EUR, USD e GBP.
 
 O preço e o peso inicial permitem calcular o custo estimado e o custo real do material usado em uma impressão. A moeda pertence ao cadastro daquele Spool; não é definida pelo idioma da aplicação.
 
@@ -190,7 +221,7 @@ A densidade pertence ao Material e não é digitada neste formulário. Ela é us
 
 ### Status inicial e secagem
 
-`Initial Status` permite `SEALED` ou `OPEN`. Escolha `SEALED` para uma unidade lacrada e `OPEN` para uma unidade já aberta. Marque `Needs drying` quando o filamento precisa de secagem.
+**Status inicial** permite **Lacrado** ou **Aberto**. Escolha **Lacrado** para uma unidade fechada e **Aberto** para uma unidade já aberta. Marque **Precisa de secagem** quando o filamento precisa de secagem.
 
 ![Cadastro de Spool em uma tela móvel](images/mobile/02-new-spool.png)
 

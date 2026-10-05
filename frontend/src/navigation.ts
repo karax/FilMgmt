@@ -1,6 +1,5 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  ChartNoAxesCombined,
   FileCode2,
   LayoutDashboard,
   PackageOpen,
@@ -15,19 +14,16 @@ export interface NavigationItem {
 }
 
 export const navigationItems: readonly NavigationItem[] = [
-  { labelKey: 'navigation.dashboard', path: '/dashboard', icon: LayoutDashboard },
   { labelKey: 'navigation.inventory', path: '/inventory', icon: PackageOpen },
+  { labelKey: 'navigation.dashboard', path: '/dashboard', icon: LayoutDashboard },
   { labelKey: 'navigation.prints', path: '/prints', icon: Printer },
   { labelKey: 'navigation.gcode', path: '/gcode', icon: FileCode2 },
-  {
-    labelKey: 'navigation.analytics',
-    path: '/analytics',
-    icon: ChartNoAxesCombined,
-  },
   { labelKey: 'navigation.settings', path: '/settings', icon: Settings2 },
 ]
 
 export function getPageTitleKey(pathname: string): string {
+  if (pathname === '/analytics') return 'navigation.analytics'
+  if (pathname === '/settings/catalogs') return 'catalogs.title'
   if (pathname === '/inventory/new') return 'spool.new'
   if (pathname === '/scan') return 'scan.pageTitle'
   if (pathname.startsWith('/qr/spool/')) return 'qr.spool.pageTitle'

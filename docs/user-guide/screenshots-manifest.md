@@ -39,3 +39,15 @@ As imagens são geradas por `npm run docs:screenshots` a partir de um banco SQLi
 | `mobile/06-settings.png` | `/settings` | Idioma e download no celular | 390 × 844 | Uso no celular | Português (Brasil) |
 
 Os IDs das impressões são determinados pela ordem fixa de criação do fixture. Os códigos de Spool são gerados pelo produto, também em ordem fixa no banco temporário.
+
+## Wave 2 — capturas direcionadas
+
+`FCC_WAVE2_SCREENSHOTS=1 npm run test:e2e:wave2 -- --project=wave2` usa Chromium
+e um banco temporário vazio; os cadastros são feitos pela interface. Somente
+imagens das mudanças de onboarding são geradas, sem recapturar a coleção inteira.
+
+| Arquivo | Rota | Estado | Viewport |
+|---|---|---|---|
+| `wave2/empty-inventory-desktop.png` | `/inventory` | Primeiro uso, pt-BR, sem Spools | 1280 × 720 |
+| `wave2/catalogs-desktop.png` | `/settings/catalogs` | Fabricante e material criados pelo browser | 1280 × 720 |
+| `wave2/catalogs-mobile.png` | `/settings/catalogs` | Mesmo catálogo em pt-BR no celular | 390 × 844 |

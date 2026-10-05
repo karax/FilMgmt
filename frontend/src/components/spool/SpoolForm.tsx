@@ -1,6 +1,7 @@
 import { AlertCircle, LoaderCircle } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 
 import { isApiError } from '../../api/client'
 import {
@@ -394,8 +395,13 @@ export function SpoolForm({
             </select>
           </FormField>
         </div>
-        {manufacturers.length === 0 && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{t('spool.manufacturerEmpty')}</p>}
-        {materials.length === 0 && <p className="mt-4 text-sm text-red-600 dark:text-red-400">{t('spool.materialEmpty')}</p>}
+        {(manufacturers.length === 0 || materials.length === 0) && (
+          <div className="mt-4 rounded-md border border-amber-500/30 bg-amber-500/5 p-4 text-sm text-ink">
+            {manufacturers.length === 0 && <p>{t('spool.manufacturerEmpty')}</p>}
+            {materials.length === 0 && <p className={manufacturers.length === 0 ? 'mt-2' : ''}>{t('spool.materialEmpty')}</p>}
+            <Link className="mt-3 inline-flex font-semibold text-accent underline underline-offset-4" to="/settings/catalogs">{t('spool.openCatalogs')}</Link>
+          </div>
+        )}
       </FormSection>
 
       <FormSection title={t('spool.materialColor')}>

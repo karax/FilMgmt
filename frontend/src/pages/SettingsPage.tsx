@@ -1,4 +1,4 @@
-import { BookOpen, Download } from 'lucide-react'
+import { BookOpen, ChevronRight, Download, Tags } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 import { LanguageSelector } from '../components/settings/LanguageSelector'
@@ -17,6 +17,15 @@ export function SettingsPage() {
         <p className="mt-1 text-sm text-ink-muted">{t('settings.languageDescription')}</p>
         <div className="mt-5"><LanguageSelector /></div>
       </section>
+
+      <a className="mt-6 flex items-center gap-3 rounded-lg border border-line bg-surface p-5 shadow-sm transition-colors hover:bg-surface-raised" href="/settings/catalogs">
+        <span aria-hidden="true" className="rounded-md bg-accent-soft p-2 text-accent"><Tags className="size-5" /></span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-lg font-semibold text-ink">{t('catalogs.title')}</span>
+          <span className="mt-1 block text-sm leading-6 text-ink-muted">{t('catalogs.settingsDescription')}</span>
+        </span>
+        <ChevronRight aria-hidden="true" className="size-5 shrink-0 text-ink-muted" />
+      </a>
 
       <section aria-labelledby="manual-title" className="mt-6 rounded-lg border border-line bg-surface p-5 shadow-sm">
         <div className="flex items-start gap-3">

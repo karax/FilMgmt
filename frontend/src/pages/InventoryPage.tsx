@@ -26,9 +26,10 @@ export const INVENTORY_VIEW_STORAGE_KEY = 'fcc-inventory-view'
 function getInitialView(): InventoryView {
   try {
     const savedView = window.localStorage.getItem(INVENTORY_VIEW_STORAGE_KEY)
-    return savedView === 'grid' || savedView === 'table' ? savedView : 'table'
+    if (savedView === 'grid' || savedView === 'table') return savedView
+    return window.innerWidth < 640 ? 'grid' : 'table'
   } catch {
-    return 'table'
+    return window.innerWidth < 640 ? 'grid' : 'table'
   }
 }
 

@@ -15,10 +15,10 @@ export function InventoryGrid({ spools }: InventoryGridProps) {
       role="list"
     >
       {spools.map((spool) => (
-        <li key={spool.id}>
+        <li className="min-w-0" key={spool.id}>
           <a
             aria-label={t('spool.view', { code: spool.code })}
-            className="block h-full rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            className="block h-full min-w-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             href={`/spools/${encodeURIComponent(spool.code)}`}
           >
             <SpoolCard spool={spool} />

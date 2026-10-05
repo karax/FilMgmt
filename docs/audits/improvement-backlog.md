@@ -89,6 +89,10 @@
 
 ### SEC-01 — Establish the application trust boundary
 
+**DEFERRED by Wave 2 product decision:** authentication and public-network
+hardening are not implemented while deployment remains local-first on a trusted
+LAN/Tailnet. This finding is not resolved; public/untrusted exposure remains outside the supported deployment.
+
 - Priority basis: P2 for a single operator behind a controlled LAN/Tailnet; P1
   for an untrusted LAN/Tailnet or multi-user mode; P0 exposure gate before
   public Internet ingress.
@@ -112,6 +116,8 @@
 
 ### A11Y-02 — Correct light-theme contrast
 
+**DEFERRED** to the later polish/accessibility phase; not resolved in Wave 2.
+
 - Split decorative accent from an accessible accent-text/focus token.
 - Reach at least 4.5:1 for normal text and 3:1 for non-text focus indicators.
 - Recheck links, FIL codes, eyebrows, selected view text and small dashboard
@@ -120,6 +126,11 @@
 
 ### UX-01 — Unblock clean-install catalog onboarding
 
+**COMPLETE (2026-09-29).** Settings → Catalogs manages Manufacturers and
+Materials, New Spool links to empty-catalog recovery, protected deletes remain
+intact, and the clean-database Chromium flow creates the first Spool entirely
+through the browser.
+
 - Add Manufacturer/Material management in Settings, or a first-run wizard that
   safely runs/validates seed data.
 - Replace “Create first” dead-end messages with direct actions.
@@ -127,6 +138,8 @@
 - Acceptance: a browser-only user can go from an empty DB to the first Spool.
 
 ### A11Y-03 / A11Y-04 — Standardize accessible dialogs and forms
+
+**DEFERRED** to the later polish/accessibility phase; not resolved in Wave 2.
 
 - Create one Dialog primitive with initial focus, focus containment, inert
   background, Escape, pending-state rules and trigger restoration.
@@ -138,11 +151,20 @@
 
 ### IA-01 — Resolve Analytics navigation
 
+**COMPLETE (2026-09-29).** The placeholder is hidden from primary desktop and
+mobile navigation. Dashboard remains useful, Inventory remains home, and no
+Analytics feature was implemented.
+
 - Hide Analytics until useful, label it explicitly as preview, or deliver a
   minimum useful dashboard.
 - Acceptance: primary navigation contains no unqualified placeholder module.
 
 ### UX-02 / UX-03 — Improve mobile and route recovery
+
+**UX-02 COMPLETE FOR WAVE 2 SCOPE (2026-09-29).** Inventory defaults to Grid
+below 640 px when no preference exists. The 390×844 product matrix and critical
+320×844 flows passed Chromium overflow/action/dialog checks. UX-03 branded route
+recovery remains open.
 
 - Use a compact theme control/menu on narrow headers and preserve full page
   context accessibly.
@@ -264,24 +286,26 @@ Exit gate:
 - public ingress is disabled unless authentication/authorization is promoted to
   a P0 prerequisite and implemented.
 
-## Wave 2 — UX consistency and accessibility
+## Wave 2 — Product UX & Onboarding
 
 1. I18N-01/A11Y-01 language completion — COMPLETE (2026-09-13).
-2. Accessibility: contrast, semantics and interaction primitives.
-3. UX-01 catalog onboarding.
-4. Mobile UX and route recovery.
-5. Application states and feedback consistency.
-6. SEC-01 authentication as low-priority defensive hardening for the supported
-   single-user trusted LAN/Tailnet model. Promote it only for public exposure,
-   an untrusted network or multiple untrusted users.
+2. Full accessibility remediation — DEFERRED to later polish/accessibility work.
+3. UX-01 catalog onboarding — COMPLETE (2026-09-29).
+4. Mobile UX scope — COMPLETE (2026-09-29); UX-03 route recovery remains open.
+5. Application states and feedback consistency — COMPLETE for scoped screens.
+6. SEC-01 authentication/public-network hardening — DEFERRED while deployment
+   remains local-first, single-user, trusted LAN/Tailnet.
 
 Exit gate:
 
 - empty-DB first-use works in browser;
 - intended language and HTML language agree;
-- core routes pass keyboard and automated accessibility checks;
+- existing accessibility semantics are preserved; full remediation is deferred;
 - primary navigation contains only honest destinations;
-- 320/390 px product screenshots are reviewed in both themes/languages.
+- 390×844 primary flows and critical 320 px screens pass Chromium validation.
+
+Closure evidence is tracked in [Wave 2](wave-2-product-ux-onboarding.md).
+Analytics is NOT IMPLEMENTED. Wave 3 is NOT STARTED.
 
 ## Wave 3 — Scale and architectural health
 

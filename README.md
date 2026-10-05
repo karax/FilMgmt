@@ -29,6 +29,18 @@ catálogos e spools, e um frontend React para acompanhar o inventário.
 - Shell compatível com POSIX em Linux ou macOS; os comandos abaixo foram
   validados em Linux. O setup equivalente para Windows não está documentado.
 
+O frontend declara esse requisito em `package.json#engines`. Node 20 não é
+compatível com o jsdom/undici do lockfile atual. A validação da Wave 2 usa
+Node 24.20.0; instale uma versão suportada no seu ambiente, sem depender de
+binários temporários usados durante a validação.
+
+Para validar onboarding e mobile com banco descartável, execute no frontend
+`npm run test:e2e:wave2`. O comando cria um SQLite temporário, aplica as migrações
+existentes e inicia API/Vite nas portas 18002/15173, recusando servidores já em
+uso. Os cadastros são feitos pelo Chromium. Depois, executa os testes de smoke
+existentes no mesmo ambiente isolado. Para somente os cenários da Wave 2, use
+`npm run test:e2e:wave2 -- --project=wave2`. Nenhum comando acessa o banco normal.
+
 ## Backend
 
 Crie um ambiente virtual, instale as dependências e inicie a API:

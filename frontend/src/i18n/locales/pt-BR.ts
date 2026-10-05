@@ -213,6 +213,22 @@ Object.assign(ptBR.prints, {
   eyebrow: 'Controle de impressões', createEyebrow: 'Controle de impressões / Nova', editEyebrow: 'Controle de impressões / #{{id}} / Editar', loadingForm: 'Carregando formulário de impressão',
 })
 
+Object.assign(ptBR.common, { edit: 'Editar', delete: 'Excluir', loading: 'Carregando…', save: 'Salvar', saving: 'Salvando…' })
+Object.assign(ptBR.spool, { openCatalogs: 'Abrir Catálogos' })
+Object.assign(ptBR, {
+  catalogs: {
+    eyebrow: 'Configurações / Catálogos', title: 'Catálogos', back: 'Voltar para Configurações',
+    description: 'Gerencie os fabricantes e tipos de material usados ao cadastrar um Spool.',
+    settingsDescription: 'Gerencie os fabricantes e materiais usados pelos seus Spools.',
+    locationNote: 'Não existe um catálogo separado de Locais. Nome da Loja registra onde o Spool foi comprado; use Observações para detalhes de armazenamento.',
+    deleteConfirm: 'Excluir {{name}}? Apenas itens que não estão em uso podem ser excluídos.',
+    manufacturers: { title: 'Fabricantes', description: 'Marcas que produzem seus filamentos.', add: 'Adicionar fabricante', edit: 'Editar fabricante', empty: 'Nenhum fabricante cadastrado.', emptyDescription: 'Cadastre um fabricante para começar a organizar seus Spools.' },
+    materials: { title: 'Materiais', description: 'Tipos de filamento e seus padrões úteis de impressão.', add: 'Adicionar material', edit: 'Editar material', empty: 'Nenhum material cadastrado.', emptyDescription: 'Cadastre um material antes de criar seu primeiro Spool.' },
+    fields: { name: 'Nome', website: 'Site (opcional)', category: 'Categoria', density: 'Densidade (g/cm³)', densityHelp: 'Usada pela análise de G-code para estimar o peso do filamento.', nozzle: 'Temperatura do bico (°C)', bed: 'Temperatura da mesa (°C)', minimum: 'Mínima', maximum: 'Máxima', notes: 'Observações (opcional)' },
+    errors: { load: 'Não foi possível carregar este catálogo.', save: 'Não foi possível salvar este item. Tente novamente.', validation: 'Revise os valores informados e as faixas de temperatura.', inUseOrDuplicate: 'Este nome já existe ou o item está sendo usado por um Spool e não pode ser excluído.' },
+  },
+})
+
 Object.assign(ptBR.prints, {
   form: {
     ...ptBR.prints.form,
@@ -247,7 +263,7 @@ Object.assign(ptBR.prints, {
     description: 'Confirme os spools que serão utilizados nesta impressão.',
     spoolsUsed_one: 'Esta impressão utilizará {{count}} spool.', spoolsUsed_other: 'Esta impressão utilizará {{count}} spools.',
     available: 'Filamento Disponível', estimated: 'Peso Estimado',
-    inUseNotice: 'Ao iniciar, todos esses spools ficarão marcados como Em Uso.',
+    inUseNotice: 'Ao iniciar, todos esses spools ficarão marcados como Em Uso.', blockedReason: 'Resolva os avisos de Spool indisponível acima antes de iniciar esta impressão.',
     confirm: 'Iniciar Impressão', pending: 'Iniciando…',
     error: 'Não foi possível iniciar a impressão.', networkError: 'Não foi possível iniciar a impressão. Verifique a conexão e tente novamente.',
     warnings: {

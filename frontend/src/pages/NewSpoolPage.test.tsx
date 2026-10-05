@@ -111,6 +111,15 @@ describe('NewSpoolPage', () => {
     expect(screen.getByRole('option', { name: 'PLA+' })).toBeVisible()
   })
 
+  it('links to Catalogs when required catalog data is empty', async () => {
+    mockCatalogs({ manufacturers: [], materials: [] })
+    renderPage()
+    expect(await screen.findByText('No manufacturers available. Create a manufacturer first.')).toBeVisible()
+    expect(screen.getByText('No materials available. Create a material first.')).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Open Catalogs' })).toHaveAttribute('href', '/settings/catalogs')
+    expect(screen.getByRole('button', { name: 'Create Spool' })).toBeDisabled()
+  })
+
   it('applies selected material defaults while keeping print-setting inputs editable', async () => {
     mockCatalogs({ materials: [plaMaterial] })
     const { user } = renderPage()

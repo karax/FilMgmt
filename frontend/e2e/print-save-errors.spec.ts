@@ -25,7 +25,7 @@ for (const mode of ['create', 'edit']) {
       await page.getByLabel('Nome da Impressão', { exact: true }).fill(job.name)
       await page.getByLabel('Spool', { exact: true }).selectOption('1')
       await page.getByLabel('Peso Estimado', { exact: true }).fill('10')
-      await page.getByRole('button', { name: '+ Add Spool' }).click()
+      await page.getByRole('button', { name: '+ Adicionar Spool', exact: true }).click()
       await page.getByLabel('Spool', { exact: true }).nth(1).selectOption('2')
       await page.getByLabel('Peso Estimado', { exact: true }).nth(1).fill('20')
       await page.getByLabel('Impressora', { exact: true }).fill(job.printer_name)

@@ -9,6 +9,7 @@ import { NewSpoolPage } from '../pages/NewSpoolPage'
 import { PrintsPage } from '../pages/PrintsPage'
 import { QrScannerPage } from '../pages/QrScannerPage'
 import { SettingsPage } from '../pages/SettingsPage'
+import { CatalogsPage } from '../pages/CatalogsPage'
 import { SpoolDetailsPage } from '../pages/SpoolDetailsPage'
 import { SpoolQrLandingPage } from '../pages/SpoolQrLandingPage'
 import { EditSpoolPage } from '../pages/EditSpoolPage'
@@ -36,6 +37,7 @@ export const routes: RouteObject[] = [
       { path: 'analytics', element: <AnalyticsPage /> },
       { path: 'dashboard', element: <DashboardPage /> },
       { path: 'settings', element: <SettingsPage /> },
+      { path: 'settings/catalogs', element: <CatalogsPage /> },
     ],
   },
 ]
