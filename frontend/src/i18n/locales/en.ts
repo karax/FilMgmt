@@ -1,5 +1,5 @@
 export const en = {
-  common: { appName: 'Filament Command Center', retry: 'Retry', cancel: 'Cancel', optional: 'Optional', unconfigured: 'Not configured', yes: 'Yes', no: 'No' },
+  common: { appName: 'Filament Command Center', retry: 'Retry', cancel: 'Cancel', close: 'Close', optional: 'Optional', unconfigured: 'Not configured', yes: 'Yes', no: 'No' },
   navigation: { dashboard: 'Dashboard', inventory: 'Inventory', prints: 'Prints', analytics: 'Analytics', settings: 'Settings', openNavigation: 'Open navigation menu', closeNavigation: 'Close navigation menu', mobileNavigation: 'Mobile navigation', skipContent: 'Skip to content' },
   dashboard: { eyebrow: 'Operations overview', title: 'Dashboard', description: 'A focused view of your filament inventory and what needs attention.', total: 'Total Spools', available: 'Available Filament', low: 'Low Spools', empty: 'Empty Spools', drying: 'Needs Drying', materials: 'Materials', active: 'active inventory', attention: 'Needs Attention', criticalEmpty: 'No critical spools.', criticalEmptyDescription: 'Low, empty, and drying alerts will appear here.', noFilament: 'no filament left', flagged: 'flagged by inventory', noSpools: 'No filament spools yet.', noSpoolsDescription: 'Add your first spool to start tracking filament.', unable: 'Unable to load dashboard.' },
   inventory: { title: 'Inventory', eyebrow: 'Inventory / Filament', description: 'Manage and track your filament spools.', add: 'Add Spool', grid: 'Grid', table: 'Table', gridView: 'Grid view', tableView: 'Table view', tableAria: 'Spool inventory', search: 'Search inventory', searchPlaceholder: 'Search by code, color, material or manufacturer...', clearSearch: 'Clear Search', filters: 'Filters', clearFilters: 'Clear Filters', clearAll: 'Clear All', applyFilters: 'Apply Filters', activeFilters: 'Active filters:', removeFilter: 'Remove {{filter}}', spool_one: '{{count}} spool', spool_other: '{{count}} spools', noMatch: 'No spools match these filters.', noSearch: 'No spools found for “{{search}}”.', noSearchAndFilters: 'No spools match your search and filters.', tryAnother: 'Try another search or clear the current filters.', unable: 'Unable to load inventory.', connection: 'Please check the backend connection.', retrying: 'Retrying…', created: 'Spool {{code}} created successfully.', empty: 'Your filament inventory is empty.', emptyDescription: 'Add your first spool to start tracking filament.', spoolColumn: 'Spool', manufacturer: 'Manufacturer', material: 'Material', color: 'Color', remaining: 'Remaining', weight: 'Weight', status: 'Status' },
@@ -11,6 +11,186 @@ export const en = {
   prints: { title: 'Print Jobs', description: 'Track planned, active, and completed prints.', loading: 'Loading print jobs', error: 'Unable to load print jobs.', retrying: 'Retrying…', emptyTitle: 'No print jobs recorded yet.', emptyDescription: 'Your planned and completed prints will appear here.', spoolFallback: 'Spool #{{id}}', sections: { printing: 'Printing', planned: 'Planned', success: 'Completed', other: 'Other' }, fields: { printer: 'Printer', estimatedWeight: 'Estimated', actualWeight: 'Actual', estimatedTime: 'Estimated time', actualTime: 'Actual time', cost: 'Material cost', started: 'Started', finished: 'Finished' }, status: { PLANNED: 'Planned', PRINTING: 'Printing', SUCCESS: 'Completed', FAILED: 'Failed', CANCELLED: 'Cancelled' }, actions: { new: 'New Print', edit: 'Edit', create: 'Create Print', save: 'Save Changes', cancel: 'Cancel', back: 'Back to Prints', dismiss: 'Dismiss message' }, create: { title: 'New Print', subtitle: 'Plan a print using a spool from your inventory.' }, edit: { title: 'Edit Print', subtitle: 'Update the planned print details.', notFound: 'Print job not found.' }, messages: { created: 'Planned print created successfully.', updated: 'Print updated successfully.', cannotEdit: 'This print can no longer be edited.' }, form: { name: 'Print Name', spool: 'Spool', selectSpool: 'Select a spool', estimatedWeight: 'Estimated Weight', weightHint: 'Estimated filament required for this print.', estimatedTime: 'Estimated Time', hours: 'Hours', minutes: 'Minutes', printer: 'Printer', notes: 'Notes', lowWarning: 'This spool is low on filament.', emptyWarning: 'This spool is marked as empty.', insufficientWeightWarning: 'The estimated weight is greater than the filament available on this spool.', loadError: 'Unable to load form data.', errors: { name: 'Enter a print name.', spool: 'Select a spool.', weight: 'Estimated weight must be greater than zero.', hours: 'Enter a valid number of hours.', minutes: 'Minutes must be between 0 and 59.', duration: 'Duration must be greater than zero.', spoolMissing: 'The selected spool was not found.', conflict: 'The print could not be saved because its data conflicts with the current state.', save: 'Unable to save the print. Please try again.' } } },
   errors: { loadForm: 'Unable to load form data.', checkConnection: 'Please check the backend connection and try again.', save: 'Unable to save spool. Please check the backend connection and try again.', reviewFields: 'Some fields need to be corrected. Review the highlighted fields.', validationFallback: 'Some values could not be saved. Review the form and try again.', extraForbidden: 'This field is not accepted by the server.', selectedMissing: 'A selected manufacturer or material no longer exists.', conflict: 'The spool could not be saved because the data conflicts with an existing record.' },
 } as const
+
+Object.assign(en.prints, {
+  unnamed: 'Print #{{id}}',
+  amsUnavailable: 'AMS snapshot unavailable',
+  fields: { ...en.prints.fields, progress: 'Progress' },
+  status: {
+    ...en.prints.status,
+    PAUSED: 'Paused',
+    COMPLETED: 'Completed',
+    UNKNOWN_TERMINAL: 'Needs review',
+  },
+})
+
+Object.assign(en, {
+  analytics: {
+    eyebrow: 'Confirmed data / Trends', title: 'Analytics',
+    description: 'Understand confirmed filament use, purchases, print outcomes, and current inventory.',
+    loading: 'Loading analytics dashboard', loadingChart: 'Loading {{title}}', retrying: 'Retrying…',
+    loadError: 'Unable to load analytics.', loadErrorDescription: 'The analytics service could not be reached. Try again without losing your selected range.', chartUnavailable: 'This chart is temporarily unavailable.',
+    unavailable: 'Unavailable', noData: 'No data', multipleCurrencies: '{{count}} currencies',
+    periodValue: '{{range}}', coverageValue: '{{value}} data coverage', activeSpools_one: '{{count}} active spool · current snapshot', activeSpools_other: '{{count}} active spools · current snapshot',
+    terminalOnly: 'Terminal prints only', pendingUsages_one: '{{count}} filament usage', pendingUsages_other: '{{count}} filament usages', spoolCount_one: '{{count}} spool', spoolCount_other: '{{count}} spools',
+    successValue: 'Backend success rate: {{value}}', observedWithCoverage: '{{duration}} observed · {{coverage}} duration coverage', pendingPrints_one: '{{count}} print', pendingPrints_other: '{{count}} prints',
+    range: { label: 'Date range', last_7_days: 'Last 7 days', last_30_days: 'Last 30 days', last_90_days: 'Last 90 days', this_year: 'This year', last_12_months: 'Last 12 months', all_time: 'All time', custom: 'Custom', from: 'From', to: 'To', chooseDates: 'Choose both a start and end date to load a custom range.' },
+    kpi: { consumed: 'Confirmed consumed', materialCost: 'Material cost', currentInventory: 'Current inventory', completed: 'Completed prints', successRate: 'Success rate', pending: 'Pending reconciliation' },
+    sections: { highlights: 'Highlights', consumption: 'Consumption', inventory: 'Inventory', purchases: 'Purchases', printing: 'Printing', coverage: 'Data coverage' },
+    highlights: { spool: 'Most used spool', material: 'Most consumed material', brand: 'Most consumed brand', spendStore: 'Highest spend store', spoolsStore: 'Most spools purchased' },
+    charts: { consumption: 'Confirmed consumption over time', topSpools: 'Most-used physical spools', material: 'Consumption by material', brand: 'Consumption by brand', inventory: 'Current inventory by material', stores: 'Purchases by store', purchaseSpend: 'Purchase spending over time', outcomes: 'Print outcomes', activity: 'Printer activity', largestPrints: 'Largest prints by confirmed filament' },
+    chartSubtitles: { confirmed: 'Confirmed reconciled consumption, assigned to each PrintJob date.', physicalSpools: 'Physical spools remain separate, even when their metadata matches.', currentSnapshot: 'Current snapshot — the selected historical range does not change this view.', currencySafe: 'Currencies are shown as separate series; no exchange-rate conversion is applied.' },
+    storeMode: { label: 'Purchase ranking mode', spend: 'Spend', count: 'Spools' },
+    outcomes: { completed: 'Completed', failed: 'Failed', cancelled: 'Cancelled', unknown: 'Unknown terminal' },
+    empty: { consumption: 'No confirmed filament consumption in this period.', inventory: 'No active inventory is available.', purchases: 'No purchases were recorded in this period.', prints: 'No terminal prints in this period.', activity: 'No observed printing duration in this period.' },
+    coverage: { cost: 'Cost coverage', duration: 'Duration coverage', pending: 'Pending reconciliation' },
+    coverageDescription: 'Coverage makes missing historical metadata visible instead of treating it as zero.', durationHelp: 'Some historical PrintJobs do not have complete observed duration data.',
+    export: {
+      open: 'Export data', title: 'Export data', description: 'Download one trustworthy, machine-readable CSV dataset.',
+      analyticsGroup: 'Analytics', rawGroup: 'Raw data', scopeTitle: 'Export scope', currentFilters: 'Current Analytics filters', allData: 'All data',
+      analyticsScopeHelp: 'This dataset uses the date range and filters currently selected on Analytics.',
+      currentScopeHelp: 'Apply the current date range and supported Analytics filters.', allScopeHelp: 'Export the complete raw dataset without Analytics filters.',
+      inventorySnapshotHelp: 'Spool inventory is a current snapshot; the historical date range does not alter it.',
+      download: 'Export CSV', preparing: 'Preparing CSV…', downloaded: '{{filename}} downloaded.',
+      errorTitle: 'Could not export data.', errorDescription: 'Please try again.',
+      datasets: {
+        consumption_over_time: 'Consumption over time', top_spools: 'Top physical spools', consumption_by_material: 'Consumption by material', consumption_by_brand: 'Consumption by brand', inventory_by_material: 'Inventory by material', purchases_by_store: 'Purchases by store', purchase_spend_over_time: 'Purchase spending over time', print_outcomes: 'Print outcomes', print_activity: 'Printer activity', largest_consuming_prints: 'Largest consuming prints',
+        spools: 'Spool inventory', prints: 'Print history', filament_usage: 'Filament usage', confirmed_consumption: 'Confirmed consumption', purchases: 'Purchase data', ledger: 'Inventory ledger', calibrations: 'Physical calibrations',
+      },
+    },
+  },
+})
+
+Object.assign(en.navigation, { reconciliation: 'Reconcile prints' })
+Object.assign(en, {
+  reconciliation: {
+    eyebrow: 'P1S / Inventory',
+    title: 'Reconcile prints',
+    description: 'Review several days of captured prints, confirm the physical spools used, and apply inventory consumption in one batch.',
+    loading: 'Loading reconciliation queue',
+    loadError: 'Unable to load the reconciliation queue.',
+    pending: 'Pending prints',
+    ready: 'Ready to confirm',
+    estimatedPending: 'Estimated consumption pending',
+    empty: 'Everything is reconciled',
+    emptyDescription: 'New enriched P1S prints will appear here after they finish.',
+    recentTitle: 'Recently reconciled',
+    recentDescription: 'Undo a mistaken spool selection here; the reversal restores inventory and preserves the audit trail.',
+    batchTitle: 'Batch confirmation',
+    selectedLines_one: '{{count}} filament selected',
+    selectedLines_other: '{{count}} filaments selected',
+    selectReady: 'Select all unambiguous',
+    confirmSelected_one: 'Confirm {{count}} filament',
+    confirmSelected_other: 'Confirm {{count}} filaments',
+    confirming: 'Applying inventory…',
+    confirmed_one: '{{count}} filament was reconciled.',
+    confirmed_other: '{{count}} filaments were reconciled.',
+    fixSelected: 'Complete the spool, amount, and reason for every selected filament.',
+    printCount_one: '{{count}} print',
+    printCount_other: '{{count}} prints',
+    unnamedPrint: 'Unnamed print',
+    dateUnavailable: 'Date unavailable',
+    plate: 'Plate {{plate}}',
+    plateUnavailable: 'Plate unavailable',
+    filamentCount_one: '{{count}} filament',
+    filamentCount_other: '{{count}} filaments',
+    slicedEstimateShort: 'sliced estimate',
+    resolved: 'resolved',
+    incompleteTitle: 'Incomplete print.',
+    incompleteDescription: 'Estimated consumption is calculated from the final progress ({{progress}}%) and remains editable before confirmation.',
+    includeUsage: 'Include {{material}} in this batch',
+    unknownMaterial: 'Unknown material',
+    trayUnavailable: 'AMS tray unavailable',
+    needsSelection: 'Needs selection',
+    physicalSpool: 'Physical inventory spool',
+    chooseSpool: 'Choose a spool',
+    searchSpoolPlaceholder: 'Search by code, name, brand, material, or color…',
+    noSpoolMatches: 'No active spool matches this search.',
+    suggestedSpools: 'Suggested spools',
+    otherInventory: 'Other active inventory',
+    manualSpoolSelection: 'Manual spool selection — this spool did not match the captured metadata.',
+    doNotDeduct: 'Do not deduct',
+    consumption: 'Consumption',
+    progressEstimate: 'Estimated {{estimate}} g = {{progress}}% of {{total}} g sliced.',
+    insufficient: 'This spool does not have enough remaining weight. Choose another spool or recalibrate it.',
+    reasonRequired: 'Reason (required)',
+    reasonOptional: 'Reason (optional)',
+    reasonPlaceholder: 'Why this amount or skip is appropriate',
+    estimateNotice: 'Sliced estimate; inventory changes only after confirmation.',
+    skipped: 'Explicitly skipped — no inventory deducted',
+    deducted: '{{amount}} g deducted from {{spool}}',
+    manualAmount: 'manual amount',
+    undo: 'Undo',
+    undoPrompt: 'Why are you undoing this reconciliation?',
+    undone: 'The reconciliation was reversed and inventory restored.',
+    confidence: {
+      EXACT: 'Exact match',
+      HIGH: 'High confidence',
+      MEDIUM: 'Medium confidence',
+      LOW: 'Low confidence',
+      AMBIGUOUS: 'Ambiguous — choose the physical spool',
+    },
+    errors: {
+      insufficient: 'The selected spool no longer has enough filament.',
+      reason: 'Add a reason for the manual consumption amount.',
+      spool: 'The selected spool is no longer available.',
+      conflict: 'The reconciliation changed in another request. The queue has been refreshed.',
+      generic: 'The reconciliation could not be applied. No partial inventory change was saved.',
+    },
+  },
+})
+
+Object.assign((en as unknown as { reconciliation: Record<string, unknown> }).reconciliation, {
+  checkpointWarning: 'This print is older than the selected spool’s latest physical calibration.',
+  checkpointWarningHelp: 'The measured balance may already include this consumption. Confirm only if deducting it again is intentional.',
+  checkpointAcknowledge: 'I understand this may double-count material and want to continue.',
+})
+Object.assign(en, {
+  calibration: {
+    title: 'Physical weight calibration', description: 'Align the estimated inventory balance with a manual scale measurement.', open: 'Calibrate weight', last: 'Last physical calibration', physicalRemaining: 'Filament remaining', tare: 'Empty spool weight', currentSystem: 'Current system balance', measuredTotal: 'Physical weight', measuredHelp: 'Place the entire spool, including filament, on the scale.', emptyWeight: 'How should the empty spool weight be determined?', profile: 'Tare profile', chooseProfile: 'Choose a compatible physical spool profile', createProfile: 'Create tare profile', profileName: 'Profile name', saveProfile: 'Save profile', source: 'Tare source', confidence: 'Confidence', note: 'Note (optional)', adjustment: 'Physical adjustment', expectedBefore: 'Expected before calibration', drift: 'Drift', review: 'Review calibration', reviewing: 'Calculating…', confirm: 'Confirm calibration', confirming: 'Applying…', success: 'Physical calibration saved.', estimatedWarning: 'This remaining weight is approximate because the tare is estimated.', pendingWarning_one: 'There is {{count}} unreconciled print that may have used this spool.', pendingWarning_other: 'There are {{count}} unreconciled prints that may have used this spool.', pendingWarningHelp: 'The physical measurement already reflects real-world usage. Reconciling an older print later may deduct the same material again.', showHistory: 'Show calibration history', hideHistory: 'Hide calibration history', noHistory: 'No physical calibrations recorded yet.', physicalEvent: 'Physical calibration', reversal: 'Calibration reversal', undo: 'Undo calibration', undoPrompt: 'Why are you undoing this calibration?', undoSuccess: 'Calibration reversed and the exact previous balance restored.', tareMode: { PROFILE: 'Use a tare profile', MANUAL: 'Enter an empty spool weight', UNKNOWN: 'I do not know the empty spool weight' }, unknownHelp: 'Exact filament remaining cannot be calculated without an empty spool weight. Select a profile, enter a measured or estimated tare, or calibrate later.', errors: { stale: 'Inventory changed after this preview. Review the updated adjustment before confirming.', validation: 'Check the physical and empty-spool weights.', conflict: 'The calibration could not be applied because inventory changed or later activity must be undone first.', generic: 'The calibration could not be completed.' },
+  },
+})
+
+Object.assign(en.navigation, { prints: 'Print history' })
+Object.assign(en.prints, {
+  title: 'Print history',
+  description: 'Review prints, thumbnails, and slicer-estimated filament usage.',
+  metadata: {
+    title: 'Slicing metadata', noThumbnail: 'No thumbnail', unknownMaterial: 'Unknown material', colorUnavailable: 'Color unavailable',
+    filamentCount_one: '{{count}} filament', filamentCount_other: '{{count}} filaments',
+    estimatedTotal: 'Total estimated filament', estimatedLength: 'Total estimated length', slicerDuration: 'Slicer estimated duration', plate: 'Printed plate',
+    estimatedWeight: 'Estimated weight', estimatedMeters: 'Estimated length', trayInfo: 'Filament index', nozzle: 'Nozzle',
+    retry: 'Retry metadata', retrying: 'Requesting…', retryError: 'A new attempt could not be requested right now.',
+    unavailableDescription: 'The print remains available, but its 3MF metadata could not be obtained yet.',
+    estimateDisclaimer: 'Filament values are slicer estimates, not physical measurements.',
+    amsSnapshot: 'Historical AMS snapshot', external: 'External', snapshotRemaining: '{{value}}% reported at start',
+    snapshotDisclaimer: 'This state was preserved at print start; later AMS changes do not alter this record.',
+    status: { PENDING: 'Metadata pending', IN_PROGRESS: 'Retrieving metadata…', ENRICHED: 'Metadata available', FILE_NOT_FOUND: '3MF file not found', AMBIGUOUS: 'Ambiguous file or plate', RETRYABLE: 'FTPS temporarily unavailable', FAILED: 'Metadata processing failed' },
+  },
+})
+
+Object.assign(en.navigation, { printerStatus: 'Printer status' })
+Object.assign(en, {
+  printerStatus: {
+    eyebrow: 'P1S / Live monitoring', title: 'Printer status',
+    description: 'Monitor the Bambu Lab P1S connection, current print, and AMS. This integration is read-only.',
+    loading: 'Loading printer status', loadError: 'Unable to load printer status.',
+    loadErrorDescription: 'Check the backend connection and try again.', refreshing: 'Refreshing…', refresh: 'Refresh now',
+    connected: 'P1S connected', disconnected: 'P1S disconnected', readOnly: 'Read-only', serialUnavailable: 'Serial unavailable',
+    lastUpdate: 'Updated {{value}}', waitingForData: 'Waiting for printer data', notConfigured: 'Integration is not configured.',
+    connection: 'Printer connection', connectionState: 'Connection', serial: 'Serial number', normalizedState: 'Normalized state', rawState: 'Raw Bambu state',
+    ftps: 'FTPS / metadata', lastFtpsSuccess: 'Last FTPS access',
+    ftpsStates: { unconfigured: 'Not configured', reachable: 'Available', error: 'Temporary error', waiting: 'Waiting for first lookup' },
+    currentPrint: 'Current print', unnamedPrint: 'Unnamed print', noActivePrint: 'No active print',
+    noActivePrintDescription: 'Progress and identifiers will appear here when a print starts.',
+    progress: 'Progress', layer: 'Layer', remaining: 'Time remaining', minutes: 'min', taskId: 'Task ID', subtaskId: 'Subtask ID',
+    openHistory: 'Open PrintJob #{{id}}', ams: 'Loaded materials', autoRefresh: 'Refreshes automatically every 5 seconds', noAms: 'No AMS data received.',
+    amsUnit: 'AMS {{id}}', externalTray: 'External spool', tray: 'Slot {{id}}', selected: 'Selected', emptyTray: 'Empty or unidentified slot',
+    profileUnavailable: 'Profile unavailable', unavailable: 'Unavailable',
+    connections: { DISABLED: 'Disabled', CONNECTING: 'Connecting', CONNECTED: 'Connected', DISCONNECTED: 'Disconnected' },
+    states: { UNKNOWN: 'Unknown', IDLE: 'Idle', PREPARING: 'Preparing', PRINTING: 'Printing', PAUSED: 'Paused', FINISHED: 'Completed', FAILED: 'Failed', CANCELLED: 'Cancelled' },
+  },
+})
 
 Object.assign(en.spool, {
   qr: {
@@ -286,11 +466,11 @@ Object.assign(en.prints, {
     back: 'Back to Prints', identifier: 'Print #{{id}}', loading: 'Loading print details',
     notFound: 'Print job not found.', loadError: 'Unable to load this print job.',
     overview: 'Overview', status: 'Status', printer: 'Printer', createdAt: 'Created at', startedAt: 'Started at', finishedAt: 'Finished at',
-    estimatedTime: 'Estimated duration', actualTime: 'Actual duration', spools: 'Spools and consumption',
+    estimatedTime: 'Estimated duration', actualTime: 'Actual duration', layers: 'Layers', spools: 'Spools and consumption',
     estimatedWeight: 'Estimated weight', consumedWeight: 'Filament consumed', totalEstimatedWeight: 'Total estimated weight', totalConsumedWeight: 'Total filament consumed',
     consumptionNotProvided: 'Not provided', incompleteEstimate: 'Incomplete estimate', partialConsumption: 'Partial consumption',
     unitCost: 'Cost per gram', materialCost: 'Material cost', costs: 'Costs', totalMaterialCost: 'Total material cost', materialCosts: 'Material costs', knownCost: 'Known cost', costUnavailable: 'Some costs are unavailable.',
-    viewSpool: 'View Spool', timeline: 'Timeline', currentStatus: 'Current status', notes: 'Notes', noNotes: 'No notes.',
+    viewSpool: 'View Spool', reconciledSpool: 'Reconciled spool', reconciliationSkipped: 'Reconciled without inventory deduction', timeline: 'Timeline', currentStatus: 'Current status', notes: 'Notes', noNotes: 'No notes.',
   },
   timeline: { created: 'Created', started: 'Started', finished: 'Completed', running: 'Running' },
   errors: {

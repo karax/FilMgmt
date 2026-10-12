@@ -3,7 +3,7 @@ from decimal import Decimal
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session, selectinload
-from app.models import PrintJob, PrintJobSpool, PrintJobStatus, PrintSpoolLock, Spool, SpoolStatus, WeightSource
+from app.models import PrintJob, PrintJobFilamentReconciliation, PrintJobFilamentUsage, PrintJobSpool, PrintJobStatus, PrintSpoolLock, Spool, SpoolStatus, WeightSource
 from app.models.timestamps import utc_now
 from app.schemas import PrintJobCreate, PrintJobFilterParams, PrintJobFinishRequest, PrintJobUpdate
 from app.services.print_cost_service import InvalidPrintCostDataError, calculate_print_material_cost
@@ -22,6 +22,7 @@ class PrintJobStartEmptySpoolError(Exception): pass
 class PrintJobSpoolInUseError(Exception): pass
 class PrintJobActiveSpoolJobError(Exception): pass
 class PrintJobNotPrintingError(Exception): pass
+class PrintJobManagedByPrinterError(Exception): pass
 class PrintJobMissingStartTimeError(Exception): pass
 class PrintJobInvalidFinishTimeError(Exception): pass
 class PrintJobFinishArchivedSpoolError(Exception): pass
@@ -30,11 +31,20 @@ class PrintJobInvalidCostDataError(Exception): pass
 
 class PrintJobService:
  def __init__(self, db: Session): self.db = db
- def _query(self): return select(PrintJob).options(selectinload(PrintJob.spool_links))
+ def _query(self):
+  return select(PrintJob).options(
+   selectinload(PrintJob.spool_links),
+   selectinload(PrintJob.filament_usages)
+   .selectinload(PrintJobFilamentUsage.reconciliation_events)
+   .selectinload(PrintJobFilamentReconciliation.spool),
+  )
  def list_print_jobs(self, filters: PrintJobFilterParams | None = None):
   filters = filters or PrintJobFilterParams(); q = self._query()
   if filters.status is not None: q = q.where(PrintJob.status == filters.status)
   if filters.spool_id is not None: q = q.join(PrintJobSpool).where(PrintJobSpool.spool_id == filters.spool_id)
+  if filters.printer_serial is not None: q = q.where(PrintJob.printer_serial == filters.printer_serial)
+  if filters.started_after is not None: q = q.where(PrintJob.started_at >= filters.started_after)
+  if filters.started_before is not None: q = q.where(PrintJob.started_at <= filters.started_before)
   return list(self.db.scalars(q.order_by(PrintJob.created_at.desc(), PrintJob.id.desc())).unique().all())
  def get_print_job(self, id: int):
   item = self.db.scalar(self._query().where(PrintJob.id == id))
@@ -82,6 +92,7 @@ class PrintJobService:
   return self.get_print_job(id)
  def finish_print_job(self,id,payload:PrintJobFinishRequest):
   job=self.get_print_job(id)
+  if job.capture_mode is not None: raise PrintJobManagedByPrinterError
   if job.status is not PrintJobStatus.PRINTING: raise PrintJobNotPrintingError
   if job.started_at is None: raise PrintJobMissingStartTimeError
   links={x.spool_id:x for x in job.spool_links}; supplied={x.spool_id:x.actual_weight_g for x in payload.consumptions}

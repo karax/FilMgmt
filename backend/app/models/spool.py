@@ -10,6 +10,7 @@ from sqlalchemy import (
     DateTime,
     Enum,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -23,7 +24,8 @@ from app.db.base import Base
 from app.models.timestamps import utc_now
 
 if TYPE_CHECKING:
-    from app.models.print_job import PrintJobSpool, PrintSpoolLock
+    from app.models.calibration import SpoolCalibration, TareMeasurement
+    from app.models.print_job import PrintJobFilamentReconciliation, PrintJobSpool, PrintSpoolLock
     from app.models.weight_history import WeightHistory
 
 
@@ -104,6 +106,7 @@ class Spool(Base):
             "'NEEDS_DRYING', 'ARCHIVED')",
             name="ck_spools_status",
         ),
+        Index("ix_spools_purchase_date", "purchase_date"),
         {"sqlite_autoincrement": True},
     )
 
@@ -227,6 +230,20 @@ class Spool(Base):
     )
     print_spool_locks: Mapped[list["PrintSpoolLock"]] = relationship(
         back_populates="spool",
+        passive_deletes="all",
+    )
+    reconciliation_events: Mapped[list["PrintJobFilamentReconciliation"]] = relationship(
+        back_populates="spool",
+        passive_deletes="all",
+    )
+    calibrations: Mapped[list["SpoolCalibration"]] = relationship(
+        back_populates="spool",
+        order_by="SpoolCalibration.created_at",
+        passive_deletes="all",
+    )
+    tare_measurements: Mapped[list["TareMeasurement"]] = relationship(
+        back_populates="spool",
+        order_by="TareMeasurement.created_at",
         passive_deletes="all",
     )
 

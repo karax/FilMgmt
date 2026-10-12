@@ -27,10 +27,10 @@ export function elapsedMinutes(startedAt: string | null, now = Date.now()): numb
   return Math.floor((now - started) / 60_000)
 }
 
-export const printJobStatuses: readonly PrintJobStatus[] = ['PRINTING', 'PLANNED', 'SUCCESS', 'FAILED', 'CANCELLED']
+export const printJobStatuses: readonly PrintJobStatus[] = ['PRINTING', 'PAUSED', 'PLANNED', 'SUCCESS', 'COMPLETED', 'FAILED', 'CANCELLED', 'UNKNOWN_TERMINAL']
 
 export function jobsForStatus(jobs: PrintJob[], status: PrintJobStatus): PrintJob[] {
-  const dateFor = (job: PrintJob) => status === 'PRINTING' ? job.started_at : status === 'SUCCESS' ? job.finished_at : job.created_at
+  const dateFor = (job: PrintJob) => status === 'PRINTING' || status === 'PAUSED' ? job.started_at : status === 'SUCCESS' || status === 'COMPLETED' ? job.finished_at : job.created_at
   return jobs
     .filter((job) => job.status === status)
     .sort((left, right) => (dateFor(right) ?? right.created_at).localeCompare(dateFor(left) ?? left.created_at) || right.id - left.id)

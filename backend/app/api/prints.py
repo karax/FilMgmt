@@ -1,10 +1,14 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.schemas import PrintJobCreate, PrintJobFilterParams, PrintJobFinishRequest, PrintJobRead, PrintJobUpdate
+from app.schemas.print_job import PrintJobEnrichmentAccepted
+from app.models import PrintJobReconciliationStatus
+from app.services.print_job_media_service import PrintJobMediaError, PrintJobMediaService
 from app.services.print_job_service import (
     PrintJobArchivedSpoolError,
     PrintJobDataConflictError,
@@ -19,6 +23,7 @@ from app.services.print_job_service import (
     PrintJobInvalidCostDataError,
     PrintJobInvalidFinishTimeError,
     PrintJobMissingStartTimeError,
+    PrintJobManagedByPrinterError,
     PrintJobNotPrintingError,
     PrintJobService,
     PrintJobSpoolNotFoundError,
@@ -27,6 +32,13 @@ from app.services.print_job_service import (
 router = APIRouter(prefix="/prints", tags=["Prints"])
 DbSession = Annotated[Session, Depends(get_db)]
 PrintFilters = Annotated[PrintJobFilterParams, Query()]
+
+
+def get_print_job_media_service() -> PrintJobMediaService:
+    return PrintJobMediaService()
+
+
+PrintMediaService = Annotated[PrintJobMediaService, Depends(get_print_job_media_service)]
 
 
 @router.get("", response_model=list[PrintJobRead])
@@ -87,6 +99,8 @@ def finish_print_job(
         raise _not_found("Spool not found.") from error
     except PrintJobNotPrintingError as error:
         raise _conflict("Only printing jobs can be finished.") from error
+    except PrintJobManagedByPrinterError as error:
+        raise _conflict("Printer-managed jobs are updated automatically.") from error
     except PrintJobMissingStartTimeError as error:
         raise _conflict("Printing job has no start time.") from error
     except PrintJobInvalidFinishTimeError as error:
@@ -108,6 +122,57 @@ def get_print_job(print_job_id: int, db: DbSession) -> PrintJobRead:
         return PrintJobRead.model_validate(PrintJobService(db).get_print_job(print_job_id))
     except PrintJobNotFoundError as error:
         raise _not_found("Print job not found.") from error
+
+
+@router.get("/{print_job_id}/thumbnail", response_class=FileResponse)
+def get_print_job_thumbnail(
+    print_job_id: int,
+    db: DbSession,
+    media_service: PrintMediaService,
+) -> FileResponse:
+    try:
+        print_job = PrintJobService(db).get_print_job(print_job_id)
+    except PrintJobNotFoundError as error:
+        raise _not_found("Print job not found.") from error
+    if print_job.thumbnail_file_name is None:
+        raise _not_found("Print thumbnail not found.")
+    try:
+        path = media_service.resolve_thumbnail(print_job.id, print_job.thumbnail_file_name)
+    except PrintJobMediaError as error:
+        raise _not_found("Print thumbnail not found.") from error
+    return FileResponse(path, media_type="image/png")
+
+
+@router.post(
+    "/{print_job_id}/enrichment",
+    response_model=PrintJobEnrichmentAccepted,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def request_print_job_enrichment(
+    print_job_id: int,
+    request: Request,
+    db: DbSession,
+) -> PrintJobEnrichmentAccepted:
+    try:
+        print_job = PrintJobService(db).get_print_job(print_job_id)
+    except PrintJobNotFoundError as error:
+        raise _not_found("Print job not found.") from error
+    if print_job.capture_mode is None:
+        raise _conflict("Only printer-managed jobs can be enriched from P1S FTPS.")
+    if print_job.reconciliation_status in {
+        PrintJobReconciliationStatus.PARTIALLY_RECONCILED,
+        PrintJobReconciliationStatus.RECONCILED,
+        PrintJobReconciliationStatus.NOT_APPLICABLE,
+    }:
+        raise _conflict("Reconciled filament metadata cannot be replaced.")
+    integration = request.app.state.bambu_integration
+    if not integration.ftps_settings.configured:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Bambu FTPS is not configured.",
+        )
+    integration.request_enrichment(print_job_id, force=True)
+    return PrintJobEnrichmentAccepted(print_job_id=print_job_id, status="ACCEPTED")
 
 
 @router.patch("/{print_job_id}", response_model=PrintJobRead)

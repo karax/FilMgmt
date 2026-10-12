@@ -1,5 +1,5 @@
 export const ptBR = {
-  common: { appName: 'Filament Command Center', retry: 'Tentar novamente', cancel: 'Cancelar', optional: 'Opcional', unconfigured: 'Não configurado', yes: 'Sim', no: 'Não' },
+  common: { appName: 'Filament Command Center', retry: 'Tentar novamente', cancel: 'Cancelar', close: 'Fechar', optional: 'Opcional', unconfigured: 'Não configurado', yes: 'Sim', no: 'Não' },
   navigation: { dashboard: 'Painel', inventory: 'Inventário', prints: 'Impressões', analytics: 'Análises', settings: 'Configurações', openNavigation: 'Abrir menu de navegação', closeNavigation: 'Fechar menu de navegação', mobileNavigation: 'Navegação móvel', skipContent: 'Pular para o conteúdo' },
   dashboard: { eyebrow: 'Visão geral operacional', title: 'Painel', description: 'Uma visão objetiva do seu inventário de filamentos e do que precisa de atenção.', total: 'Total de Spools', available: 'Filamento Disponível', low: 'Spools com Pouco Filamento', empty: 'Spools Vazios', drying: 'Precisam de Secagem', materials: 'Materiais', active: 'inventário ativo', attention: 'Precisam de Atenção', criticalEmpty: 'Nenhum spool crítico.', criticalEmptyDescription: 'Alertas de pouco filamento, vazio e secagem aparecerão aqui.', noFilament: 'sem filamento restante', flagged: 'sinalizados pelo inventário', noSpools: 'Nenhum spool cadastrado ainda.', noSpoolsDescription: 'Adicione seu primeiro spool para começar a controlar seu filamento.', unable: 'Não foi possível carregar o painel.' },
   inventory: { title: 'Inventário', eyebrow: 'Inventário / Filamento', description: 'Gerencie e acompanhe seus spools de filamento.', add: 'Adicionar Spool', grid: 'Grade', table: 'Tabela', gridView: 'Visualização em grade', tableView: 'Visualização em tabela', tableAria: 'Inventário de spools', search: 'Buscar no inventário', searchPlaceholder: 'Buscar por código, cor, material ou fabricante...', clearSearch: 'Limpar busca', filters: 'Filtros', clearFilters: 'Limpar filtros', clearAll: 'Limpar tudo', applyFilters: 'Aplicar filtros', activeFilters: 'Filtros ativos:', removeFilter: 'Remover {{filter}}', spool_one: '{{count}} spool', spool_other: '{{count}} spools', noMatch: 'Nenhum spool corresponde aos filtros selecionados.', noSearch: 'Nenhum spool encontrado para “{{search}}”.', noSearchAndFilters: 'Nenhum spool corresponde à sua busca e aos filtros.', tryAnother: 'Tente outra busca ou limpe os filtros atuais.', unable: 'Não foi possível carregar o inventário.', connection: 'Verifique a conexão com o backend.', retrying: 'Tentando novamente…', created: 'Spool {{code}} criado com sucesso.', empty: 'Seu inventário de filamentos está vazio.', emptyDescription: 'Adicione seu primeiro spool para começar a controlar seu filamento.', spoolColumn: 'Spool', manufacturer: 'Fabricante', material: 'Material', color: 'Cor', remaining: 'Restante', weight: 'Peso', status: 'Status' },
@@ -11,6 +11,186 @@ export const ptBR = {
   prints: { title: 'Trabalhos de Impressão', description: 'Acompanhe impressões planejadas, em andamento e concluídas.', loading: 'Carregando trabalhos de impressão', error: 'Não foi possível carregar os trabalhos de impressão.', retrying: 'Tentando novamente…', emptyTitle: 'Nenhuma impressão registrada ainda.', emptyDescription: 'Suas impressões planejadas e concluídas aparecerão aqui.', spoolFallback: 'Spool #{{id}}', sections: { printing: 'Em andamento', planned: 'Planejadas', success: 'Concluídas', other: 'Outras' }, fields: { printer: 'Impressora', estimatedWeight: 'Estimado', actualWeight: 'Real', estimatedTime: 'Tempo estimado', actualTime: 'Tempo real', cost: 'Custo de material', started: 'Iniciada', finished: 'Finalizada' }, status: { PLANNED: 'Planejada', PRINTING: 'Imprimindo', SUCCESS: 'Concluída', FAILED: 'Falhou', CANCELLED: 'Cancelada' }, actions: { new: 'Nova Impressão', edit: 'Editar', create: 'Criar Impressão', save: 'Salvar Alterações', cancel: 'Cancelar', back: 'Voltar para Impressões', dismiss: 'Fechar mensagem' }, create: { title: 'Nova Impressão', subtitle: 'Planeje uma impressão usando um spool do seu inventário.' }, edit: { title: 'Editar Impressão', subtitle: 'Atualize os detalhes da impressão planejada.', notFound: 'Trabalho de impressão não encontrado.' }, messages: { created: 'Impressão planejada criada com sucesso.', updated: 'Impressão atualizada com sucesso.', cannotEdit: 'Esta impressão não pode mais ser editada.' }, form: { name: 'Nome da Impressão', spool: 'Spool', selectSpool: 'Selecione um spool', estimatedWeight: 'Peso Estimado', weightHint: 'Filamento estimado necessário para a impressão.', estimatedTime: 'Tempo Estimado', hours: 'Horas', minutes: 'Minutos', printer: 'Impressora', notes: 'Observações', lowWarning: 'Este spool está com pouco filamento.', emptyWarning: 'Este spool está marcado como vazio.', insufficientWeightWarning: 'O peso estimado é maior que o filamento disponível neste spool.', loadError: 'Não foi possível carregar os dados do formulário.', errors: { name: 'Informe o nome da impressão.', spool: 'Selecione um spool.', weight: 'O peso estimado deve ser maior que zero.', hours: 'Informe um número de horas válido.', minutes: 'Os minutos devem estar entre 0 e 59.', duration: 'A duração deve ser maior que zero.', spoolMissing: 'O spool selecionado não foi encontrado.', conflict: 'A impressão não pôde ser salva porque os dados entram em conflito com o estado atual.', save: 'Não foi possível salvar a impressão. Tente novamente.' } } },
   errors: { loadForm: 'Não foi possível carregar os dados do formulário.', checkConnection: 'Verifique a conexão com o backend e tente novamente.', save: 'Não foi possível salvar o spool. Verifique a conexão com o backend e tente novamente.', reviewFields: 'Alguns campos precisam ser corrigidos. Revise os campos destacados.', validationFallback: 'Alguns valores não puderam ser salvos. Revise o formulário e tente novamente.', extraForbidden: 'Este campo não é aceito pelo servidor.', selectedMissing: 'Um fabricante ou material selecionado não existe mais.', conflict: 'O spool não pôde ser salvo porque os dados entram em conflito com um registro existente.' },
 } as const
+
+Object.assign(ptBR.prints, {
+  unnamed: 'Impressão #{{id}}',
+  amsUnavailable: 'Snapshot do AMS indisponível',
+  fields: { ...ptBR.prints.fields, progress: 'Progresso' },
+  status: {
+    ...ptBR.prints.status,
+    PAUSED: 'Pausada',
+    COMPLETED: 'Concluída',
+    UNKNOWN_TERMINAL: 'Precisa de revisão',
+  },
+})
+
+Object.assign(ptBR, {
+  analytics: {
+    eyebrow: 'Dados confirmados / Tendências', title: 'Analytics',
+    description: 'Entenda o uso confirmado de filamento, compras, resultados de impressões e o estoque atual.',
+    loading: 'Carregando painel de analytics', loadingChart: 'Carregando {{title}}', retrying: 'Tentando novamente…',
+    loadError: 'Não foi possível carregar analytics.', loadErrorDescription: 'O serviço de analytics não respondeu. Tente novamente sem perder o período selecionado.', chartUnavailable: 'Este gráfico está temporariamente indisponível.',
+    unavailable: 'Indisponível', noData: 'Sem dados', multipleCurrencies: '{{count}} moedas',
+    periodValue: '{{range}}', coverageValue: '{{value}} de cobertura dos dados', activeSpools_one: '{{count}} spool ativo · retrato atual', activeSpools_other: '{{count}} spools ativos · retrato atual',
+    terminalOnly: 'Somente impressões encerradas', pendingUsages_one: '{{count}} uso de filamento', pendingUsages_other: '{{count}} usos de filamento', spoolCount_one: '{{count}} spool', spoolCount_other: '{{count}} spools',
+    successValue: 'Taxa de sucesso do backend: {{value}}', observedWithCoverage: '{{duration}} observadas · {{coverage}} de cobertura da duração', pendingPrints_one: '{{count}} impressão', pendingPrints_other: '{{count}} impressões',
+    range: { label: 'Período', last_7_days: 'Últimos 7 dias', last_30_days: 'Últimos 30 dias', last_90_days: 'Últimos 90 dias', this_year: 'Este ano', last_12_months: 'Últimos 12 meses', all_time: 'Todo o período', custom: 'Personalizado', from: 'De', to: 'Até', chooseDates: 'Escolha as datas inicial e final para carregar um período personalizado.' },
+    kpi: { consumed: 'Consumo confirmado', materialCost: 'Custo do material', currentInventory: 'Estoque atual', completed: 'Impressões concluídas', successRate: 'Taxa de sucesso', pending: 'Reconciliação pendente' },
+    sections: { highlights: 'Destaques', consumption: 'Consumo', inventory: 'Estoque', purchases: 'Compras', printing: 'Impressões', coverage: 'Cobertura dos dados' },
+    highlights: { spool: 'Spool mais usado', material: 'Material mais consumido', brand: 'Marca mais consumida', spendStore: 'Loja com maior gasto', spoolsStore: 'Maior quantidade comprada' },
+    charts: { consumption: 'Consumo confirmado ao longo do tempo', topSpools: 'Spools físicos mais usados', material: 'Consumo por material', brand: 'Consumo por marca', inventory: 'Estoque atual por material', stores: 'Compras por loja', purchaseSpend: 'Gastos com compras ao longo do tempo', outcomes: 'Resultados das impressões', activity: 'Atividade da impressora', largestPrints: 'Maiores impressões por filamento confirmado' },
+    chartSubtitles: { confirmed: 'Consumo reconciliado confirmado, atribuído à data de cada PrintJob.', physicalSpools: 'Spools físicos permanecem separados, mesmo com metadados iguais.', currentSnapshot: 'Retrato atual — o período histórico selecionado não altera esta visão.', currencySafe: 'Moedas aparecem em séries separadas; nenhuma conversão cambial é aplicada.' },
+    storeMode: { label: 'Modo do ranking de compras', spend: 'Gasto', count: 'Spools' },
+    outcomes: { completed: 'Concluídas', failed: 'Falharam', cancelled: 'Canceladas', unknown: 'Terminal desconhecido' },
+    empty: { consumption: 'Nenhum consumo confirmado de filamento neste período.', inventory: 'Nenhum estoque ativo disponível.', purchases: 'Nenhuma compra registrada neste período.', prints: 'Nenhuma impressão encerrada neste período.', activity: 'Nenhuma duração de impressão observada neste período.' },
+    coverage: { cost: 'Cobertura de custo', duration: 'Cobertura de duração', pending: 'Reconciliação pendente' },
+    coverageDescription: 'A cobertura torna visíveis metadados históricos ausentes, sem tratá-los como zero.', durationHelp: 'Alguns PrintJobs históricos não possuem dados completos de duração observada.',
+    export: {
+      open: 'Exportar dados', title: 'Exportar dados', description: 'Baixe um conjunto de dados CSV confiável e legível por máquina.',
+      analyticsGroup: 'Analytics', rawGroup: 'Dados brutos', scopeTitle: 'Escopo da exportação', currentFilters: 'Filtros atuais de Analytics', allData: 'Todos os dados',
+      analyticsScopeHelp: 'Este conjunto usa o período e os filtros selecionados em Analytics.',
+      currentScopeHelp: 'Aplica o período atual e os filtros de Analytics compatíveis.', allScopeHelp: 'Exporta todo o conjunto bruto sem filtros de Analytics.',
+      inventorySnapshotHelp: 'O inventário de spools é um retrato atual; o período histórico não o altera.',
+      download: 'Exportar CSV', preparing: 'Preparando CSV…', downloaded: '{{filename}} baixado.',
+      errorTitle: 'Não foi possível exportar os dados.', errorDescription: 'Tente novamente.',
+      datasets: {
+        consumption_over_time: 'Consumo ao longo do tempo', top_spools: 'Spools físicos mais usados', consumption_by_material: 'Consumo por material', consumption_by_brand: 'Consumo por marca', inventory_by_material: 'Estoque por material', purchases_by_store: 'Compras por loja', purchase_spend_over_time: 'Gastos com compras ao longo do tempo', print_outcomes: 'Resultados das impressões', print_activity: 'Atividade da impressora', largest_consuming_prints: 'Maiores impressões por consumo',
+        spools: 'Inventário de spools', prints: 'Histórico de impressões', filament_usage: 'Uso de filamento', confirmed_consumption: 'Consumo confirmado', purchases: 'Dados de compras', ledger: 'Livro de inventário', calibrations: 'Calibrações físicas',
+      },
+    },
+  },
+})
+
+Object.assign(ptBR.navigation, { reconciliation: 'Conciliar impressões' })
+Object.assign(ptBR, {
+  reconciliation: {
+    eyebrow: 'P1S / Inventário',
+    title: 'Conciliar impressões',
+    description: 'Revise vários dias de impressões capturadas, confirme os spools físicos usados e aplique o consumo ao inventário em lote.',
+    loading: 'Carregando fila de conciliação',
+    loadError: 'Não foi possível carregar a fila de conciliação.',
+    pending: 'Impressões pendentes',
+    ready: 'Prontas para confirmar',
+    estimatedPending: 'Consumo estimado pendente',
+    empty: 'Tudo conciliado',
+    emptyDescription: 'Novas impressões P1S enriquecidas aparecerão aqui após terminarem.',
+    recentTitle: 'Conciliadas recentemente',
+    recentDescription: 'Desfaça aqui uma seleção incorreta; a reversão restaura o inventário e preserva o histórico.',
+    batchTitle: 'Confirmação em lote',
+    selectedLines_one: '{{count}} filamento selecionado',
+    selectedLines_other: '{{count}} filamentos selecionados',
+    selectReady: 'Selecionar sugestões sem ambiguidade',
+    confirmSelected_one: 'Confirmar {{count}} filamento',
+    confirmSelected_other: 'Confirmar {{count}} filamentos',
+    confirming: 'Atualizando inventário…',
+    confirmed_one: '{{count}} filamento foi conciliado.',
+    confirmed_other: '{{count}} filamentos foram conciliados.',
+    fixSelected: 'Preencha spool, quantidade e justificativa para cada filamento selecionado.',
+    printCount_one: '{{count}} impressão',
+    printCount_other: '{{count}} impressões',
+    unnamedPrint: 'Impressão sem nome',
+    dateUnavailable: 'Data indisponível',
+    plate: 'Placa {{plate}}',
+    plateUnavailable: 'Placa indisponível',
+    filamentCount_one: '{{count}} filamento',
+    filamentCount_other: '{{count}} filamentos',
+    slicedEstimateShort: 'estimado pelo fatiador',
+    resolved: 'conciliados',
+    incompleteTitle: 'Impressão incompleta.',
+    incompleteDescription: 'O consumo estimado é calculado pelo progresso final ({{progress}}%) e pode ser ajustado antes da confirmação.',
+    includeUsage: 'Incluir {{material}} neste lote',
+    unknownMaterial: 'Material desconhecido',
+    trayUnavailable: 'Bandeja AMS indisponível',
+    needsSelection: 'Precisa de seleção',
+    physicalSpool: 'Spool físico do inventário',
+    chooseSpool: 'Escolha um spool',
+    searchSpoolPlaceholder: 'Buscar por código, nome, marca, material ou cor…',
+    noSpoolMatches: 'Nenhum spool ativo corresponde a esta busca.',
+    suggestedSpools: 'Spools sugeridos',
+    otherInventory: 'Outros spools ativos',
+    manualSpoolSelection: 'Seleção manual — este spool não correspondeu aos metadados capturados.',
+    doNotDeduct: 'Não descontar',
+    consumption: 'Consumo',
+    progressEstimate: 'Estimativa de {{estimate}} g = {{progress}}% de {{total}} g fatiados.',
+    insufficient: 'Este spool não tem peso restante suficiente. Escolha outro ou recalibre-o.',
+    reasonRequired: 'Justificativa (obrigatória)',
+    reasonOptional: 'Justificativa (opcional)',
+    reasonPlaceholder: 'Por que esta quantidade ou opção é adequada',
+    estimateNotice: 'Estimativa do fatiador; o inventário só muda após a confirmação.',
+    skipped: 'Ignorado explicitamente — nenhum consumo descontado',
+    deducted: '{{amount}} g descontados de {{spool}}',
+    manualAmount: 'quantidade manual',
+    undo: 'Desfazer',
+    undoPrompt: 'Por que você está desfazendo esta conciliação?',
+    undone: 'A conciliação foi revertida e o inventário restaurado.',
+    confidence: {
+      EXACT: 'Correspondência exata',
+      HIGH: 'Alta confiança',
+      MEDIUM: 'Média confiança',
+      LOW: 'Baixa confiança',
+      AMBIGUOUS: 'Ambíguo — escolha o spool físico',
+    },
+    errors: {
+      insufficient: 'O spool selecionado não tem mais filamento suficiente.',
+      reason: 'Adicione uma justificativa para a quantidade manual.',
+      spool: 'O spool selecionado não está mais disponível.',
+      conflict: 'A conciliação mudou em outra solicitação. A fila foi atualizada.',
+      generic: 'A conciliação não pôde ser aplicada. Nenhuma alteração parcial foi salva.',
+    },
+  },
+})
+
+Object.assign((ptBR as unknown as { reconciliation: Record<string, unknown> }).reconciliation, {
+  checkpointWarning: 'Esta impressão é anterior à calibração física mais recente do spool selecionado.',
+  checkpointWarningHelp: 'O saldo medido pode já incluir este consumo. Confirme somente se o novo desconto for intencional.',
+  checkpointAcknowledge: 'Entendo que isto pode contar o material duas vezes e quero continuar.',
+})
+Object.assign(ptBR, {
+  calibration: {
+    title: 'Calibração por peso físico', description: 'Alinhe o saldo estimado do inventário com uma medição manual em balança.', open: 'Calibrar peso', last: 'Última calibração física', physicalRemaining: 'Filamento restante', tare: 'Peso do spool vazio', currentSystem: 'Saldo atual do sistema', measuredTotal: 'Peso físico', measuredHelp: 'Coloque o spool inteiro, incluindo o filamento, na balança.', emptyWeight: 'Como determinar o peso do spool vazio?', profile: 'Perfil de tara', chooseProfile: 'Escolha um perfil físico compatível', createProfile: 'Criar perfil de tara', profileName: 'Nome do perfil', saveProfile: 'Salvar perfil', source: 'Fonte da tara', confidence: 'Confiança', note: 'Observação (opcional)', adjustment: 'Ajuste físico', expectedBefore: 'Esperado antes da calibração', drift: 'Desvio', review: 'Revisar calibração', reviewing: 'Calculando…', confirm: 'Confirmar calibração', confirming: 'Aplicando…', success: 'Calibração física salva.', estimatedWarning: 'Este peso restante é aproximado porque a tara é estimada.', pendingWarning_one: 'Há {{count}} impressão não conciliada que pode ter usado este spool.', pendingWarning_other: 'Há {{count}} impressões não conciliadas que podem ter usado este spool.', pendingWarningHelp: 'A medição física já reflete o uso real. Conciliar depois uma impressão anterior pode descontar o mesmo material novamente.', showHistory: 'Mostrar histórico de calibração', hideHistory: 'Ocultar histórico de calibração', noHistory: 'Nenhuma calibração física registrada.', physicalEvent: 'Calibração física', reversal: 'Reversão de calibração', undo: 'Desfazer calibração', undoPrompt: 'Por que você está desfazendo esta calibração?', undoSuccess: 'Calibração revertida e saldo anterior restaurado exatamente.', tareMode: { PROFILE: 'Usar um perfil de tara', MANUAL: 'Informar o peso do spool vazio', UNKNOWN: 'Não sei o peso do spool vazio' }, unknownHelp: 'Não é possível calcular o filamento restante exato sem o peso do spool vazio. Selecione um perfil, informe uma tara medida ou estimada, ou calibre depois.', errors: { stale: 'O inventário mudou após esta prévia. Revise o ajuste atualizado antes de confirmar.', validation: 'Confira os pesos físico e do spool vazio.', conflict: 'A calibração não pôde ser aplicada porque o inventário mudou ou uma atividade posterior precisa ser desfeita primeiro.', generic: 'Não foi possível concluir a calibração.' },
+  },
+})
+
+Object.assign(ptBR.navigation, { prints: 'Histórico de impressões' })
+Object.assign(ptBR.prints, {
+  title: 'Histórico de impressões',
+  description: 'Consulte impressões, miniaturas e consumo estimado pelo fatiador.',
+  metadata: {
+    title: 'Metadados do fatiamento', noThumbnail: 'Sem miniatura', unknownMaterial: 'Material não identificado', colorUnavailable: 'Cor indisponível',
+    filamentCount_one: '{{count}} filamento', filamentCount_other: '{{count}} filamentos',
+    estimatedTotal: 'Filamento estimado total', estimatedLength: 'Comprimento estimado total', slicerDuration: 'Duração estimada pelo fatiador', plate: 'Placa impressa',
+    estimatedWeight: 'Peso estimado', estimatedMeters: 'Comprimento estimado', trayInfo: 'Índice do filamento', nozzle: 'Bico',
+    retry: 'Tentar metadados novamente', retrying: 'Solicitando…', retryError: 'Não foi possível solicitar uma nova tentativa agora.',
+    unavailableDescription: 'A impressão continua disponível, mas os metadados do arquivo 3MF ainda não puderam ser obtidos.',
+    estimateDisclaimer: 'Os valores de filamento são estimativas do fatiador, não medições físicas.',
+    amsSnapshot: 'Snapshot histórico do AMS', external: 'Externo', snapshotRemaining: '{{value}}% indicado no início',
+    snapshotDisclaimer: 'Este é o estado preservado no início da impressão; mudanças posteriores no AMS não alteram este registro.',
+    status: { PENDING: 'Metadados pendentes', IN_PROGRESS: 'Obtendo metadados…', ENRICHED: 'Metadados disponíveis', FILE_NOT_FOUND: 'Arquivo 3MF não encontrado', AMBIGUOUS: 'Arquivo ou placa ambíguos', RETRYABLE: 'FTPS temporariamente indisponível', FAILED: 'Falha ao processar metadados' },
+  },
+})
+
+Object.assign(ptBR.navigation, { printerStatus: 'Status da impressora' })
+Object.assign(ptBR, {
+  printerStatus: {
+    eyebrow: 'P1S / Monitoramento ao vivo', title: 'Status da impressora',
+    description: 'Acompanhe a conexão, a impressão atual e o AMS da Bambu Lab P1S. Esta integração é somente leitura.',
+    loading: 'Carregando status da impressora', loadError: 'Não foi possível carregar o status da impressora.',
+    loadErrorDescription: 'Verifique a conexão com o backend e tente novamente.', refreshing: 'Atualizando…', refresh: 'Atualizar agora',
+    connected: 'P1S conectada', disconnected: 'P1S desconectada', readOnly: 'Somente leitura', serialUnavailable: 'Serial indisponível',
+    lastUpdate: 'Atualização {{value}}', waitingForData: 'Aguardando dados da impressora', notConfigured: 'Integração não configurada.',
+    connection: 'Conexão da impressora', connectionState: 'Conexão', serial: 'Número de série', normalizedState: 'Estado normalizado', rawState: 'Estado bruto Bambu',
+    ftps: 'FTPS / metadados', lastFtpsSuccess: 'Último acesso FTPS',
+    ftpsStates: { unconfigured: 'Não configurado', reachable: 'Disponível', error: 'Erro temporário', waiting: 'Aguardando primeira consulta' },
+    currentPrint: 'Impressão atual', unnamedPrint: 'Impressão sem nome', noActivePrint: 'Nenhuma impressão ativa',
+    noActivePrintDescription: 'Quando uma impressão começar, o progresso e os identificadores aparecerão aqui.',
+    progress: 'Progresso', layer: 'Camada', remaining: 'Tempo restante', minutes: 'min', taskId: 'Task ID', subtaskId: 'Subtask ID',
+    openHistory: 'Abrir PrintJob #{{id}}', ams: 'Materiais carregados', autoRefresh: 'Atualização automática a cada 5 segundos', noAms: 'Nenhum dado de AMS recebido.',
+    amsUnit: 'AMS {{id}}', externalTray: 'Carretel externo', tray: 'Slot {{id}}', selected: 'Selecionado', emptyTray: 'Slot vazio ou não identificado',
+    profileUnavailable: 'Perfil indisponível', unavailable: 'Indisponível',
+    connections: { DISABLED: 'Desativada', CONNECTING: 'Conectando', CONNECTED: 'Conectada', DISCONNECTED: 'Desconectada' },
+    states: { UNKNOWN: 'Desconhecido', IDLE: 'Ociosa', PREPARING: 'Preparando', PRINTING: 'Imprimindo', PAUSED: 'Pausada', FINISHED: 'Concluída', FAILED: 'Falhou', CANCELLED: 'Cancelada' },
+  },
+})
 
 Object.assign(ptBR.spool, {
   qr: {
@@ -288,11 +468,11 @@ Object.assign(ptBR.prints, {
     back: 'Voltar para Impressões', identifier: 'Impressão #{{id}}', loading: 'Carregando detalhes da impressão',
     notFound: 'Impressão não encontrada.', loadError: 'Não foi possível carregar esta impressão.',
     overview: 'Visão geral', status: 'Status', printer: 'Impressora', createdAt: 'Criada em', startedAt: 'Iniciada em', finishedAt: 'Finalizada em',
-    estimatedTime: 'Duração estimada', actualTime: 'Duração real', spools: 'Spools e consumo',
+    estimatedTime: 'Duração estimada', actualTime: 'Duração real', layers: 'Camadas', spools: 'Spools e consumo',
     estimatedWeight: 'Peso estimado', consumedWeight: 'Filamento consumido', totalEstimatedWeight: 'Peso estimado total', totalConsumedWeight: 'Filamento consumido total',
     consumptionNotProvided: 'Não informado', incompleteEstimate: 'Estimativa incompleta', partialConsumption: 'Consumo parcial',
     unitCost: 'Custo por grama', materialCost: 'Custo do material', costs: 'Custos', totalMaterialCost: 'Custo total do material', materialCosts: 'Custos do material', knownCost: 'Custo conhecido', costUnavailable: 'Alguns custos não estão disponíveis.',
-    viewSpool: 'Ver Spool', timeline: 'Linha do tempo', currentStatus: 'Status atual', notes: 'Observações', noNotes: 'Nenhuma observação.',
+    viewSpool: 'Ver Spool', reconciledSpool: 'Spool reconciliado', reconciliationSkipped: 'Reconciliado sem desconto no estoque', timeline: 'Linha do tempo', currentStatus: 'Status atual', notes: 'Observações', noNotes: 'Nenhuma observação.',
   },
   timeline: { created: 'Criada', started: 'Iniciada', finished: 'Concluída', running: 'Em andamento' },
   errors: {

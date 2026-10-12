@@ -54,10 +54,10 @@ export function PrintsPage() {
       {!isPending && !error && jobs?.length === 0 && <div className="mt-8 rounded-lg border border-dashed border-line bg-surface px-5 py-14 text-center shadow-sm"><Printer aria-hidden="true" className="mx-auto size-7 text-ink-muted" /><h2 className="mt-4 text-lg font-semibold text-ink">{t('prints.emptyTitle')}</h2><p className="mt-2 text-sm text-ink-muted">{t('prints.emptyDescription')}</p><div className="mt-5 flex justify-center"><PrintsNewLink label={t('prints.actions.new')} /></div></div>}
 
       {!isPending && !error && jobs && jobs.length > 0 && <>
-        <PrintJobsSection title={t('prints.sections.printing')} jobs={jobsForStatus(jobs, 'PRINTING')} onFinish={openFinish} onStart={openStart} spools={spoolMap} />
+        <PrintJobsSection title={t('prints.sections.printing')} jobs={[...jobsForStatus(jobs, 'PRINTING'), ...jobsForStatus(jobs, 'PAUSED')]} onFinish={openFinish} onStart={openStart} spools={spoolMap} />
         <PrintJobsSection title={t('prints.sections.planned')} jobs={jobsForStatus(jobs, 'PLANNED')} onFinish={openFinish} onStart={openStart} spools={spoolMap} />
-        <PrintJobsSection title={t('prints.sections.success')} jobs={jobsForStatus(jobs, 'SUCCESS')} onFinish={openFinish} onStart={openStart} spools={spoolMap} />
-        <PrintJobsSection title={t('prints.sections.other')} jobs={[...jobsForStatus(jobs, 'FAILED'), ...jobsForStatus(jobs, 'CANCELLED')]} onFinish={openFinish} onStart={openStart} spools={spoolMap} />
+        <PrintJobsSection title={t('prints.sections.success')} jobs={[...jobsForStatus(jobs, 'SUCCESS'), ...jobsForStatus(jobs, 'COMPLETED')]} onFinish={openFinish} onStart={openStart} spools={spoolMap} />
+        <PrintJobsSection title={t('prints.sections.other')} jobs={[...jobsForStatus(jobs, 'FAILED'), ...jobsForStatus(jobs, 'CANCELLED'), ...jobsForStatus(jobs, 'UNKNOWN_TERMINAL')]} onFinish={openFinish} onStart={openStart} spools={spoolMap} />
       </>}
       {action?.type === 'start' && selectedJob && <StartPrintDialog entries={selectedEntries} onCancel={() => setAction(null)} onSuccess={() => { setAction(null); setFeedback(t('prints.messages.started')) }} printJob={selectedJob} />}
       {action?.type === 'finish' && selectedJob && <FinishPrintDialog entries={selectedEntries} onCancel={() => setAction(null)} onSuccess={() => { setAction(null); setFeedback(t('prints.messages.finished')) }} printJob={selectedJob} />}

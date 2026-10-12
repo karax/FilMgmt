@@ -6,7 +6,7 @@ from sqlalchemy import Engine, text
 from app.db.base import Base
 from app.db.config import DEFAULT_DATABASE_URL, get_database_url
 from app.db.session import create_database_engine, create_session_factory, engine
-from app.models import Manufacturer, Material, PrintJob, PrintJobSpool, PrintSpoolLock, Spool, WeightHistory
+from app.models import Manufacturer, Material, PrintJob, PrintJobFilamentReconciliation, PrintJobFilamentUsage, PrintJobSpool, PrintSpoolLock, Spool, SpoolCalibration, TareMeasurement, TareProfile, WeightHistory
 
 TEST_DATABASE_URL = "sqlite+pysqlite:///:memory:"
 
@@ -31,9 +31,14 @@ def test_declarative_base_contains_registered_domain_tables() -> None:
         Manufacturer.__tablename__,
         Material.__tablename__,
             PrintJob.__tablename__,
+            PrintJobFilamentReconciliation.__tablename__,
+            PrintJobFilamentUsage.__tablename__,
             PrintJobSpool.__tablename__,
             PrintSpoolLock.__tablename__,
         Spool.__tablename__,
+        SpoolCalibration.__tablename__,
+        TareMeasurement.__tablename__,
+        TareProfile.__tablename__,
         WeightHistory.__tablename__,
     }
 

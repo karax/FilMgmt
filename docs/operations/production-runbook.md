@@ -162,12 +162,20 @@ service restart. Actual supported fields and defaults are:
 | --- | --- | --- |
 | `DATABASE_URL` | SQLite at `data/filament.db` | SQLAlchemy database URL; operations require a file-backed SQLite URL. |
 | `GCODE_UPLOAD_DIRECTORY` | `data/uploads/gcode` | Managed upload directory. |
+| `PRINT_JOB_MEDIA_DIRECTORY` | `data/print-jobs` | Derived P1S print thumbnails; the API never exposes this filesystem path. |
 | `GCODE_MAX_UPLOAD_BYTES` | `104857600` | Maximum bytes per upload (100 MiB). |
 | `GCODE_UPLOAD_RETENTION_DAYS` | `30` | Upload age before cleanup eligibility. |
 | `GCODE_UPLOAD_MAX_TOTAL_BYTES` | `2147483648` | Managed storage quota (2 GiB). |
 | `GCODE_UPLOAD_TEMP_STALE_SECONDS` | `3600` | Abandoned temp-file age. |
 | `GCODE_UPLOAD_CLEANUP_ENABLED` | `true` | Cleanup before a new upload. |
 | `GCODE_UPLOAD_RETENTION_ENABLED` | `true` | Age-based expiry. |
+| `BAMBU_HOST` | unset | P1S local IP/hostname; required with serial and access code to enable collection. |
+| `BAMBU_PORT` | `8883` | P1S MQTT port. |
+| `BAMBU_FTPS_PORT` | `990` | P1S implicit-TLS FTPS port used for read-only 3MF enrichment. |
+| `BAMBU_SERIAL` | unset | P1S serial used in the report topic. |
+| `BAMBU_ACCESS_CODE` | unset | Secret P1S LAN/developer access code. |
+| `BAMBU_MQTT_TLS` | `true` | Use the P1S local TLS endpoint. |
+| `BAMBU_DEBUG_PAYLOADS` | `false` | Development-only bounded sanitized payload capture; leave disabled in production. |
 | `FCC_BACKUP_DIRECTORY` | `backups/` | Operations-only verified-backup directory. |
 | `FCC_BACKEND_HEALTH_URL` | `http://127.0.0.1:8000/api/health` | Quick-check backend URL. |
 | `FCC_FRONTEND_URL` | `http://127.0.0.1:8080/` | Quick-check frontend URL. |
@@ -176,6 +184,9 @@ Numeric validation and accepted boolean spellings are documented in
 `docs/gcode.md`. Absolute custom data paths must be owned by the service user.
 Recommended permissions are environment `0600`, database and backup files
 `0600`, and data, backup, and G-code directories `0700`. Never use `chmod 777`.
+The Bambu access code must remain only in this protected environment file. See
+the [P1S collector guide](../bambu-p1s.md) for its scoped self-signed TLS policy,
+diagnostic endpoint, and real-printer verification steps.
 
 When running maintenance manually, load the same environment:
 

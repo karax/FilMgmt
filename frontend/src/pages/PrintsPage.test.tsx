@@ -14,6 +14,7 @@ const baseJob = (overrides: Partial<PrintJob> = {}): PrintJob => ({
   printer_name: 'Bambu Lab A1', started_at: null, finished_at: null, notes: null,
   created_at: '2026-08-30T10:00:00Z', updated_at: '2026-08-30T10:00:00Z', ...overrides,
 })
+const timestamp = '2026-10-05T21:14:00Z'
 
 function apiResponse(data: unknown, ok = true): Response {
   return { ok, status: ok ? 200 : 503, json: vi.fn().mockResolvedValue(data) } as unknown as Response
@@ -76,7 +77,7 @@ describe('PrintsPage', () => {
     await i18n.changeLanguage('en')
     vi.mocked(fetch).mockImplementation((input) => Promise.resolve(apiResponse(String(input).includes('/api/prints') ? [baseJob({ status: 'PRINTING' })] : [])))
     renderPrints()
-    expect(await screen.findByRole('heading', { name: 'Print Jobs' })).toBeVisible()
+    expect(await screen.findByRole('heading', { name: 'Print history' })).toBeVisible()
     expect((await screen.findAllByText('Printing')).length).toBeGreaterThan(1)
     expect(screen.getByRole('button', { name: 'Finish Print' })).toBeVisible()
   })
@@ -98,6 +99,37 @@ describe('PrintsPage', () => {
     const success = screen.getByRole('region', { name: 'Concluídas' })
     expect(within(success).queryByRole('button')).not.toBeInTheDocument()
     expect(within(success).getByRole('link', { name: 'Ver detalhes' })).toHaveAttribute('href', '/prints/3')
+  })
+
+  it('shows enriched P1S history with thumbnail, sliced filaments, and estimated total', async () => {
+    const captured = baseJob({
+      id: 101,
+      name: 'Desk Robot Head',
+      status: 'COMPLETED',
+      spools: [],
+      total_estimated_weight_g: null,
+      printer_name: null,
+      printer_serial: 'P1S-SERIAL',
+      capture_mode: 'LIVE',
+      finished_at: '2026-10-05T21:14:00Z',
+      enrichment_status: 'ENRICHED',
+      thumbnail_url: '/api/prints/101/thumbnail',
+      estimated_filament_g: '82.9',
+      filament_count: 2,
+      filaments: [
+        { id: 1, position: 0, plate_index: 1, source_filament_id: '1', material_type: 'PLA', color: '#000000', used_g: '74.2', used_m: '24.7', tray_info_idx: 'GFA00', used_for_object: true, used_for_support: false, nozzle_diameter: '0.4', group_id: '0', created_at: timestamp, updated_at: timestamp },
+        { id: 2, position: 1, plate_index: 1, source_filament_id: '2', material_type: 'PLA', color: '#FFFFFF', used_g: '8.7', used_m: '2.9', tray_info_idx: 'GFA01', used_for_object: true, used_for_support: false, nozzle_diameter: '0.4', group_id: '0', created_at: timestamp, updated_at: timestamp },
+      ],
+    })
+    vi.mocked(fetch).mockImplementation((input) => Promise.resolve(apiResponse(String(input).includes('/api/prints') ? [captured] : [])))
+    renderPrints()
+
+    const completed = await screen.findByRole('region', { name: 'Concluídas' })
+    expect(within(completed).getByRole('img', { name: 'Desk Robot Head' })).toHaveAttribute('src', '/api/prints/101/thumbnail')
+    expect(within(completed).getByText('2 filamentos')).toBeVisible()
+    expect(within(completed).getAllByText('PLA')).toHaveLength(2)
+    expect(within(completed).getByText('82,9 g')).toBeVisible()
+    expect(within(completed).queryByRole('button', { name: 'Finalizar Impressão' })).not.toBeInTheDocument()
   })
 
   it('moves a planned job to Printing after the server confirms Start', async () => {

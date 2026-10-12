@@ -37,3 +37,7 @@ export function startPrintJob(id: number): Promise<PrintJob> {
 export function finishPrintJob(id: number, payload: PrintJobFinishPayload): Promise<PrintJob> {
   return apiPost<PrintJob, PrintJobFinishPayload>(`/api/prints/${id}/finish`, payload)
 }
+
+export function requestPrintJobEnrichment(id: number): Promise<{ print_job_id: number; status: string }> {
+  return apiPostWithoutBody(`/api/prints/${id}/enrichment`)
+}

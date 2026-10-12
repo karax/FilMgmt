@@ -40,13 +40,15 @@ describe('application layout', () => {
     for (const label of [
       'Inventory',
       'Dashboard',
-      'Prints',
+      'Printer status',
+      'Reconcile prints',
+      'Print history',
+      'Analytics',
       'G-code',
       'Settings',
     ]) {
       expect(screen.getByRole('link', { name: label })).toBeInTheDocument()
     }
-    expect(screen.queryByRole('link', { name: 'Analytics' })).not.toBeInTheDocument()
   })
 
   it('redirects the root route to the existing inventory page', async () => {
@@ -117,11 +119,6 @@ describe('application layout', () => {
   })
 
   it.each([
-    [
-      '/analytics',
-      'Analytics',
-      'Review filament usage and printing statistics.',
-    ],
     ['/settings', 'Settings', 'Configure Filament Command Center.'],
   ])('renders the placeholder for %s', (path, title, description) => {
     renderRoute(path)
@@ -143,6 +140,8 @@ describe('application layout', () => {
       'prints/new',
       'prints/:id/edit',
       'prints/:id',
+      'printer-status',
+      'reconciliation',
       'analytics',
       'dashboard',
       'settings',
@@ -219,7 +218,7 @@ describe('mobile navigation', () => {
     ).getAllByRole('link')
     expect(
       mobileLinks.map((link) => link.textContent),
-    ).toEqual(['Inventory', 'Dashboard', 'Prints', 'G-code', 'Settings'])
+    ).toEqual(['Inventory', 'Dashboard', 'Printer status', 'Reconcile prints', 'Print history', 'Analytics', 'G-code', 'Settings'])
 
     await user.click(
       within(drawer).getByRole('button', { name: 'Close navigation menu' }),

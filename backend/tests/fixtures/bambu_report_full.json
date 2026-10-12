@@ -1,0 +1,62 @@
+{
+  "print": {
+    "command": "push_status",
+    "gcode_state": "RUNNING",
+    "subtask_name": "Calibration Cube",
+    "gcode_file": "/data/Metadata/calibration_cube.gcode",
+    "project_name": "Calibration Project",
+    "project_id": "project-12",
+    "profile_id": "profile-34",
+    "task_id": "task-56",
+    "subtask_id": "subtask-78",
+    "mc_percent": 42,
+    "layer_num": 71,
+    "total_layer_num": 166,
+    "mc_remaining_time": 38,
+    "tray_now": "1",
+    "ams": {
+      "ams_exist_bits": "1",
+      "tray_exist_bits": "3",
+      "ams": [
+        {
+          "id": "0",
+          "humidity": "3",
+          "temp": "24.5",
+          "tray": [
+            {
+              "id": "0",
+              "tag_uid": "AABBCCDDEEFF0011",
+              "tray_uuid": "tray-uuid-0",
+              "tray_info_idx": "GFA00",
+              "setting_id": "GFSA00_01",
+              "tray_type": "PLA",
+              "tray_sub_brands": "Bambu PLA Basic",
+              "tray_color": "FF0000FF",
+              "remain": 87,
+              "nozzle_temp_min": "190",
+              "nozzle_temp_max": "240"
+            },
+            {
+              "id": "1",
+              "tag_uid": "0000000000000000",
+              "tray_info_idx": "GFG00",
+              "tray_type": "PETG",
+              "tray_color": "0000FFFF",
+              "remain": "65"
+            }
+          ]
+        }
+      ]
+    },
+    "vt_tray": {
+      "id": "254",
+      "tray_info_idx": "GFA00",
+      "tray_type": "PLA",
+      "tray_color": "FFFFFFFF"
+    },
+    "future_firmware_field": {
+      "ignored": true
+    }
+  },
+  "unknown_top_level": "ignored"
+}

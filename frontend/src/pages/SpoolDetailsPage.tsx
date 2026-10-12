@@ -10,6 +10,7 @@ import { SpoolPrintSettings } from '../components/spool/SpoolPrintSettings'
 import { SpoolQrCard } from '../components/spool/SpoolQrCard'
 import { SpoolStatusBadge } from '../components/spool/SpoolStatusBadge'
 import { SpoolWeightPanel } from '../components/spool/SpoolWeightPanel'
+import { SpoolCalibrationPanel } from '../components/spool/SpoolCalibrationPanel'
 import { useSpool } from '../hooks/useSpool'
 import { useArchiveSpool, useDeleteSpool } from '../hooks/useSpoolMutations'
 import { formatCurrency, formatDate } from '../lib/inventory'
@@ -59,6 +60,7 @@ export function SpoolDetailsPage() {
           <InfoRow label={t('spool.color')}>{spool.color_name}</InfoRow>
           <InfoRow label={t('spool.status')}><SpoolStatusBadge status={spool.status} /></InfoRow>
         </SpoolInfoSection>
+        {!archived && <SpoolCalibrationPanel spool={spool} />}
         <SpoolQrCard code={spool.code} displayName={spool.display_name} />
         <SpoolInfoSection title={t('spool.purchase')}>
           <InfoRow label={t('spool.storeName')}>{spool.store_name ?? '—'}</InfoRow>

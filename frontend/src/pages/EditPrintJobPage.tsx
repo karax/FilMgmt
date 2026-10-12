@@ -24,7 +24,7 @@ export function EditPrintJobPage() {
     return <LoadError onRetry={() => { void job.refetch(); void spools.refetch() }} />
   }
   if (job.data.status !== 'PLANNED') return <section className="mx-auto max-w-3xl rounded-lg border border-line bg-surface p-7 text-center"><AlertCircle aria-hidden="true" className="mx-auto size-7 text-amber-600 dark:text-amber-300" /><h1 className="mt-4 text-xl font-semibold text-ink">{t('prints.messages.cannotEdit')}</h1><button className="mt-6 rounded-md bg-accent px-4 py-2.5 text-sm font-bold text-sidebar" onClick={() => navigate('/prints')} type="button">{t('prints.actions.back')}</button></section>
-  const initialValues = printJobFormValues(job.data)
+  const initialValues = printJobFormValues({ ...job.data, name: job.data.name ?? '' })
   return <section aria-labelledby="edit-print-title" className="mx-auto max-w-3xl"><PageHeading eyebrow={t('prints.editEyebrow', { id: job.data.id })} id="edit-print-title" subtitle={t('prints.edit.subtitle')} title={t('prints.edit.title')} /><PrintJobForm initialValues={initialValues} isSubmitting={update.isPending} mode="edit" onCancel={() => navigate('/prints')} onSubmit={(payload) => update.mutate({ id: job.data.id, payload: updatedFields(initialValues, payload) }, { onSuccess: () => navigate('/prints', { replace: true, state: { feedback: t('prints.messages.updated') } }) })} spools={spools.data ?? []} submitError={update.error} /></section>
 }
 

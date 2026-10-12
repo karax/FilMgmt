@@ -202,6 +202,59 @@ describe('PrintJobDetailsPage', () => {
     expect(screen.queryByText(/BRL|R\$/)).not.toBeInTheDocument()
   })
 
+  it('shows enriched slicer estimates separately from observed duration and historical AMS', async () => {
+    mockApi(job({
+      status: 'COMPLETED',
+      capture_mode: 'LIVE',
+      printer_serial: 'P1S-SERIAL',
+      duration_seconds: 12_120,
+      final_progress: 100,
+      final_layer: 928,
+      total_layers: 928,
+      enrichment_status: 'ENRICHED',
+      thumbnail_url: '/api/prints/42/thumbnail',
+      estimated_filament_g: '82.9',
+      estimated_filament_m: '27.6',
+      slicer_estimated_duration_seconds: 11_820,
+      selected_plate_index: 7,
+      selected_plate_name: 'Robot head',
+      filaments: [
+        { id: 10, position: 0, plate_index: 7, source_filament_id: '1', material_type: 'PLA', color: '#000000', used_g: '74.2', used_m: '24.7', tray_info_idx: 'GFA00', used_for_object: true, used_for_support: false, nozzle_diameter: '0.4', group_id: '0', reconciliation_event_type: 'CONSUMPTION', confirmed_spool_id: 7, confirmed_spool_code: 'FIL-0007', reconciled_consumption_g: '74.2', created_at: timestamp, updated_at: timestamp },
+        { id: 11, position: 1, plate_index: 7, source_filament_id: '2', material_type: 'PLA', color: '#FFFFFF', used_g: '8.7', used_m: '2.9', tray_info_idx: 'GFA01', used_for_object: true, used_for_support: false, nozzle_diameter: '0.4', group_id: '0', reconciliation_event_type: null, confirmed_spool_id: null, confirmed_spool_code: null, reconciled_consumption_g: null, created_at: timestamp, updated_at: timestamp },
+      ],
+      ams_snapshot: { ams_units: [{ unit_id: '0', trays: [{ tray_id: '0', material_type: 'PLA', color: '000000', brand: 'Bambu Lab', remaining_percent: 80 }] }] },
+    }))
+    renderPage()
+
+    expect(await screen.findByRole('region', { name: 'Metadados do fatiamento' })).toBeVisible()
+    expect(screen.getByRole('img', { name: 'Boneco Multicolor' })).toHaveAttribute('src', '/api/prints/42/thumbnail')
+    expect(screen.getByText('3h 22min')).toBeVisible()
+    expect(screen.getByText('3h 17min')).toBeVisible()
+    expect(screen.getByText('Robot head')).toBeVisible()
+    expect(screen.getAllByText('PLA').length).toBeGreaterThanOrEqual(2)
+    expect(screen.getByText('74.20 g')).toBeVisible()
+    expect(screen.getByText('8.70 g')).toBeVisible()
+    const reconciledSpool = screen.getByRole('link', { name: 'FIL-0007' })
+    expect(reconciledSpool).toHaveAttribute('href', '/spools/FIL-0007')
+    expect(reconciledSpool.parentElement).toHaveTextContent('Spool reconciliado: FIL-0007 · 74,2 g')
+    expect(screen.getByRole('region', { name: 'Snapshot histórico do AMS' })).toHaveTextContent('Bambu Lab · PLA')
+    expect(screen.queryByRole('region', { name: 'Spools e consumo' })).not.toBeInTheDocument()
+  })
+
+  it('keeps an unenriched print visible and can request a metadata retry', async () => {
+    const captured = job({ status: 'COMPLETED', capture_mode: 'LIVE', enrichment_status: 'FILE_NOT_FOUND', spools: [] })
+    vi.mocked(fetch).mockImplementation((input, init) => {
+      if (String(input).endsWith('/enrichment') && init?.method === 'POST') return Promise.resolve(response({ print_job_id: 42, status: 'ACCEPTED' }, 202))
+      return Promise.resolve(response(String(input).startsWith('/api/prints/') ? captured : []))
+    })
+    renderPage()
+
+    expect(await screen.findByText('Arquivo 3MF não encontrado')).toBeVisible()
+    expect(screen.getByText(/A impressão continua disponível/)).toBeVisible()
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Tentar metadados novamente' }))
+    expect(fetch).toHaveBeenCalledWith('/api/prints/42/enrichment', expect.objectContaining({ method: 'POST' }))
+  })
+
   it('reuses Start and refreshes the detail in place', async () => {
     let current = job()
     vi.mocked(fetch).mockImplementation((input, init) => {

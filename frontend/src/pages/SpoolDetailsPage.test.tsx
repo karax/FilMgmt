@@ -9,7 +9,7 @@ import { makeSpool } from '../test/spoolFixture'
 import type { Spool } from '../types/spool'
 import { SpoolDetailsPage } from './SpoolDetailsPage'
 
-function response(data: Spool | null, status = 200): Response {
+function response(data: unknown, status = 200): Response {
   return { ok: status >= 200 && status < 300, status, json: vi.fn().mockResolvedValue(data) } as unknown as Response
 }
 
@@ -158,5 +158,44 @@ describe('SpoolDetailsPage', () => {
     expect(deleteButton).toBeDisabled()
     await user.type(screen.getByLabelText('Type FIL-0042 to confirm'), 'FIL-0042')
     expect(deleteButton).toBeEnabled()
+  })
+
+  it('previews a manual physical calibration without mutating until explicit confirmation', async () => {
+    const spool = makeSpool({ code: 'FIL-0042', current_filament_weight_g: '684.200' })
+    const preview = { measured_total_g: '631.000', tare_g: '224.000', calculated_filament_g: '407.000', current_remaining_g: '684.200', adjustment_g: '-277.200', tare_source: 'MEASURED', tare_confidence: 'HIGH', tare_profile_id: null, is_estimated: false, unreconciled_prints: [] }
+    const event = { id: 1, spool_id: spool.id, event_type: 'PHYSICAL_CALIBRATION', measured_total_g: '631.000', tare_g_used: '224.000', calculated_filament_g: '407.000', previous_remaining_g: '684.200', adjustment_g: '-277.200', new_remaining_g: '407.000', tare_source_used: 'MEASURED', tare_confidence_used: 'HIGH', tare_profile_id: null, tare_profile_name: null, note: null, reversed_calibration_id: null, reversed_at: null, effective_at: '2026-10-06T10:24:00Z', created_at: '2026-10-06T10:24:00Z' }
+    vi.mocked(fetch).mockImplementation(async (input, init) => {
+      const url = String(input)
+      if (url.endsWith('/tare-profiles')) return response([])
+      if (url.endsWith('/calibrations/preview')) return response(preview)
+      if (url.endsWith('/calibrations') && init?.method === 'POST') return response(event, 201)
+      if (url.endsWith('/calibrations')) return response([])
+      return response(spool)
+    })
+    renderPage()
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Calibrate weight' }))
+    await user.click(screen.getByLabelText('Enter an empty spool weight'))
+    await user.type(screen.getByRole('spinbutton', { name: /Physical weight/ }), '631.000')
+    await user.type(screen.getByLabelText('Empty spool weight'), '224.000')
+    await user.selectOptions(screen.getByLabelText('Tare source'), 'MEASURED')
+    await user.selectOptions(screen.getByLabelText('Confidence'), 'HIGH')
+    await user.click(screen.getByRole('button', { name: 'Review calibration' }))
+    expect(await screen.findByText('-277.2 g')).toBeVisible()
+    expect(vi.mocked(fetch).mock.calls.filter(([url, init]) => String(url).endsWith('/calibrations') && init?.method === 'POST')).toHaveLength(0)
+    await user.click(screen.getByRole('button', { name: 'Confirm calibration' }))
+    expect(await screen.findByText('Physical calibration saved.')).toBeVisible()
+    expect(vi.mocked(fetch).mock.calls.some(([url, init]) => String(url).endsWith('/calibrations') && init?.method === 'POST')).toBe(true)
+  })
+
+  it('makes the unknown-tare limitation explicit', async () => {
+    vi.mocked(fetch).mockImplementation(async (input) => String(input).endsWith('/tare-profiles') || String(input).endsWith('/calibrations') ? response([]) : response(makeSpool()))
+    renderPage()
+    const user = userEvent.setup()
+    await user.click(await screen.findByRole('button', { name: 'Calibrate weight' }))
+    await user.type(screen.getByRole('spinbutton', { name: /Physical weight/ }), '637')
+    await user.click(screen.getByLabelText('I do not know the empty spool weight'))
+    expect(screen.getByText(/Exact filament remaining cannot be calculated/)).toBeVisible()
+    expect(screen.getByRole('button', { name: 'Review calibration' })).toBeDisabled()
   })
 })

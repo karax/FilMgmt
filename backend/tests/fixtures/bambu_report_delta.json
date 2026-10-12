@@ -1,0 +1,19 @@
+{
+  "print": {
+    "mc_percent": 43,
+    "layer_num": 72,
+    "ams": {
+      "ams": [
+        {
+          "id": "0",
+          "tray": [
+            {
+              "id": "1",
+              "remain": 64
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
